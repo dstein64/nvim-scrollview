@@ -248,7 +248,11 @@ function! s:CalculatePosition(winnr) abort
   return l:result
 endfunction
 
-function! s:ShowScrollbar(winid) abort
+" Show a scrollbar for the specified 'winid' window ID, using the specified
+" 'bar_winid' floating window ID (a new floating window will be created if
+" this is -1).
+function! s:ShowScrollbar(winid, bar_winid) abort
+  let l:bar_winid = a:bar_winid
   let l:winid = a:winid
   let l:winnr = win_id2win(l:winid)
   let l:bufnr = winbufnr(l:winnr)
@@ -303,7 +307,7 @@ function! s:ShowScrollbar(winid) abort
     call setbufvar(s:bar_bufnr, '&filetype', 'scrollview')
     call setbufvar(s:bar_bufnr, '&buftype', 'nofile')
   endif
-  let l:options = {
+  let l:config = {
         \   'relative': 'editor',
         \   'focusable': 0,
         \   'style': 'minimal',
@@ -312,11 +316,15 @@ function! s:ShowScrollbar(winid) abort
         \   'row': l:bar_position.row - 1,
         \   'col': l:bar_position.col - 1
         \ }
-  let l:bar_winid = nvim_open_win(s:bar_bufnr, 0, l:options)
+  if l:bar_winid ==# -1
+    let l:bar_winid = nvim_open_win(s:bar_bufnr, 0, l:config)
+  else
+    call nvim_win_set_config(l:bar_winid, l:config)
+  endif
+  let l:bar_winnr = win_id2win(l:bar_winid)
   " It's not sufficient to just specify Normal highlighting. With just that, a
   " color scheme's specification of EndOfBuffer would be used to color the
   " bottom of the scrollbar.
-  let l:bar_winnr = win_id2win(l:bar_winid)
   let l:winheighlight = 'Normal:ScrollView,EndOfBuffer:ScrollView'
   call setwinvar(l:bar_winnr, '&winhighlight', l:winheighlight)
   let l:winblend = s:GetVariable('scrollview_winblend', l:winnr)
@@ -434,7 +442,18 @@ function! scrollview#RefreshBars() abort
       endfor
     endif
     for l:winid in l:target_wins
-      call s:ShowScrollbar(l:winid)
+      let l:bar_winid = -1
+      if len(l:existing_wins) ># 0
+        " Reuse an existing scrollbar floating window when available. This
+        " keeps the window IDs smaller than they would be otherwise.
+        " The benefits of small window IDs seems relatively less benefial than
+        " small buffer numbers, since they would ordinarily be used less as
+        " inputs to commands (where smaller numbers are preferable for their
+        " fewer digits to type).
+        let l:bar_winid = l:existing_wins[-1]
+        call remove(l:existing_wins, -1)
+      endif
+      call s:ShowScrollbar(l:winid, l:bar_winid)
     endfor
     for l:winid in l:existing_wins
       " Remove bars asynchronously to prevent flickering. Even when
