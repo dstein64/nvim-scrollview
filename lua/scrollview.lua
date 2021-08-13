@@ -44,6 +44,23 @@ end
 -- * Core
 -- *************************************************
 
+-- Return top line and bottom line in window. For folds, the top line
+-- represents the start of the fold and the bottom line represents the end of
+-- the fold.
+local function line_range(winid)
+  return vim.api.nvim_win_call(winid, function()
+    -- Using scrolloff=0 combined with H and L breaks diff mode. Scrolling is not
+    -- possible and/or the window scrolls when it shouldn't. Temporarily turning
+    -- off scrollbind and cursorbind accommodates, but the following is simpler.
+    local topline = vim.fn.line('w0')
+    local botline = vim.fn.line('w$')
+    -- line('w$') returns 0 in silent Ex mode, but line('w0') is always greater
+    -- than or equal to 1.
+    botline = math.max(botline, topline)
+    return {topline, botline}
+  end)
+end
+
 -- Creates a temporary floating window that can be used for computations
 -- ---corresponding to the specified window---that require temporary cursor
 -- movements (e.g., counting virtual lines, where all lines in a closed fold
@@ -356,6 +373,7 @@ local function virtual_topline_lookup(winid)
 end
 
 return {
+  line_range = line_range,
   open_win_workspace = open_win_workspace,
   reset_memoize = reset_memoize,
   start_memoize = start_memoize,
