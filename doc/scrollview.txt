@@ -254,11 +254,12 @@ Synchronization Issues ~
 
 Error Message Issues ~
                                            *scrollview-error-message-issues*
-* When attempting to close the last window in a tab with |:close| or
-  `<ctrl-w>c`, with the scrollbar displayed, and at least one other tab, the
-  following error is shown: >
+* For `nvim<=0.6.1`, when attempting to close the last window in a tab with
+  |:close| or `<ctrl-w>c`, with the scrollbar displayed, and at least one
+  other tab, the following error is shown: >
     E5601: Cannot close window, only floating window would remain
-<  Neovim Issue #11440 is the corresponding issue, opened November 23, 2019.
+<  Neovim Issue #11440 is the corresponding issue, opened November 23, 2019
+  and closed February 11, 2022.
   - Workaround 1: Use |:quit|, |ZZ|, |ZQ|, or another command that quits the
     current window (as opposed to a window-closing command).
   - Workaround 2: Use |:only| or `<ctrl-w>o` on the last window of the tab,
