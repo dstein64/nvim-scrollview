@@ -107,6 +107,24 @@ local set_window_option = function(winid, key, value)
   fn.setwinvar(winid, '&' .. key, value)
 end
 
+-- Executes a function in a window with the specified options temporarily set.
+local with_win_options = function(winid, opts, fun)
+  api.nvim_win_call(winid, function()
+    local restore = {}
+    for key, val in pairs(opts) do
+      local cur = api.nvim_win_get_option(winid, key)
+      if cur ~= val then
+        restore[key] = cur
+        set_window_option(winid, key, val)
+      end
+    end
+    fun()
+    for key, val in pairs(restore) do
+      set_window_option(winid, key, val)
+    end
+  end)
+end
+
 -- Creates a temporary floating window that can be used for computations
 -- ---corresponding to the specified window---that require temporary cursor
 -- movements (e.g., counting virtual lines, where all lines in a closed fold
@@ -950,6 +968,12 @@ local restore = function(state, restore_toplines)
   api.nvim_set_option('winheight', state.winheight)
   if restore_toplines then
     -- Scroll windows back to their original positions.
+    -- Temporarily disable cursorbind/scrollbind to prevent unintended
+    -- scrolling (Issue #68).
+    local opts = {
+      cursorbind = false,
+      scrollbind = false,
+    }
     for winid, topline in pairs(state.toplines) do
       -- The number of scrolls is limited as a precaution against entering an
       -- infinite loop.
@@ -958,7 +982,7 @@ local restore = function(state, restore_toplines)
         -- Can't use set_topline, since that function changes the current
         -- window, and would result in the same problem that is intended to be
         -- solved here.
-        api.nvim_win_call(winid, function()
+        with_win_options(winid, opts, function()
           vim.cmd('keepjumps normal! ' .. t'<c-e>')
         end)
         countdown = countdown - 1
