@@ -282,7 +282,7 @@ Error Message Issues ~
     E444: Cannot close last window
     E444: Cannot close last window
 <  The buffer may not be deleted from the buffer list. Neovim Issue #13628 is
-  the corresponding issue, opened December 28, 2020.
+  the corresponding issue, opened December 28, 2020 and closed March 23, 2022.
   - Workaround 1: Use |:only| or `<ctrl-w>o`, which has the side-effect of closing
     all floating windows (including scrollbars). A subsequent |:bdelete| command
     works without error.
