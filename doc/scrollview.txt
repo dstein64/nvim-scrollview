@@ -276,9 +276,9 @@ Error Message Issues ~
     and <c-w>c would infinitely recurse, as its usage on the right-hand-side
     is not at the beginning (see |recursive_mapping| for details).
 
-* Deleting a buffer with |:bdelete|, when it's the only visible buffer and there
-  are multiple buffers on the buffer list, results in the following error
-  (with duplicate lines, as shown): >
+* For `nvim<=0.6.1`, deleting a buffer with |:bdelete|, when it's the only visible
+  buffer and there are multiple buffers on the buffer list, results in the
+  following error (with duplicate lines, as shown): >
     E444: Cannot close last window
     E444: Cannot close last window
 <  The buffer may not be deleted from the buffer list. Neovim Issue #13628 is
