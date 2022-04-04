@@ -146,6 +146,20 @@ example.
     let g:scrollview_base = 'buffer'
     let g:scrollview_column = 80
 
+Lua Setup ~
+
+A Lua `setup()` function is provided for convenience, to set globally scoped
+options (the 'scrollview_' prefix is omitted). For example:
+ >
+    require('scrollview').setup({
+      excluded_filetypes = {'nerdtree'},
+      current_only = true,
+      winblend = 75,
+      -- Position the scrollbar at the 80th character of the buffer
+      base = 'buffer',
+      column = 80
+    })
+
 Scrollview Modes ~
                                            *scrollview-modes*
 The following modes are available for the |scrollview_mode| configuration

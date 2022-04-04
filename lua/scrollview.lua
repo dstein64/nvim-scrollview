@@ -1598,6 +1598,17 @@ local handle_mouse = function(button)
   restore(state, restore_toplines)
 end
 
+-- A convenience function for setting global options with
+-- require('scrollview').setup().
+local setup = function(opts)
+  for key, val in pairs(opts) do
+    if type(val) == 'boolean' then
+      val = val and 1 or 0
+    end
+    api.nvim_set_var('scrollview_' .. key, val)
+  end
+end
+
 -- *************************************************
 -- * API
 -- *************************************************
@@ -1620,4 +1631,7 @@ return {
   virtual_line_count_linewise = virtual_line_count_linewise,
   virtual_topline_lookup_spanwise = virtual_topline_lookup_spanwise,
   virtual_topline_lookup_linewise = virtual_topline_lookup_linewise,
+
+  -- require('scrollview').setup()
+  setup = setup,
 }

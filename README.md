@@ -94,6 +94,29 @@ for details.
 
 </details>
 
+#### VimScript Example
+
+```vim
+let g:scrollview_excluded_filetypes = ['nerdtree']
+let g:scrollview_current_only = 1
+let g:scrollview_winblend = 75
+" Position the scrollbar at the 80th character of the buffer
+let g:scrollview_base = 'buffer'
+let g:scrollview_column = 80
+```
+
+#### Lua Setup Example
+
+```lua
+require('scrollview').setup({
+  excluded_filetypes = {'nerdtree'},
+  current_only = true,
+  winblend = 75,
+  base = 'buffer',
+  column = 80
+})
+```
+
 ## Documentation
 
 Documentation can be accessed with:
