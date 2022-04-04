@@ -1601,6 +1601,7 @@ end
 -- A convenience function for setting global options with
 -- require('scrollview').setup().
 local setup = function(opts)
+  opts = opts or {}
   for key, val in pairs(opts) do
     if type(val) == 'boolean' then
       val = val and 1 or 0
