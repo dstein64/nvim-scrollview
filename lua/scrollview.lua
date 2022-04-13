@@ -767,7 +767,7 @@ local show_scrollbar = function(winid, bar_winid)
       return -1
     end
   end
-  if bar_bufnr == -1 or not fn.bufexists(bar_bufnr) then
+  if bar_bufnr == -1 or not to_bool(fn.bufexists(bar_bufnr)) then
     bar_bufnr = api.nvim_create_buf(false, true)
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
     api.nvim_buf_set_option(bar_bufnr, 'filetype', 'scrollview')
