@@ -308,9 +308,9 @@ Error Message Issues ~
 
 Other Issues ~
                                            *scrollview-other-issues*
-* Sessions cannot be properly restored by |:mksession| scripts created when the
-  plugin is active (Issue #71). Neovim Issue #18432 is the corresponding
-  issue, opened May 5, 2022.
+* For `nvim<=0.7.0`, sessions cannot be properly restored by |:mksession| scripts
+  created when the plugin is active (Issue #71). Neovim Issue #18432 is the
+  corresponding issue, opened May 5, 2022.
   - Workaround: Create a `MkSession` command that avoids the problem. >
     command -bang -nargs=? MkSession
           \ silent! ScrollViewDisable
