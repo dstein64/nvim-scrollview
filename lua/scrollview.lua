@@ -168,6 +168,11 @@ local with_win_workspace = function(winid, fun)
   -- can function properly.
   set_window_option(workspace_winid, 'scrollbind', false)
   set_window_option(workspace_winid, 'cursorbind', false)
+  -- As a precautionary measure, make sure the floating window has no winbar,
+  -- which is a assumed above.
+  if to_bool(fn.exists('+winbar')) then
+    set_window_option(workspace_winid, 'winbar', '')
+  end
   -- Don't include the workspace window in a diff session. If included, closing
   -- it could end the diff session (e.g., when there is one other window in the
   -- session). Issue #57.
