@@ -1021,7 +1021,7 @@ end
 -- The mouse values are 0 when there was no mouse event or getmousepos is not
 -- available. The mouse_winid is set to -1 when a mouse event was on the
 -- command line. The mouse_winid is set to -2 when a mouse event was on the
--- tabline. The mouse_winid is set to -3 when a mouse event was on the winbar.
+-- tabline.
 local read_input_stream = function()
   local chars = {}
   local chars_props = {}
@@ -1077,10 +1077,6 @@ local read_input_stream = function()
       if mouse_winid > 0
           and to_bool(tbl_get(fn.getwininfo(mouse_winid)[1], 'winbar', 0)) then
         mouse_row = mouse_row - 1
-        -- Handle mouse events on the winbar.
-        if mouse_row == 0 then
-          mouse_winid = -3
-        end
       end
     end
     local char_props = {
