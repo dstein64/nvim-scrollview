@@ -92,6 +92,18 @@ end
 -- * Core
 -- *************************************************
 
+-- Return window height, subtracting 1 if there is a winbar.
+local get_window_height = function(winid)
+  if winid == 0 then
+    winid = api.nvim_get_current_win()
+  end
+  local height = api.nvim_win_get_height(winid)
+  if to_bool(tbl_get(fn.getwininfo(winid)[1], 'winbar', 0)) then
+    height = height - 1
+  end
+  return height
+end
+
 -- Set window option.
 local set_window_option = function(winid, key, value)
   -- Convert to Vim format (e.g., 1 instead of Lua true).
@@ -144,7 +156,9 @@ local with_win_workspace = function(winid, fun)
       relative = 'editor',
       focusable = false,
       width = math.max(1, api.nvim_win_get_width(winid)),
-      height = math.max(1, api.nvim_win_get_height(winid)),
+      -- The floating window doesn't inherit a winbar. Use the winbar-omitted
+      -- height where applicable.
+      height = math.max(1, get_window_height(winid)),
       row = 0,
       col = 0
     })
@@ -419,7 +433,7 @@ end
 -- scrollbar at that row under virtual scrollview mode, in the current window.
 -- The computation loops over virtual spans. The cursor may be moved.
 local virtual_topline_lookup_spanwise = function()
-  local winheight = api.nvim_win_get_height(0)
+  local winheight = get_window_height(0)
   local result = {}  -- A list of line numbers
   local winid = api.nvim_get_current_win()
   local total_vlines = virtual_line_count(winid, 1, '$')
@@ -485,7 +499,7 @@ end
 -- The computation primarily loops over lines, but may loop over virtual spans
 -- as part of calling 'virtual_line_count', so the cursor may be moved.
 local virtual_topline_lookup_linewise = function()
-  local winheight = api.nvim_win_get_height(0)
+  local winheight = get_window_height(0)
   local last_line = fn.line('$')
   local result = {}  -- A list of line numbers
   local winid = api.nvim_get_current_win()
@@ -567,7 +581,7 @@ local topline_lookup = function(winid)
   else
     local bufnr = api.nvim_win_get_buf(winid)
     local line_count = api.nvim_buf_line_count(bufnr)
-    local winheight = fn.winheight(winid)
+    local winheight = get_window_height(winid)
     for row = 1, winheight do
       local proportion = (row - 1) / (winheight - 1)
       local topline = round(proportion * (line_count - 1)) + 1
@@ -594,7 +608,7 @@ local calculate_position = function(winnr)
     effective_topline = virtual_line_count(winid, 1, topline - 1) + 1
     effective_line_count = virtual_line_count(winid, 1, '$')
   end
-  local winheight = fn.winheight(winnr)
+  local winheight = get_window_height(winid)
   local winwidth = fn.winwidth(winnr)
   -- top is the position for the top of the scrollbar, relative to the window,
   -- and 0-indexed.
@@ -656,7 +670,7 @@ end
 -- window.
 local get_window_edges = function(winid)
   local top, left = unpack(fn.win_screenpos(winid))
-  local bottom = top + fn.winheight(winid) - 1
+  local bottom = top + get_window_height(winid) - 1
   local right = left + fn.winwidth(winid) - 1
   -- Only edges have to be checked to determine if a border is present (i.e.,
   -- corners don't have to be checked). Borders don't impact the top and left
@@ -712,7 +726,7 @@ local show_scrollbar = function(winid, bar_winid)
   local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local buf_filetype = api.nvim_buf_get_option(bufnr, 'filetype')
-  local winheight = fn.winheight(winnr)
+  local winheight = get_window_height(winid)
   local winwidth = fn.winwidth(winnr)
   local wininfo = fn.getwininfo(winid)[1]
   -- Skip if the filetype is on the list of exclusions.
@@ -788,6 +802,8 @@ local show_scrollbar = function(winid, bar_winid)
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
   end
   local zindex = get_variable('scrollview_zindex', winnr)
+  -- When there is a winbar, nvim_open_win with relative=win considers row 0 to
+  -- be the line below the winbar.
   local config = {
     win = winid,
     relative = 'win',
@@ -834,7 +850,7 @@ end
 -- remains on screen. Returns the updated scrollbar properties.
 local move_scrollbar = function(props, row)
   props = copy(props)
-  local max_row = fn.winheight(props.parent_winid) - props.height + 1
+  local max_row = get_window_height(props.parent_winid) - props.height + 1
   row = math.min(row, max_row)
   local options = {
     win = props.parent_winid,
@@ -1005,7 +1021,7 @@ end
 -- The mouse values are 0 when there was no mouse event or getmousepos is not
 -- available. The mouse_winid is set to -1 when a mouse event was on the
 -- command line. The mouse_winid is set to -2 when a mouse event was on the
--- tabline.
+-- tabline. The mouse_winid is set to -3 when a mouse event was on the winbar.
 local read_input_stream = function()
   local chars = {}
   local chars_props = {}
@@ -1056,6 +1072,15 @@ local read_input_stream = function()
         mouse_winid = -2
         mouse_row = mousepos.screenrow
         mouse_col = mousepos.screencol
+      end
+      -- Handle mouse events when there is a winbar.
+      if mouse_winid > 0
+          and to_bool(tbl_get(fn.getwininfo(mouse_winid)[1], 'winbar', 0)) then
+        mouse_row = mouse_row - 1
+        -- Handle mouse events on the winbar.
+        if mouse_row == 0 then
+          mouse_winid = -3
+        end
       end
     end
     local char_props = {
@@ -1336,6 +1361,8 @@ local scrollview_enable = function()
       " The following is used so that bars are shown when cycling through tabs.
       autocmd TabEnter * :lua require('scrollview').refresh_bars_async()
       autocmd VimResized * :lua require('scrollview').refresh_bars_async()
+      " Scrollbar positions can become stale after adding or removing winbars.
+      autocmd OptionSet winbar :lua require('scrollview').refresh_bars_async()
     augroup END
   ]])
   -- The initial refresh is asynchronous, since :ScrollViewEnable can be used
@@ -1557,7 +1584,7 @@ local handle_mouse = function(button)
       -- Only consider a scrollbar update for mouse events on windows (i.e.,
       -- not on the tabline or command line).
       if mouse_winid > 0 then
-        local winheight = api.nvim_win_get_height(winid)
+        local winheight = get_window_height(winid)
         local mouse_winrow = fn.getwininfo(mouse_winid)[1].winrow
         local winrow = fn.getwininfo(winid)[1].winrow
         local window_offset = mouse_winrow - winrow
