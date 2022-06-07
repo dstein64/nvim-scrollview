@@ -169,7 +169,7 @@ local with_win_workspace = function(winid, fun)
   set_window_option(workspace_winid, 'scrollbind', false)
   set_window_option(workspace_winid, 'cursorbind', false)
   -- As a precautionary measure, make sure the floating window has no winbar,
-  -- which is a assumed above.
+  -- which is assumed above.
   if to_bool(fn.exists('+winbar')) then
     set_window_option(workspace_winid, 'winbar', '')
   end
