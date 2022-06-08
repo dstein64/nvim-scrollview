@@ -5,7 +5,11 @@
 `nvim-scrollview` is a Neovim plugin that displays interactive vertical
 scrollbars. The plugin is customizable (see `:help scrollview-configuration`).
 
+<details open><summary>Demo</summary><br>
+
 <img src="https://github.com/dstein64/media/blob/main/nvim-scrollview/screencast.gif?raw=true" width="643" />
+
+</details>
 
 ## Features
 
