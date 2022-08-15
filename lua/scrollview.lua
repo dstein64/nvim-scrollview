@@ -1452,175 +1452,176 @@ local handle_mouse = function(button)
     -- since this could be an expensive operation (and the mouse could move).
     local the_topline_lookup = nil
     while true do
-      while true do
-        idx = idx + 1
-        if idx > #chars_props then
-          idx = 1
-          string, chars_props = read_input_stream()
-        end
-        local char_props = chars_props[idx]
-        str_idx = char_props.str_idx
-        char = char_props.char
-        mouse_winid = char_props.mouse_winid
-        mouse_row = char_props.mouse_row
-        mouse_col = char_props.mouse_col
-        -- Break unless it's a mouse drag followed by another mouse drag, so
-        -- that the first drag is skipped.
-        if mouse_winid == 0
-            or vim.tbl_contains({mousedown, mouseup}, char) then
-          break
-        end
-        if idx >= #char_props then break end
-        local next = chars_props[idx + 1]
-        if next.mouse_winid == 0
-            or vim.tbl_contains({mousedown, mouseup}, next.char) then
-          break
-        end
-      end
-      if char == t'<esc>' then
-        fn.feedkeys(string.sub(string, str_idx + #char), 'ni')
-        return
-      end
-      -- In select-mode, mouse usage results in the mode intermediately
-      -- switching to visual mode, accompanied by a call to this function.
-      -- After the initial mouse event, the next getchar() character is
-      -- <80><f5>X. This is "Used for switching Select mode back on after a
-      -- mapping or menu" (https://github.com/vim/vim/blob/
-      -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/keymap.h#L84-L88,
-      -- https://github.com/vim/vim/blob/
-      -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/getchar.c#L2660-L2672)
-      -- Ignore this character after scrolling has started.
-      -- NOTE: "\x80\xf5X" (hex) ==# "\200\365X" (octal)
-      if char == '\x80\xf5X' and count > 0 then
-        goto continue
-      end
-      if mouse_winid == 0 then
-        -- There was no mouse event.
-        fn.feedkeys(string.sub(string, str_idx), 'ni')
-        return
-      end
-      if char == mouseup then
-        if count == 0 then
-          -- No initial mousedown was captured.
-          fn.feedkeys(string.sub(string, str_idx), 'ni')
-        elseif count == 1 then
-          -- A scrollbar was clicked, but there was no corresponding drag.
-          -- Allow the interaction to be processed as it would be with no
-          -- scrollbar.
-          fn.feedkeys(mousedown .. string.sub(string, str_idx), 'ni')
-        else
-          -- A scrollbar was clicked and there was a corresponding drag.
-          -- 'feedkeys' is not called, since the full mouse interaction has
-          -- already been processed. The current window (from prior to
-          -- scrolling) is not changed.
-          -- Refresh scrollbars to handle the scenario where
-          -- scrollview_hide_on_intersect is enabled and dragging resulted in a
-          -- scrollbar overlapping a floating window.
-          refresh_bars(false)
-        end
-        return
-      end
-      if count == 0 then
-        if mouse_winid < 0 then
-          -- The mouse event was on the tabline or command line.
-          fn.feedkeys(string.sub(string, str_idx), 'ni')
-          return
-        end
-        props = get_scrollview_props(mouse_winid)
-        if vim.tbl_isempty(props) then
-          -- There was no scrollbar in the window where a click occurred.
-          fn.feedkeys(string.sub(string, str_idx), 'ni')
-          return
-        end
-        -- Add 1 cell horizonal padding for grabbing the scrollbar. Don't do
-        -- this when the padding would extend past the window, as it will
-        -- interfere with dragging the vertical separator to resize the window.
-        local lpad = 0
-        if props.col > 1 then
-          lpad = 1
-        end
-        local rpad = 0
-        if props.col < api.nvim_win_get_width(mouse_winid) then
-          rpad = 1
-        end
-        if mouse_row < props.row
-            or mouse_row >= props.row + props.height
-            or mouse_col < props.col - lpad
-            or mouse_col > props.col + rpad then
-          -- The click was not on a scrollbar.
-          fn.feedkeys(string.sub(string, str_idx), 'ni')
-          return
-        end
-        -- The click was on a scrollbar.
-        -- It's possible that the clicked scrollbar is out-of-sync. Refresh the
-        -- scrollbars and check if the mouse is still over a scrollbar. If not,
-        -- ignore all mouse events until a mouseup. This approach was deemed
-        -- preferable to refreshing scrollbars initially, as that could result
-        -- in unintended clicking/dragging where there is no scrollbar.
-        refresh_bars(false)
-        vim.cmd('redraw')
-        -- Don't restore toplines whenever a scrollbar was clicked. This
-        -- prevents the window where a scrollbar is dragged from having its
-        -- topline restored to the pre-drag position. This also prevents
-        -- restoring windows that may have had their windows shifted during the
-        -- course of scrollbar clicking/dragging, to prevent jumpiness in the
-        -- display.
-        restore_toplines = false
-        props = get_scrollview_props(mouse_winid)
-        if vim.tbl_isempty(props) or mouse_row < props.row
-            or mouse_row >= props.row + props.height then
-          while fn.getchar() ~= mouseup do end
-          return
-        end
-        -- By this point, the click on a scrollbar was successful.
-        if is_visual_mode(fn.mode()) then
-          -- Exit visual mode.
-          vim.cmd('normal! ' .. t'<esc>')
-        end
-        winid = mouse_winid
-        bufnr = api.nvim_win_get_buf(winid)
-        scrollbar_offset = props.row - mouse_row
-        previous_row = props.row
-      end
-      -- Only consider a scrollbar update for mouse events on windows (i.e.,
-      -- not on the tabline or command line).
-      if mouse_winid > 0 then
-        local winheight = get_window_height(winid)
-        local mouse_winrow = fn.getwininfo(mouse_winid)[1].winrow
-        local winrow = fn.getwininfo(winid)[1].winrow
-        local window_offset = mouse_winrow - winrow
-        local row = mouse_row + window_offset + scrollbar_offset
-        row = math.min(row, winheight - props.height + 1)
-        row = math.max(1, row)
-        -- Only update scrollbar if the row changed.
-        if previous_row ~= row then
-          if the_topline_lookup == nil then
-            the_topline_lookup = topline_lookup(winid)
+      repeat -- Allows continue like normal loops with do break end
+        while true do
+          idx = idx + 1
+          if idx > #chars_props then
+            idx = 1
+            string, chars_props = read_input_stream()
           end
-          local topline = the_topline_lookup[row]
-          topline = math.max(1, topline)
-          if row == 1 then
-            -- If the scrollbar was dragged to the top of the window, always show
-            -- the first line.
-            topline = 1
-          elseif row + props.height - 1 >= winheight then
-            -- If the scrollbar was dragged to the bottom of the window, always
-            -- show the bottom line.
-            topline = api.nvim_buf_line_count(bufnr)
+          local char_props = chars_props[idx]
+          str_idx = char_props.str_idx
+          char = char_props.char
+          mouse_winid = char_props.mouse_winid
+          mouse_row = char_props.mouse_row
+          mouse_col = char_props.mouse_col
+          -- Break unless it's a mouse drag followed by another mouse drag, so
+          -- that the first drag is skipped.
+          if mouse_winid == 0
+              or vim.tbl_contains({mousedown, mouseup}, char) then
+            break
           end
-          set_topline(winid, topline)
-          if api.nvim_win_get_option(winid, 'scrollbind')
-              or api.nvim_win_get_option(winid, 'cursorbind') then
+          if idx >= #char_props then break end
+          local next = chars_props[idx + 1]
+          if next.mouse_winid == 0
+              or vim.tbl_contains({mousedown, mouseup}, next.char) then
+            break
+          end
+        end
+        if char == t'<esc>' then
+          fn.feedkeys(string.sub(string, str_idx + #char), 'ni')
+          return
+        end
+        -- In select-mode, mouse usage results in the mode intermediately
+        -- switching to visual mode, accompanied by a call to this function.
+        -- After the initial mouse event, the next getchar() character is
+        -- <80><f5>X. This is "Used for switching Select mode back on after a
+        -- mapping or menu" (https://github.com/vim/vim/blob/
+        -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/keymap.h#L84-L88,
+        -- https://github.com/vim/vim/blob/
+        -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/getchar.c#L2660-L2672)
+        -- Ignore this character after scrolling has started.
+        -- NOTE: "\x80\xf5X" (hex) ==# "\200\365X" (octal)
+        if char == '\x80\xf5X' and count > 0 then
+          do break end -- Continue in while loop
+        end
+        if mouse_winid == 0 then
+          -- There was no mouse event.
+          fn.feedkeys(string.sub(string, str_idx), 'ni')
+          return
+        end
+        if char == mouseup then
+          if count == 0 then
+            -- No initial mousedown was captured.
+            fn.feedkeys(string.sub(string, str_idx), 'ni')
+          elseif count == 1 then
+            -- A scrollbar was clicked, but there was no corresponding drag.
+            -- Allow the interaction to be processed as it would be with no
+            -- scrollbar.
+            fn.feedkeys(mousedown .. string.sub(string, str_idx), 'ni')
+          else
+            -- A scrollbar was clicked and there was a corresponding drag.
+            -- 'feedkeys' is not called, since the full mouse interaction has
+            -- already been processed. The current window (from prior to
+            -- scrolling) is not changed.
+            -- Refresh scrollbars to handle the scenario where
+            -- scrollview_hide_on_intersect is enabled and dragging resulted in a
+            -- scrollbar overlapping a floating window.
             refresh_bars(false)
-            props = get_scrollview_props(winid)
           end
-          props = move_scrollbar(props, row)
-          vim.cmd('redraw')
-          previous_row = row
+          return
         end
-      end
-      count = count + 1
-      ::continue::
+        if count == 0 then
+          if mouse_winid < 0 then
+            -- The mouse event was on the tabline or command line.
+            fn.feedkeys(string.sub(string, str_idx), 'ni')
+            return
+          end
+          props = get_scrollview_props(mouse_winid)
+          if vim.tbl_isempty(props) then
+            -- There was no scrollbar in the window where a click occurred.
+            fn.feedkeys(string.sub(string, str_idx), 'ni')
+            return
+          end
+          -- Add 1 cell horizonal padding for grabbing the scrollbar. Don't do
+          -- this when the padding would extend past the window, as it will
+          -- interfere with dragging the vertical separator to resize the window.
+          local lpad = 0
+          if props.col > 1 then
+            lpad = 1
+          end
+          local rpad = 0
+          if props.col < api.nvim_win_get_width(mouse_winid) then
+            rpad = 1
+          end
+          if mouse_row < props.row
+              or mouse_row >= props.row + props.height
+              or mouse_col < props.col - lpad
+              or mouse_col > props.col + rpad then
+            -- The click was not on a scrollbar.
+            fn.feedkeys(string.sub(string, str_idx), 'ni')
+            return
+          end
+          -- The click was on a scrollbar.
+          -- It's possible that the clicked scrollbar is out-of-sync. Refresh the
+          -- scrollbars and check if the mouse is still over a scrollbar. If not,
+          -- ignore all mouse events until a mouseup. This approach was deemed
+          -- preferable to refreshing scrollbars initially, as that could result
+          -- in unintended clicking/dragging where there is no scrollbar.
+          refresh_bars(false)
+          vim.cmd('redraw')
+          -- Don't restore toplines whenever a scrollbar was clicked. This
+          -- prevents the window where a scrollbar is dragged from having its
+          -- topline restored to the pre-drag position. This also prevents
+          -- restoring windows that may have had their windows shifted during the
+          -- course of scrollbar clicking/dragging, to prevent jumpiness in the
+          -- display.
+          restore_toplines = false
+          props = get_scrollview_props(mouse_winid)
+          if vim.tbl_isempty(props) or mouse_row < props.row
+              or mouse_row >= props.row + props.height then
+            while fn.getchar() ~= mouseup do end
+            return
+          end
+          -- By this point, the click on a scrollbar was successful.
+          if is_visual_mode(fn.mode()) then
+            -- Exit visual mode.
+            vim.cmd('normal! ' .. t'<esc>')
+          end
+          winid = mouse_winid
+          bufnr = api.nvim_win_get_buf(winid)
+          scrollbar_offset = props.row - mouse_row
+          previous_row = props.row
+        end
+        -- Only consider a scrollbar update for mouse events on windows (i.e.,
+        -- not on the tabline or command line).
+        if mouse_winid > 0 then
+          local winheight = get_window_height(winid)
+          local mouse_winrow = fn.getwininfo(mouse_winid)[1].winrow
+          local winrow = fn.getwininfo(winid)[1].winrow
+          local window_offset = mouse_winrow - winrow
+          local row = mouse_row + window_offset + scrollbar_offset
+          row = math.min(row, winheight - props.height + 1)
+          row = math.max(1, row)
+          -- Only update scrollbar if the row changed.
+          if previous_row ~= row then
+            if the_topline_lookup == nil then
+              the_topline_lookup = topline_lookup(winid)
+            end
+            local topline = the_topline_lookup[row]
+            topline = math.max(1, topline)
+            if row == 1 then
+              -- If the scrollbar was dragged to the top of the window, always show
+              -- the first line.
+              topline = 1
+            elseif row + props.height - 1 >= winheight then
+              -- If the scrollbar was dragged to the bottom of the window, always
+              -- show the bottom line.
+              topline = api.nvim_buf_line_count(bufnr)
+            end
+            set_topline(winid, topline)
+            if api.nvim_win_get_option(winid, 'scrollbind')
+                or api.nvim_win_get_option(winid, 'cursorbind') then
+              refresh_bars(false)
+              props = get_scrollview_props(winid)
+            end
+            props = move_scrollbar(props, row)
+            vim.cmd('redraw')
+            previous_row = row
+          end
+        end
+        count = count + 1
+      until true
     end  -- end while
   end)  -- end pcall
   restore(state, restore_toplines)
