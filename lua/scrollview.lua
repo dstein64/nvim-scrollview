@@ -1452,7 +1452,7 @@ local handle_mouse = function(button)
     -- since this could be an expensive operation (and the mouse could move).
     local the_topline_lookup = nil
     while true do
-      repeat -- Allows continue like normal loops with do break end
+      repeat -- Allows continue like normal loops with break
         while true do
           idx = idx + 1
           if idx > #chars_props then
@@ -1493,7 +1493,7 @@ local handle_mouse = function(button)
         -- Ignore this character after scrolling has started.
         -- NOTE: "\x80\xf5X" (hex) ==# "\200\365X" (octal)
         if char == '\x80\xf5X' and count > 0 then
-          do break end -- Continue in while loop
+          break  -- Continue in while loop
         end
         if mouse_winid == 0 then
           -- There was no mouse event.
