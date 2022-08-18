@@ -1452,7 +1452,7 @@ local handle_mouse = function(button)
     -- since this could be an expensive operation (and the mouse could move).
     local the_topline_lookup = nil
     while true do
-      repeat -- Allows continue like normal loops with break
+      repeat  -- Allows continue like normal loops with break
         while true do
           idx = idx + 1
           if idx > #chars_props then
