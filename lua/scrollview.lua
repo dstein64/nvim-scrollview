@@ -1452,49 +1452,46 @@ local handle_mouse = function(button)
     -- since this could be an expensive operation (and the mouse could move).
     local the_topline_lookup = nil
     while true do
-      repeat  -- Allows continue like normal loops with break
-        while true do
-          idx = idx + 1
-          if idx > #chars_props then
-            idx = 1
-            string, chars_props = read_input_stream()
-          end
-          local char_props = chars_props[idx]
-          str_idx = char_props.str_idx
-          char = char_props.char
-          mouse_winid = char_props.mouse_winid
-          mouse_row = char_props.mouse_row
-          mouse_col = char_props.mouse_col
-          -- Break unless it's a mouse drag followed by another mouse drag, so
-          -- that the first drag is skipped.
-          if mouse_winid == 0
-              or vim.tbl_contains({mousedown, mouseup}, char) then
-            break
-          end
-          if idx >= #char_props then break end
-          local next = chars_props[idx + 1]
-          if next.mouse_winid == 0
-              or vim.tbl_contains({mousedown, mouseup}, next.char) then
-            break
-          end
+      while true do
+        idx = idx + 1
+        if idx > #chars_props then
+          idx = 1
+          string, chars_props = read_input_stream()
         end
-        if char == t'<esc>' then
-          fn.feedkeys(string.sub(string, str_idx + #char), 'ni')
-          return
+        local char_props = chars_props[idx]
+        str_idx = char_props.str_idx
+        char = char_props.char
+        mouse_winid = char_props.mouse_winid
+        mouse_row = char_props.mouse_row
+        mouse_col = char_props.mouse_col
+        -- Break unless it's a mouse drag followed by another mouse drag, so
+        -- that the first drag is skipped.
+        if mouse_winid == 0
+            or vim.tbl_contains({mousedown, mouseup}, char) then
+          break
         end
-        -- In select-mode, mouse usage results in the mode intermediately
-        -- switching to visual mode, accompanied by a call to this function.
-        -- After the initial mouse event, the next getchar() character is
-        -- <80><f5>X. This is "Used for switching Select mode back on after a
-        -- mapping or menu" (https://github.com/vim/vim/blob/
-        -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/keymap.h#L84-L88,
-        -- https://github.com/vim/vim/blob/
-        -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/getchar.c#L2660-L2672)
-        -- Ignore this character after scrolling has started.
-        -- NOTE: "\x80\xf5X" (hex) ==# "\200\365X" (octal)
-        if char == '\x80\xf5X' and count > 0 then
-          break  -- Continue in while loop
+        if idx >= #char_props then break end
+        local next = chars_props[idx + 1]
+        if next.mouse_winid == 0
+            or vim.tbl_contains({mousedown, mouseup}, next.char) then
+          break
         end
+      end
+      if char == t'<esc>' then
+        fn.feedkeys(string.sub(string, str_idx + #char), 'ni')
+        return
+      end
+      -- In select-mode, mouse usage results in the mode intermediately
+      -- switching to visual mode, accompanied by a call to this function.
+      -- After the initial mouse event, the next getchar() character is
+      -- <80><f5>X. This is "Used for switching Select mode back on after a
+      -- mapping or menu" (https://github.com/vim/vim/blob/
+      -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/keymap.h#L84-L88,
+      -- https://github.com/vim/vim/blob/
+      -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/getchar.c#L2660-L2672)
+      -- Ignore this character after scrolling has started.
+      -- NOTE: "\x80\xf5X" (hex) ==# "\200\365X" (octal)
+      if char ~= '\x80\xf5X' or count == 0 then
         if mouse_winid == 0 then
           -- There was no mouse event.
           fn.feedkeys(string.sub(string, str_idx), 'ni')
@@ -1621,7 +1618,7 @@ local handle_mouse = function(button)
           end
         end
         count = count + 1
-      until true
+      end  -- end if
     end  -- end while
   end)  -- end pcall
   restore(state, restore_toplines)
