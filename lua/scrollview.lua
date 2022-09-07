@@ -931,8 +931,7 @@ local init = function()
     eventignore = eventignore,
     winwidth = api.nvim_get_option('winwidth'),
     winheight = api.nvim_get_option('winheight'),
-    curwinwidth = api.nvim_win_get_width(0),
-    curwinheight = api.nvim_win_get_height(0),
+    winrestcmd = fn.winrestcmd(),
     mode = fn.mode(),
     toplines = get_toplines()
   }
@@ -988,16 +987,15 @@ local restore = function(state, restore_toplines)
   -- Restore options.
   api.nvim_set_option('winwidth', state.winwidth)
   api.nvim_set_option('winheight', state.winheight)
-  -- After restoring winwidth and winheight, restore current window size (#76).
-  -- This is intentionally done before restoring toplines, else it's possible
-  -- for a non-current window to scroll. To replicate such scrolling (which
-  -- requires moving the following lines later):
+  -- After restoring winwidth and winheight, restore window sizes (#76). This
+  -- is intentionally done before restoring toplines, else it's possible for a
+  -- non-current window to scroll. To replicate such scrolling (which requires
+  -- moving the following lines later):
   --   :vert split
   --   :set winwidth=130
   --   :vert resize -30
   --   :execute "normal! \<c-d>"
-  api.nvim_win_set_width(0, state.curwinwidth)
-  api.nvim_win_set_height(0, state.curwinheight)
+  api.nvim_command(state.winrestcmd)
   if restore_toplines then
     -- Scroll windows back to their original positions.
     -- Temporarily disable cursorbind/scrollbind to prevent unintended
