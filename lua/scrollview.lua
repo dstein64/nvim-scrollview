@@ -990,7 +990,7 @@ local restore = function(state, restore_toplines)
   -- After restoring winwidth and winheight, restore window sizes (#76). This
   -- is intentionally done before restoring toplines, else it's possible for a
   -- non-current window to scroll. To replicate such scrolling (which requires
-  -- moving the following lines later):
+  -- moving the following line later):
   --   :vert split
   --   :set winwidth=130
   --   :vert resize -30
