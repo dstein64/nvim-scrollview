@@ -907,6 +907,19 @@ local get_toplines = function()
   return result
 end
 
+-- Like the built-in winrestcmd, but ignores floating/external windows.
+local winrestcmd2 = function()
+  local cmds = fn.split(fn.winrestcmd(), '|')
+  local filtered = {}
+  for _, cmd in ipairs(cmds) do
+    local winnr = string.match(cmd, '%d+')
+    if winnr ~= nil and is_ordinary_window(fn.win_getid(winnr)) then
+      table.insert(filtered, cmd)
+    end
+  end
+  return fn.join(filtered, '|')
+end
+
 -- Sets global state that is assumed by the core functionality and returns a
 -- state that can be used for restoration.
 local init = function()
@@ -931,8 +944,7 @@ local init = function()
     eventignore = eventignore,
     winwidth = api.nvim_get_option('winwidth'),
     winheight = api.nvim_get_option('winheight'),
-    curwinwidth = api.nvim_win_get_width(0),
-    curwinheight = api.nvim_win_get_height(0),
+    winrestcmd = winrestcmd2(),
     mode = fn.mode(),
     toplines = get_toplines()
   }
@@ -988,16 +1000,15 @@ local restore = function(state, restore_toplines)
   -- Restore options.
   api.nvim_set_option('winwidth', state.winwidth)
   api.nvim_set_option('winheight', state.winheight)
-  -- After restoring winwidth and winheight, restore current window size (#76).
-  -- This is intentionally done before restoring toplines, else it's possible
-  -- for a non-current window to scroll. To replicate such scrolling (which
-  -- requires moving the following lines later):
+  -- After restoring winwidth and winheight, restore window sizes (#76). This
+  -- is intentionally done before restoring toplines, else it's possible for a
+  -- non-current window to scroll. To replicate such scrolling (which requires
+  -- moving the following line later):
   --   :vert split
   --   :set winwidth=130
   --   :vert resize -30
   --   :execute "normal! \<c-d>"
-  api.nvim_win_set_width(0, state.curwinwidth)
-  api.nvim_win_set_height(0, state.curwinheight)
+  api.nvim_command(state.winrestcmd)
   if restore_toplines then
     -- Scroll windows back to their original positions.
     -- Temporarily disable cursorbind/scrollbind to prevent unintended
