@@ -11,6 +11,12 @@ on:
   schedule:
     # Run weekly (* is a special character in YAML, so quote the string)
     - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      # When git-ref is empty, HEAD will be checked out.
+      git-ref:
+        description: Optional git ref (branch, tag, or full SHA)
+        required: false
 
 jobs:
   build:
@@ -19,6 +25,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        # When the ref is empty, HEAD will be checked out.
+        ref: ${{ github.event.inputs.git-ref }}
 
     - name: Dependencies
       run: |
