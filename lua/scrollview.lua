@@ -215,14 +215,6 @@ local get_ordinary_windows = function()
   return winids
 end
 
-local ordinary_window_count = function()
-  local count = 0
-  for winnr = 1, fn.winnr('$') do
-    count = count + (is_ordinary_window(fn.win_getid(winnr)) and 1 or 0)
-  end
-  return count
-end
-
 local in_command_line_window = function()
   if fn.win_gettype() == 'command' then return true end
   if fn.mode() == 'c' then return true end
@@ -1016,8 +1008,8 @@ local restore = function(state, restore_toplines)
   --   :set winwidth=130
   --   :vert resize -30
   --   :execute "normal! \<c-d>"
-  if ordinary_window_count() > 1 then
-    -- Only restore if there is more than one window. #79
+  if winrestcmd2() ~= state.winrestcmd then
+    -- Only restore if winrestcmd changed. #79
     api.nvim_command(state.winrestcmd)
   end
   if restore_toplines then
