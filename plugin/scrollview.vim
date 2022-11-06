@@ -178,13 +178,13 @@ if g:scrollview_auto_workarounds
   " === Fold command synchronization workarounds ===
   " zf takes a motion in normal mode, so it requires a g@ mapping.
   silent! nnoremap <unique> zf <cmd>set operatorfunc=<sid>ZfOperator<cr>g@
-  call s:CreateRefreshMapping('v', 'zf')
+  call s:CreateRefreshMapping('x', 'zf')
   let s:fold_seqs = [
         \   'zF', 'zd', 'zD', 'zE', 'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zv',
         \   'zx', 'zX', 'zm', 'zM', 'zr', 'zR', 'zn', 'zN', 'zi'
         \ ]
   for s:seq in s:fold_seqs
-    call s:CreateRefreshMapping('nv', s:seq)
+    call s:CreateRefreshMapping('nx', s:seq)
   endfor
   " === <c-w>c for the tab last window workaround ===
   " A workaround is intentionally not currently applied. It would need careful
