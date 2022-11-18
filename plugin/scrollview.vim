@@ -170,7 +170,7 @@ if g:scrollview_auto_workarounds
   for s:seq in s:win_seqs
     call s:CreateRefreshMapping('nv', s:seq)
   endfor
-  " === Mouse wheel scrolling syncronization workarounds ===
+  " === Mouse wheel scrolling synchronization workarounds ===
   let s:wheel_seqs = ['<scrollwheelup>', '<scrollwheeldown>']
   for s:seq in s:wheel_seqs
     call s:CreateRefreshMapping('nvit', s:seq)

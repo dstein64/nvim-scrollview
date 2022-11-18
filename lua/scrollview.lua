@@ -292,7 +292,7 @@ end
 -- the fold.
 local line_range = function(winid)
   -- WARN: getwininfo(winid)[1].botline is not properly updated for some
-  -- movements (Neovim Issue #13510), so this is implemeneted as a workaround.
+  -- movements (Neovim Issue #13510), so this is implemented as a workaround.
   -- This was originally handled by using an asynchronous context, but this was
   -- not possible for refreshing bars during mouse drags.
   -- Using scrolloff=0 combined with H and L breaks diff mode. Scrolling is not
@@ -1556,7 +1556,7 @@ local handle_mouse = function(button)
             fn.feedkeys(string.sub(string, str_idx), 'ni')
             return
           end
-          -- Add 1 cell horizonal padding for grabbing the scrollbar. Don't do
+          -- Add 1 cell horizontal padding for grabbing the scrollbar. Don't do
           -- this when the padding would extend past the window, as it will
           -- interfere with dragging the vertical separator to resize the window.
           local lpad = 0
