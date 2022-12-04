@@ -32,16 +32,7 @@ jobs:
     - name: Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install lua-check
-        # Manually installing Neovim is necessary until the repo version includes
-        # nvim>=0.5.
-        wget 'https://github.com/neovim/neovim/releases/download/v0.6.1/nvim.appimage'
-        test "$(sha256sum nvim.appimage | awk '{print $1}')" \
-          = ef9056e05ef6a4c1d0cdb8b21f79261703122c0fd31f23f782158d326fdadbf5
-        chmod u+x nvim.appimage
-        mkdir -p "${HOME}/bin"
-        ln -s ${PWD}/nvim.appimage "${HOME}/bin/nvim"
-        echo "${HOME}/bin" >> "${GITHUB_PATH}"
+        sudo apt-get install lua-check neovim
 
     - name: Check Help Tags
       run: |
