@@ -317,5 +317,35 @@ Other Issues ~
           \ | mksession<bang> <args>
           \ | silent! ScrollViewEnable
 
+* Because scrollbars are floating windows, they are included in the window
+  count returned by `winnr('$')`.
+  - Workaround 1: Use a Vimscript function that omits external and floating
+    windows in the count. >
+    function! WindowCount()
+      let l:result = 0
+      for l:winnr in range(1, winnr('$'))
+        let l:config = nvim_win_get_config(win_getid(l:winnr))
+        if !get(l:config, 'external', 0)
+              \ && get(l:config, 'relative', '') ==# ''
+          let l:result += 1
+        endif
+      endfor
+      return l:result
+    endfunction
+<  - Workaround 2: Use a Lua function that omits external and floating windows
+    in the count. >
+    local window_count = function()
+      local result = 0
+      for winnr=1,vim.fn.winnr('$') do
+        local config = vim.api.nvim_win_get_config(vim.fn.win_getid(winnr))
+        local not_external = config.external == nil or not config.external
+        local not_floating = config.relative == nil or config.relative == ''
+        if not_external and not_floating then
+          result = result + 1
+        end
+      end
+      return result
+    end
+
 ============================================================================
  vim:tw=78:ts=4:ft=help:norl:

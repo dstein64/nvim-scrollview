@@ -131,6 +131,18 @@ Documentation can be accessed with:
 
 The underlying markup is in [scrollview.txt](doc/scrollview.txt).
 
+#### Issues
+
+Documentation for issues, along with some workarounds, can be accessed with:
+
+```nvim
+:help scrollview-issues
+```
+
+Some of the known issues are regarding scrollbar synchronization, error messages, session
+restoration, and scrollbar floating windows being included in the window count returned by
+`winnr('$')`.
+
 ## License
 
 The source code has an [MIT License](https://en.wikipedia.org/wiki/MIT_License).
