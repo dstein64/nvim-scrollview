@@ -1809,9 +1809,9 @@ local handle_mouse = function(button)
             end
             return lpad
           end
-          local rpad = function(col, winid)
+          local rpad = function(col, winid_)
             local rpad = 0
-            if col < api.nvim_win_get_width(winid) then
+            if col < api.nvim_win_get_width(winid_) then
               rpad = 1
             end
             return rpad
