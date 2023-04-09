@@ -40,6 +40,8 @@ let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 " The default zindex for floating windows is 50. A smaller value is used here
 " by default so that scrollbars don't cover floating windows.
 let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
+let g:scrollview_sign_zindex = get(g:, 'scrollview_sign_zindex', 45)
+let g:scrollview_sign_symbol = get(g:, 'scrollview_sign_symbol', '*')
 
 " The default highlight group is specified below.
 " Change this default by defining or linking an alternative highlight group.
