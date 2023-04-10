@@ -504,7 +504,7 @@ local virtual_topline_lookup_spanwise = function()
     local virtual_line = 0
     local prop = 0.0
     local row = 1
-    local proportion = (row - 1) / (winheight - 1)
+    local proportion = (row - 1) / winheight
     vim.cmd('keepjumps normal! gg')
     while #result < winheight do
       local range_start, range_end, fold = advance_virtual_span()
@@ -528,7 +528,7 @@ local virtual_topline_lookup_spanwise = function()
         end
         table.insert(result, topline)
         row = row + 1
-        proportion = (row - 1) / (winheight - 1)
+        proportion = (row - 1) / winheight
       end
       -- A line number of 1 indicates that advance_virtual_span looped back to
       -- the beginning of the document.
@@ -573,7 +573,7 @@ local virtual_topline_lookup_linewise = function()
     local best_distance = math.huge
     local best_count = count
     for row = 1, winheight do
-      local proportion = (row - 1) / (winheight - 1)
+      local proportion = (row - 1) / winheight
       while line <= last_line do
         local current = (count - 1) / (total_vlines - 1)
         local distance = math.abs(current - proportion)
@@ -645,7 +645,7 @@ local topline_lookup = function(winid)
     local line_count = api.nvim_buf_line_count(bufnr)
     local winheight = get_window_height(winid)
     for row = 1, winheight do
-      local proportion = (row - 1) / (winheight - 1)
+      local proportion = (row - 1) / winheight
       local topline = round(proportion * (line_count - 1)) + 1
       table.insert(topline_lookup, topline)
     end
