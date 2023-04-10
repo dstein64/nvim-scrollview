@@ -629,26 +629,30 @@ local virtual_topline_lookup = function(winid)
   return result
 end
 
+local simple_topline_lookup = function(winid)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local winheight = get_window_height(winid)
+  local topline_lookup = {}
+  for row = 1, winheight do
+    local proportion = (row - 1) / winheight
+    local topline = round(proportion * (line_count - 1)) + 1
+    table.insert(topline_lookup, topline)
+  end
+  return topline_lookup
+end
+
 -- Returns an array that maps window rows to the topline that corresponds to a
 -- scrollbar at that row.
 local topline_lookup = function(winid)
   local winnr = api.nvim_win_get_number(winid)
   local mode = scrollview_mode(winnr)
-  local topline_lookup = {}
+  local topline_lookup
   if mode ~= 'simple' then
     -- Handling for virtual mode or an unknown mode.
-    for _, x in ipairs(virtual_topline_lookup(winid)) do
-      table.insert(topline_lookup, x)
-    end
+    topline_lookup = virtual_topline_lookup(winid)
   else
-    local bufnr = api.nvim_win_get_buf(winid)
-    local line_count = api.nvim_buf_line_count(bufnr)
-    local winheight = get_window_height(winid)
-    for row = 1, winheight do
-      local proportion = (row - 1) / winheight
-      local topline = round(proportion * (line_count - 1)) + 1
-      table.insert(topline_lookup, topline)
-    end
+    topline_lookup = simple_topline_lookup(winid)
   end
   return topline_lookup
 end
@@ -1966,6 +1970,7 @@ return {
   virtual_line_count_linewise = virtual_line_count_linewise,
   virtual_topline_lookup_spanwise = virtual_topline_lookup_spanwise,
   virtual_topline_lookup_linewise = virtual_topline_lookup_linewise,
+  simple_topline_lookup = simple_topline_lookup,
 
   -- require('scrollview').setup()
   setup = setup,
