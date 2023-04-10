@@ -686,25 +686,29 @@ local calculate_position = function(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
   local topline, botline = line_range(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  local effective_topline = topline
-  local effective_line_count = line_count
-  local mode = scrollview_mode(winnr)
-  if mode ~= 'simple' then
-    -- For virtual mode or an unknown mode, update effective_topline and
-    -- effective_line_count to correspond to virtual lines, which account for
-    -- closed folds.
-    effective_topline = virtual_line_count(winid, 1, topline - 1) + 1
-    effective_line_count = virtual_line_count(winid, 1, '$')
-  end
-  local winheight = get_window_height(winid)
+  -- TODO: add caching.
+  local the_topline_lookup = topline_lookup(winid)
   -- top is the position for the top of the scrollbar, relative to the window,
   -- and 0-indexed.
   local top = 0
-  if effective_line_count > 1 then
-    top = (effective_topline - 1) / (effective_line_count - 1)
-    top = round((winheight - 1) * top)
+  -- TODO: binary search
+  for idx, line in ipairs(the_topline_lookup) do
+    if topline >= line then
+      top = idx - 1
+    else
+      break
+    end
   end
+  local winheight = get_window_height(winid)
   local height = winheight
+  local effective_line_count = line_count
+  local mode = scrollview_mode(winnr)
+  if mode ~= 'simple' then
+    -- For virtual mode or an unknown mode, update effective_line_count to
+    -- correspond to virtual lines, which account for closed folds.
+    -- TODO: add caching.
+    effective_line_count = virtual_line_count(winid, 1, '$')
+  end
   if effective_line_count > height then
     height = winheight / effective_line_count
     height = math.ceil(height * winheight)
@@ -935,6 +939,7 @@ local show_signs = function(winid, sign_winids)
   local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
+  -- TODO: add caching.
   local the_topline_lookup = nil  -- only set when needed
   local col = calculate_scrollbar_column(winnr)
   local lookup = {}  -- maps rows to sign specifications (with line)
@@ -945,12 +950,13 @@ local show_signs = function(winid, sign_winids)
     end
     for _, line in ipairs(lines) do
       if line >= 1 and line <= line_count then
-        local row  -- TODO: initialization necessary?
+        local row = 1
         -- TODO: binary search
-        -- TODO; this doesn't currently work when the line is a topline (e.g. 1)
         for idx, topline in ipairs(the_topline_lookup) do
           if line >= topline then
             row = idx
+          else
+            break
           end
         end
         local zindex = sign_spec.zindex or vim.g['scrollview_sign_zindex']
