@@ -947,6 +947,7 @@ local show_signs = function(winid, sign_winids)
       if line >= 1 and line <= line_count then
         local row  -- TODO: initialization necessary?
         -- TODO: binary search
+        -- TODO; this doesn't currently work when the line is a topline (e.g. 1)
         for idx, topline in ipairs(the_topline_lookup) do
           if line >= topline then
             row = idx
