@@ -6,6 +6,28 @@ local fn = vim.fn
 -- WARN: Functionality that temporarily moves the cursor and restores it should
 -- use a window workspace to prevent unwanted side effects. More details are in
 -- the documentation for with_win_workspace.
+-- TODO: Some of the functionality is applicable to bars and signs, but is
+-- named as if it were only applicable to bars (since it was implemented prior
+-- to sign support).
+
+-- *************************************************
+-- * Memoization
+-- *************************************************
+
+local cache = {}
+local memoize = false
+
+local start_memoize = function()
+  memoize = true
+end
+
+local stop_memoize = function()
+  memoize = false
+end
+
+local reset_memoize = function()
+  cache = {}
+end
 
 -- *************************************************
 -- * Globals
@@ -33,6 +55,9 @@ local pending_async_refresh_count = 0
 -- IDs.
 local win_var = 'scrollview_key'
 local win_val = 'scrollview_val'
+
+-- For win workspaces, a window variable is used to store the base window ID.
+local win_workspace_base_winid_var = 'scrollview_win_workspace_base_winid'
 
 -- A type field is used to indicate the type of scrollview windows.
 local bar_type = 0
@@ -194,6 +219,20 @@ local with_win_options = function(winid, opts, fun)
   end)
 end
 
+-- Return the base window ID for the specified window. Assumes that windows
+-- have been properly marked with win_workspace_base_winid_var.
+local get_base_winid = function(winid)
+  local base_winid = winid
+  pcall(function()
+    -- Loop until reaching a window with no base winid specified.
+    while true do
+      base_winid = api.nvim_win_get_var(
+        base_winid, win_workspace_base_winid_var)
+    end
+  end)
+  return base_winid
+end
+
 -- Creates a temporary floating window that can be used for computations
 -- ---corresponding to the specified window---that require temporary cursor
 -- movements (e.g., counting virtual lines, where all lines in a closed fold
@@ -225,6 +264,7 @@ local with_win_workspace = function(winid, fun)
   -- can function properly.
   set_window_option(workspace_winid, 'scrollbind', false)
   set_window_option(workspace_winid, 'cursorbind', false)
+  api.nvim_win_set_var(workspace_winid, win_workspace_base_winid_var, winid)
   -- As a precautionary measure, make sure the floating window has no winbar,
   -- which is assumed above.
   if to_bool(fn.exists('+winbar')) then
@@ -474,6 +514,10 @@ local virtual_line_count = function(winid, start, end_)
   if type(end_) == 'string' and end_ == '$' then
     end_ = last_line
   end
+  local base_winid = get_base_winid(winid)
+  local memoize_key =
+    table.concat({'virtual_line_count', base_winid, start, end_}, ':')
+  if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count = with_win_workspace(winid, function()
     -- On an AMD Ryzen 7 2700X, linewise computation takes about 3e-7 seconds
     -- per line (this is an overestimate, as it assumes all folds are open, but
@@ -488,6 +532,7 @@ local virtual_line_count = function(winid, start, end_)
       return virtual_line_count_spanwise(start, end_)
     end
   end)
+  if memoize then cache[memoize_key] = count end
   return count
 end
 
@@ -647,6 +692,10 @@ end
 local topline_lookup = function(winid)
   local winnr = api.nvim_win_get_number(winid)
   local mode = scrollview_mode(winnr)
+  local base_winid = get_base_winid(winid)
+  local memoize_key =
+    table.concat({'topline_lookup', base_winid, mode}, ':')
+  if memoize and cache[memoize_key] then return cache[memoize_key] end
   local topline_lookup
   if mode ~= 'simple' then
     -- Handling for virtual mode or an unknown mode.
@@ -654,6 +703,7 @@ local topline_lookup = function(winid)
   else
     topline_lookup = simple_topline_lookup(winid)
   end
+  if memoize then cache[memoize_key] = topline_lookup end
   return topline_lookup
 end
 
@@ -1446,6 +1496,7 @@ local refresh_bars = function(async_removal)
   -- Use a pcall block, so that unanticipated errors don't interfere. The
   -- worst case scenario is that bars won't be shown properly, which was
   -- deemed preferable to an obscure error message that can be interrupting.
+  start_memoize()
   pcall(function()
     if in_command_line_window() then return end
     -- Don't refresh when the current window shows a scrollview buffer. This
@@ -1553,6 +1604,8 @@ local refresh_bars = function(async_removal)
       end
     end
   end)
+  stop_memoize()
+  reset_memoize()
   restore(state)
 end
 
