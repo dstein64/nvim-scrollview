@@ -736,7 +736,6 @@ local calculate_position = function(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
   local topline, botline = line_range(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  -- TODO: add caching.
   local the_topline_lookup = topline_lookup(winid)
   -- top is the position for the top of the scrollbar, relative to the window,
   -- and 0-indexed.
@@ -756,7 +755,6 @@ local calculate_position = function(winnr)
   if mode ~= 'simple' then
     -- For virtual mode or an unknown mode, update effective_line_count to
     -- correspond to virtual lines, which account for closed folds.
-    -- TODO: add caching.
     effective_line_count = virtual_line_count(winid, 1, '$')
   end
   if effective_line_count > height then
@@ -989,7 +987,6 @@ local show_signs = function(winid, sign_winids)
   local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  -- TODO: add caching.
   local the_topline_lookup = nil  -- only set when needed
   local col = calculate_scrollbar_column(winnr)
   local lookup = {}  -- maps rows to sign specifications (with line)
