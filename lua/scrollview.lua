@@ -147,6 +147,24 @@ local sorted = function(l)
   return result
 end
 
+-- Returns the index of x in l if present, or the index for insertion
+-- otherwise.
+local binary_search = function(l, x)
+  local lo = 1
+  local hi = #l
+  while lo <= hi do
+    local mid = math.floor((hi - lo) / 2 + lo)
+    if l[mid] == x then
+      return mid
+    elseif l[mid] < x then
+      lo = lo + 1
+    else
+      hi = hi - 1
+    end
+  end
+  return lo
+end
+
 -- TODO Move the follwing functions to where they should go
 local register_sign_spec = function(name, specification)
   specification = copy(specification)
@@ -744,17 +762,13 @@ local calculate_position = function(winnr)
   local topline, botline = line_range(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = topline_lookup(winid)
-  -- top is the position for the top of the scrollbar, relative to the window,
-  -- and 0-indexed.
-  local top = 0
-  -- TODO: binary search
-  for idx, line in ipairs(the_topline_lookup) do
-    if topline >= line then
-      top = idx - 1
-    else
-      break
-    end
+  -- top is the position for the top of the scrollbar, relative to the window.
+  local top = binary_search(the_topline_lookup, topline)
+  if top > #the_topline_lookup
+      or (top > 1 and the_topline_lookup[top] ~= topline) then
+    top = top - 1  -- use the preceding line from topline lookup.
   end
+  top = top - 1  -- use 0-indexing (temporarily)
   local winheight = get_window_height(winid)
   local height = winheight
   local effective_line_count = line_count
@@ -1009,14 +1023,10 @@ local show_signs = function(winid, sign_winids)
     end
     for _, line in ipairs(lines) do
       if line >= 1 and line <= line_count then
-        local row = 1
-        -- TODO: binary search
-        for idx, topline in ipairs(the_topline_lookup) do
-          if line >= topline then
-            row = idx
-          else
-            break
-          end
+        local row = binary_search(the_topline_lookup, line)
+        if row > #the_topline_lookup or
+            (row > 1 and the_topline_lookup[row] ~= line) then
+          row = row - 1  -- use the preceding line from topline lookup.
         end
         local zindex = sign_spec.zindex or vim.g['scrollview_sign_zindex']
         if lookup[row] == nil or zindex > lookup[row].zindex then
@@ -1913,15 +1923,16 @@ local handle_mouse = function(button)
               restore_toplines = false
               api.nvim_win_call(mouse_winid, function()
                 -- Go to the next sign_props line after the cursor.
-                -- TODO: binary search
                 local current = fn.line('.')
-                local target = sign_props.lines[1]
-                for _, line in ipairs(sign_props.lines) do
-                  if line > current then
-                    target = line
-                    break
-                  end
+                local target_idx = binary_search(sign_props.lines, current)
+                if target_idx <= #sign_props.lines
+                    and sign_props.lines[target_idx] == current then
+                  target_idx = target_idx + 1  -- use the next line
                 end
+                if target_idx > #sign_props.lines then
+                  target_idx = 1
+                end
+                local target = sign_props.lines[target_idx]
                 vim.cmd('normal!' .. target .. 'G')
                 vim.cmd('normal! zz')
               end)
