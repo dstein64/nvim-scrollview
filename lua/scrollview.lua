@@ -1669,8 +1669,8 @@ local scrollview_enable = function()
       " this is triggered by the WinEnter event, just prior to the relevant
       " funcionality becoming unavailable.
       autocmd WinEnter * :lua require('scrollview').remove_if_command_line_window()
-      " The following error can arise when the last window in a tab is going to
 
+      " The following error can arise when the last window in a tab is going to
       " be closed, but there are still open floating windows, and at least one
       " other tab.
       "   > "E5601: Cannot close window, only floating window would remain"
