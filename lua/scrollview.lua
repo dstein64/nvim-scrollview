@@ -140,6 +140,13 @@ local concat = function(a, b)
   return result
 end
 
+-- A non-destructive sort function.
+local sorted = function(l)
+  local result = copy(l)
+  table.sort(result)
+  return result
+end
+
 -- TODO Move the follwing functions to where they should go
 local register_sign_spec = function(name, specification)
   specification = copy(specification)
@@ -989,9 +996,14 @@ local show_signs = function(winid, sign_winids)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = nil  -- only set when needed
   local col = calculate_scrollbar_column(winnr)
-  local lookup = {}  -- maps rows to sign specifications (with line)
+  local lookup = {}  -- maps rows to sign specifications (with lines)
   for name, sign_spec in pairs(sign_specs) do
-    local lines = fn.getbufvar(bufnr, name, {})
+    local lines = {}
+    for _, line in ipairs(sorted(fn.getbufvar(bufnr, name, {}))) do
+      if #lines == 0 or lines[#lines] ~= line then
+        table.insert(lines, line)
+      end
+    end
     if #lines > 0 and the_topline_lookup == nil then
       the_topline_lookup = topline_lookup(winid)
     end
@@ -1022,7 +1034,6 @@ local show_signs = function(winid, sign_winids)
       end
     end
   end
-  -- TODO: sort and de-duplicate lines
   for row, properties in pairs(lookup) do
     local config = {
       win = winid,
