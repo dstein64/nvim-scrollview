@@ -1659,6 +1659,7 @@ local scrollview_enable = function()
       " funcionality becoming unavailable.
       autocmd WinEnter * :lua require('scrollview').remove_if_command_line_window()
       " The following error can arise when the last window in a tab is going to
+
       " be closed, but there are still open floating windows, and at least one
       " other tab.
       "   > "E5601: Cannot close window, only floating window would remain"
@@ -1676,27 +1677,34 @@ local scrollview_enable = function()
 
       " The following handles bar refreshing when changing the current window.
       autocmd WinEnter,TermEnter * :lua require('scrollview').refresh_bars_async()
+
       " The following restores bars after leaving the command-line window.
       " Refreshing must be asynchronous, since the command line window is still
       " in an intermediate state when the CmdwinLeave event is triggered.
       autocmd CmdwinLeave * :lua require('scrollview').refresh_bars_async()
+
       " The following handles scrolling events, which could arise from various
       " actions, including resizing windows, movements (e.g., j, k), or
       " scrolling (e.g., <ctrl-e>, zz).
       autocmd WinScrolled * :lua require('scrollview').refresh_bars_async()
+
       " The following handles the case where text is pasted. TextChangedI is not
       " necessary since WinScrolled will be triggered if there is corresponding
       " scrolling.
       autocmd TextChanged * :lua require('scrollview').refresh_bars_async()
+
       " The following handles when :e is used to load a file. The asynchronous
       " version handles a case where :e is used to reload an existing file, that
       " is already scrolled. This avoids a scenario where the scrollbar is
       " refreshed while the window is an intermediate state, resulting in the
       " scrollbar moving to the top of the window.
       autocmd BufWinEnter * :lua require('scrollview').refresh_bars_async()
+
       " The following is used so that bars are shown when cycling through tabs.
       autocmd TabEnter * :lua require('scrollview').refresh_bars_async()
+
       autocmd VimResized * :lua require('scrollview').refresh_bars_async()
+
       " Scrollbar positions can become stale after adding or removing winbars.
       autocmd OptionSet winbar :lua require('scrollview').refresh_bars_async()
     augroup END
