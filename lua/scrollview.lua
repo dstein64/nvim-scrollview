@@ -1709,6 +1709,13 @@ local scrollview_enable = function()
       " scrolling (e.g., <ctrl-e>, zz).
       autocmd WinScrolled * :lua require('scrollview').refresh_bars_async()
 
+      " The following handles window resizes that don't trigger WinScrolled
+      " (e.g., leaving the command line window). This was added in Neovim 0.9,
+      " so its presence needs to be tested.
+      if exists('##WinResized')
+        autocmd WinResized * :lua require('scrollview').refresh_bars_async()
+      endif
+
       " The following handles the case where text is pasted. TextChangedI is not
       " necessary since WinScrolled will be triggered if there is corresponding
       " scrolling.
