@@ -1108,6 +1108,8 @@ local show_signs = function(winid, sign_winids)
     vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
     local winhighlight = 'Normal:Normal'
     set_window_option(sign_winid, 'winhighlight', winhighlight)
+    local winblend = get_variable('scrollview_winblend', winnr)
+    set_window_option(sign_winid, 'winblend', winblend)
     -- Normal highlighting is ignored for floating windows in Neovim 0.8
     -- (Neovim #22906) and fixed for Neovim 0.9. There's a workaround.
     if to_bool(fn.has('nvim-0.8')) and not to_bool(fn.has('nvim-0.9')) then
