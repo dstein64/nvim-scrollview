@@ -1895,37 +1895,19 @@ local handle_mouse = function(button)
             fn.feedkeys(string.sub(string, str_idx), 'ni')
             return
           end
-          -- TODO: reconsider padding
-          -- Add 1 cell horizontal padding for grabbing the scrollbar. Don't do
-          -- this when the padding would extend past the window, as it will
-          -- interfere with dragging the vertical separator to resize the window.
-          local lpad = function(col)
-            local lpad = 0
-            if col > 1 then
-              lpad = 1
-            end
-            return lpad
-          end
-          local rpad = function(col, winid_)
-            local rpad = 0
-            if col < api.nvim_win_get_width(winid_) then
-              rpad = 1
-            end
-            return rpad
-          end
           props = get_scrollview_bar_props(mouse_winid)
           local clicked_bar = false
           if not vim.tbl_isempty(props) then
             clicked_bar = mouse_row >= props.row
               and mouse_row < props.row + props.height
-              and mouse_col >= props.col - lpad(props.col)
-              and mouse_col <= props.col + rpad(props.col, mouse_winid)
+              and mouse_col >= props.col
+              and mouse_col <= props.col
           end
           -- First check for a click on a sign and handle accordingly.
           for _, sign_props in pairs(get_scrollview_sign_props(mouse_winid)) do
             if mouse_row == sign_props.row
-              and mouse_col >= sign_props.col - lpad(sign_props.col)
-              and mouse_col <= sign_props.col + rpad(sign_props.col, mouse_winid)
+              and mouse_col >= sign_props.col
+              and mouse_col <= sign_props.col
               and (not clicked_bar or sign_props.zindex > props.zindex) then
               restore_toplines = false
               api.nvim_win_call(mouse_winid, function()
