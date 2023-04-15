@@ -884,14 +884,19 @@ local should_show = function(winid)
   if winheight == 0 or winwidth == 0 then
     return false
   end
-  -- Don't show scrollbar when the column is beyond what's valid.
+  return true
+end
+
+-- Indicates whether the column is valid for showing a scrollbar or signs.
+local is_valid_column = function(winid, col)
+  local winnr = api.nvim_win_get_number(winid)
+  local winwidth = fn.winwidth(winnr)
   local min_valid_col = 1
   local max_valid_col = winwidth
   local base = get_variable('scrollview_base', winnr)
   if base == 'buffer' then
     min_valid_col = api.nvim_win_call(winid, buf_view_begins_col)
   end
-  local col = calculate_scrollbar_column(winnr)
   if col < min_valid_col then
     return false
   end
@@ -916,6 +921,9 @@ local show_scrollbar = function(winid, bar_winid)
     return -1
   end
   local bar_position = calculate_position(winnr)
+  if not is_valid_column(winid, bar_position.col) then
+    return -1
+  end
   -- Height has to be positive for the call to nvim_open_win. When opening a
   -- terminal, the topline and botline can be set such that height is negative
   -- when you're using scrollview document mode.
@@ -1010,6 +1018,10 @@ local show_signs = function(winid, sign_winids)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = nil  -- only set when needed
   local col = calculate_scrollbar_column(winnr)
+  col = col + get_variable('scrollview_sign_offset', winnr)
+  if not is_valid_column(winid, col) then
+    return
+  end
   local lookup = {}  -- maps rows to sign specifications (with lines)
   for name, sign_spec in pairs(sign_specs) do
     local lines = {}
