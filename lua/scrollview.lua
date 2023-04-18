@@ -1018,7 +1018,7 @@ local show_signs = function(winid, sign_winids)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = nil  -- only set when needed
   local col = calculate_scrollbar_column(winnr)
-  col = col + get_variable('scrollview_sign_offset', winnr)
+  col = col + get_variable('scrollview_sign_column', winnr)
   if not is_valid_column(winid, col) then
     return
   end

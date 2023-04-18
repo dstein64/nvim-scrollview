@@ -42,7 +42,7 @@ let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 let g:scrollview_sign_zindex = get(g:, 'scrollview_sign_zindex', 45)
 let g:scrollview_sign_symbol = get(g:, 'scrollview_sign_symbol', '*')
-let g:scrollview_sign_offset = get(g:, 'scrollview_sign_offset', 1)
+let g:scrollview_sign_column = get(g:, 'scrollview_sign_column', 1)
 
 " The default highlight group is specified below.
 " Change this default by defining or linking an alternative highlight group.
