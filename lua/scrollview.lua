@@ -921,6 +921,10 @@ local show_scrollbar = function(winid, bar_winid)
     return -1
   end
   local bar_position = calculate_position(winnr)
+  if not to_bool(get_variable('scrollview_out_of_bounds', winnr)) then
+    local winwidth = fn.winwidth(winnr)
+    bar_position.col = math.max(1, math.min(winwidth, bar_position.col))
+  end
   if not is_valid_column(winid, bar_position.col) then
     return -1
   end
@@ -1019,6 +1023,10 @@ local show_signs = function(winid, sign_winids)
   local the_topline_lookup = nil  -- only set when needed
   local col = calculate_scrollbar_column(winnr)
   col = col + get_variable('scrollview_sign_column', winnr)
+  if not to_bool(get_variable('scrollview_out_of_bounds', winnr)) then
+    local winwidth = fn.winwidth(winnr)
+    col = math.max(1, math.min(winwidth, col))
+  end
   if not is_valid_column(winid, col) then
     return
   end

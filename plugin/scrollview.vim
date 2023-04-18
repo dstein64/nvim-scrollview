@@ -34,15 +34,18 @@ let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', 0)
 let g:scrollview_mode = get(g:, 'scrollview_mode', 'virtual')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
+" Whether bars and signs can overflow beyond the window boundary.
+let g:scrollview_out_of_bounds = get(g:, 'scrollview_overflow', 0)
 let g:scrollview_refresh_time = get(g:, 'scrollview_refresh_time', 100)
+" Sign column is relative to the scrollbar.
+let g:scrollview_sign_column = get(g:, 'scrollview_sign_column', 1)
+let g:scrollview_sign_symbol = get(g:, 'scrollview_sign_symbol', '*')
+let g:scrollview_sign_zindex = get(g:, 'scrollview_sign_zindex', 45)
 " Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
 let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 " The default zindex for floating windows is 50. A smaller value is used here
 " by default so that scrollbars don't cover floating windows.
 let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
-let g:scrollview_sign_zindex = get(g:, 'scrollview_sign_zindex', 45)
-let g:scrollview_sign_symbol = get(g:, 'scrollview_sign_symbol', '*')
-let g:scrollview_sign_column = get(g:, 'scrollview_sign_column', 1)
 
 " The default highlight group is specified below.
 " Change this default by defining or linking an alternative highlight group.
