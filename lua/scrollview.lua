@@ -944,8 +944,10 @@ local show_scrollbar = function(winid, bar_winid)
       wincol0 + bar_position.col,
       wincol0 + bar_position.col
     )
-    if not vim.tbl_isempty(float_overlaps) then
-      return -1
+    for _, float_winid in ipairs(float_overlaps) do
+      if not is_scrollview_window(float_winid) then
+        return -1
+      end
     end
   end
   if bar_bufnr == -1 or not to_bool(fn.bufexists(bar_bufnr)) then
