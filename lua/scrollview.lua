@@ -884,6 +884,12 @@ local should_show = function(winid)
   if winheight == 0 or winwidth == 0 then
     return false
   end
+  -- Don't show when all lines are on screen.
+  local topline, botline = line_range(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  if botline - topline + 1 == line_count then
+    return false
+  end
   return true
 end
 
@@ -915,11 +921,6 @@ local show_scrollbar = function(winid, bar_winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local wininfo = fn.getwininfo(winid)[1]
   local line_count = api.nvim_buf_line_count(bufnr)
-  -- Don't show the position bar when all lines are on screen.
-  local topline, botline = line_range(winid)
-  if botline - topline + 1 == line_count then
-    return -1
-  end
   local bar_position = calculate_position(winnr)
   if not to_bool(get_variable('scrollview_out_of_bounds', winnr)) then
     local winwidth = fn.winwidth(winnr)
