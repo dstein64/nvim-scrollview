@@ -195,6 +195,20 @@ register_sign_spec('sign2', {
   highlight = 'ErrorMsg'
 })
 
+-- Earlier versions don't have nvim_create_autocmd.
+if vim.api.nvim_create_autocmd ~= nil then
+  vim.api.nvim_create_autocmd('DiagnosticChanged', {
+    callback = function(args)
+      local diagnostics = args.data.diagnostics
+      for _, x in ipairs(diagnostics) do
+        vim.b[x.bufnr].sign = {x.lnum}
+      end
+      print(vim.inspect(args))
+      require('scrollview').scrollview_refresh()
+    end,
+  })
+end
+
 -- *************************************************
 -- * Core
 -- *************************************************
