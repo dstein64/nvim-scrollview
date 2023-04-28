@@ -1098,6 +1098,7 @@ local show_signs = function(winid, sign_winids)
       end
       if is_valid_column(winid, col) and not shown[row .. ',' .. col] then
         shown[row .. ',' .. col] = true
+        local zindex = get_variable('scrollview_sign_zindex', winnr)
         local config = {
           win = winid,
           relative = 'win',
@@ -1107,7 +1108,7 @@ local show_signs = function(winid, sign_winids)
           width = 1,
           row = row - 1,
           col = col - 1,
-          zindex = vim.g['scrollview_sign_zindex'],
+          zindex = zindex,
         }
         if sign_bufnr == -1 or not to_bool(fn.bufexists(sign_bufnr)) then
           sign_bufnr = api.nvim_create_buf(false, true)
@@ -1170,7 +1171,7 @@ local show_signs = function(winid, sign_winids)
           row = row,
           col = col,
           lines = properties.lines,
-          zindex = properties.zindex,
+          zindex = zindex,
         }
         api.nvim_win_set_var(sign_winid, props_var, props)
       end
