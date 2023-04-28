@@ -168,8 +168,8 @@ end
 -- TODO Move the follwing functions to where they should go
 local register_sign_spec = function(name, specification)
   specification = copy(specification)
-  -- symbol and highlight can be arrays (zindex can't)
-  for _, key in ipairs({'symbol', 'highlight'}) do
+  -- priority, symbol and highlight can be arrays
+  for _, key in ipairs({'priority', 'symbol', 'highlight'}) do
     if type(specification[key]) ~= 'table' then
       specification[key] = {specification[key]}
     else
@@ -185,12 +185,12 @@ end
 
 -- TODO: remove these debugging specifications
 register_sign_spec('sign', {
-  zindex = 50,
+  priority = 50,
   symbol = {'1', '2', '3'},
-  highlight = {'WildMenu', 'ErrorMsg', 'Normal'},
+  highlight = {'WildMenu', 'Normal'},
 })
 register_sign_spec('sign2', {
-  zindex = 50,
+  priority = 60,
   symbol = 'x',
   highlight = 'ErrorMsg'
 })
@@ -1024,16 +1024,10 @@ local show_signs = function(winid, sign_winids)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = nil  -- only set when needed
-  local col = calculate_scrollbar_column(winnr)
-  col = col + get_variable('scrollview_sign_column', winnr)
-  if not to_bool(get_variable('scrollview_out_of_bounds', winnr)) then
-    local winwidth = fn.winwidth(winnr)
-    col = math.max(1, math.min(winwidth, col))
-  end
-  if not is_valid_column(winid, col) then
-    return
-  end
-  local lookup = {}  -- maps rows to sign specifications (with lines)
+  local base_col = calculate_scrollbar_column(winnr)
+  base_col = base_col + get_variable('scrollview_sign_column', winnr)
+  -- lookup maps rows to a mapping of names to sign specifications (with lines).
+  local lookup = {}
   for name, sign_spec in pairs(sign_specs) do
     local lines = {}
     for _, line in ipairs(sorted(fn.getbufvar(bufnr, name, {}))) do
@@ -1051,108 +1045,136 @@ local show_signs = function(winid, sign_winids)
             (row > 1 and the_topline_lookup[row] ~= line) then
           row = row - 1  -- use the preceding line from topline lookup.
         end
-        local zindex = sign_spec.zindex or vim.g['scrollview_sign_zindex']
-        if lookup[row] == nil or zindex > lookup[row].zindex then
+        if lookup[row] == nil then
+          lookup[row] = {}
+        end
+        if lookup[row][name] == nil then
           local properties = {
             symbol = sign_spec.symbol,
             highlight = sign_spec.highlight,
-            zindex = zindex,
+            priority = sign_spec.priority,
           }
           properties.name = name
           properties.lines = {line}
-          lookup[row] = properties
-        elseif name == lookup[row].name then
-          table.insert(lookup[row].lines, line)
+          lookup[row][name] = properties
+        else
+          table.insert(lookup[row][name].lines, line)
         end
       end
     end
   end
-  for row, properties in pairs(lookup) do
-    local config = {
-      win = winid,
-      relative = 'win',
-      focusable = false,
-      style = 'minimal',
-      height = 1,
-      width = 1,
-      row = row - 1,
-      col = col - 1,
-      zindex = properties.zindex,
-    }
-    if sign_bufnr == -1 or not to_bool(fn.bufexists(sign_bufnr)) then
-      sign_bufnr = api.nvim_create_buf(false, true)
-      api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
-      api.nvim_buf_set_option(sign_bufnr, 'filetype', 'scrollview_sign')
-      api.nvim_buf_set_option(sign_bufnr, 'buftype', 'nofile')
-      api.nvim_buf_set_option(sign_bufnr, 'swapfile', false)
-      api.nvim_buf_set_option(sign_bufnr, 'bufhidden', 'hide')
-      api.nvim_buf_set_option(sign_bufnr, 'buflisted', false)
+  for row, props_lookup in pairs(lookup) do
+    local props_list = {}
+    for _, properties in pairs(props_lookup) do
+      for _, field in ipairs({'priority', 'symbol', 'highlight'}) do
+        if #properties.lines > #properties[field] then
+          properties[field] = properties[field][#properties[field]]
+        else
+          properties[field] = properties[field][#properties.lines]
+        end
+      end
+      table.insert(props_list, properties)
     end
-    local sign_line_count = api.nvim_buf_line_count(sign_bufnr)
-    api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
-    local symbol
-    if #properties.lines > #properties.symbol then
-      symbol = properties.symbol[#properties.symbol]
-    else
-      symbol = properties.symbol[#properties.lines]
+    -- Sort descending by priority.
+    table.sort(props_list, function(a, b)
+      return a.priority > b.priority
+    end)
+    local max_signs_per_row = get_variable('scrollview_max_signs_per_row', winnr)
+    if max_signs_per_row > 0 then
+      props_list = {unpack(props_list, 1, max_signs_per_row)}
     end
-    if symbol == nil then symbol = vim.g['scrollview_sign_symbol'] end
-    symbol = symbol:gsub('\n', '')
-    symbol = symbol:gsub('\r', '')
-    if #symbol < 1 then symbol = ' ' end
-    symbol = string.sub(symbol, 1, 1)
-    api.nvim_buf_set_lines(
-      sign_bufnr,
-      sign_line_count - 1,
-      sign_line_count - 1,
-      false,
-      {symbol}
-    )
-    api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
-    local highlight
-    if #properties.lines > #properties.highlight then
-      highlight = properties.highlight[#properties.highlight]
-    else
-      highlight = properties.highlight[#properties.lines]
+    -- A set of 'row,col' pairs to prevent creating multiple signs in the same
+    -- location.
+    local shown = {}
+    for idx, properties in ipairs(props_list) do
+      local offset = idx - 1
+      if get_variable('scrollview_sign_overflow', winnr) == 'left' then
+        offset = -offset
+      end
+      local col = base_col + offset
+      if to_bool(get_variable('scrollview_out_of_bounds_adjust', winnr)) then
+        local winwidth = fn.winwidth(winnr)
+        col = math.max(1, math.min(winwidth, col))
+      end
+      if is_valid_column(winid, col) and not shown[row .. ',' .. col] then
+        shown[row .. ',' .. col] = true
+        local config = {
+          win = winid,
+          relative = 'win',
+          focusable = false,
+          style = 'minimal',
+          height = 1,
+          width = 1,
+          row = row - 1,
+          col = col - 1,
+          zindex = vim.g['scrollview_sign_zindex'],
+        }
+        if sign_bufnr == -1 or not to_bool(fn.bufexists(sign_bufnr)) then
+          sign_bufnr = api.nvim_create_buf(false, true)
+          api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
+          api.nvim_buf_set_option(sign_bufnr, 'filetype', 'scrollview_sign')
+          api.nvim_buf_set_option(sign_bufnr, 'buftype', 'nofile')
+          api.nvim_buf_set_option(sign_bufnr, 'swapfile', false)
+          api.nvim_buf_set_option(sign_bufnr, 'bufhidden', 'hide')
+          api.nvim_buf_set_option(sign_bufnr, 'buflisted', false)
+        end
+        local sign_line_count = api.nvim_buf_line_count(sign_bufnr)
+        api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
+        local symbol = properties.symbol
+        if symbol == nil then symbol = vim.g['scrollview_sign_symbol'] end
+        symbol = symbol:gsub('\n', '')
+        symbol = symbol:gsub('\r', '')
+        if #symbol < 1 then symbol = ' ' end
+        symbol = string.sub(symbol, 1, 1)
+        api.nvim_buf_set_lines(
+          sign_bufnr,
+          sign_line_count - 1,
+          sign_line_count - 1,
+          false,
+          {symbol}
+        )
+        api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
+        local highlight = properties.highlight
+        if highlight ~= nil then
+          api.nvim_buf_add_highlight(
+            sign_bufnr, hl_namespace, highlight, sign_line_count - 1, 0, -1)
+        end
+        local sign_winid
+        if vim.tbl_isempty(sign_winids) then
+          sign_winid = api.nvim_open_win(sign_bufnr, false, config)
+        else
+          sign_winid = table.remove(sign_winids)
+          api.nvim_win_set_config(sign_winid, config)
+        end
+        -- Scroll to the inserted line.
+        local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
+        vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
+        local winhighlight = 'Normal:Normal'
+        set_window_option(sign_winid, 'winhighlight', winhighlight)
+        local winblend = get_variable('scrollview_winblend', winnr)
+        set_window_option(sign_winid, 'winblend', winblend)
+        -- Normal highlighting is ignored for floating windows in Neovim 0.8
+        -- (Neovim #22906) and fixed for Neovim 0.9. There's a workaround.
+        if to_bool(fn.has('nvim-0.8')) and not to_bool(fn.has('nvim-0.9')) then
+          api.nvim_win_set_hl_ns(sign_winid, hl_namespace)
+        end
+        set_window_option(sign_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
+        set_window_option(sign_winid, 'foldenable', false)
+        set_window_option(sign_winid, 'wrap', false)
+        api.nvim_win_set_var(sign_winid, win_var, win_val)
+        api.nvim_win_set_var(sign_winid, pending_async_removal_var, false)
+        local props = {
+          type = sign_type,
+          parent_winid = winid,
+          scrollview_winid = sign_winid,
+          row = row,
+          col = col,
+          lines = properties.lines,
+          zindex = properties.zindex,
+        }
+        api.nvim_win_set_var(sign_winid, props_var, props)
+      end
     end
-    if highlight ~= nil then
-      api.nvim_buf_add_highlight(
-        sign_bufnr, hl_namespace, highlight, sign_line_count - 1, 0, -1)
-    end
-    local sign_winid
-    if vim.tbl_isempty(sign_winids) then
-      sign_winid = api.nvim_open_win(sign_bufnr, false, config)
-    else
-      sign_winid = table.remove(sign_winids)
-      api.nvim_win_set_config(sign_winid, config)
-    end
-    -- Scroll to the inserted line.
-    local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
-    vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
-    local winhighlight = 'Normal:Normal'
-    set_window_option(sign_winid, 'winhighlight', winhighlight)
-    local winblend = get_variable('scrollview_winblend', winnr)
-    set_window_option(sign_winid, 'winblend', winblend)
-    -- Normal highlighting is ignored for floating windows in Neovim 0.8
-    -- (Neovim #22906) and fixed for Neovim 0.9. There's a workaround.
-    if to_bool(fn.has('nvim-0.8')) and not to_bool(fn.has('nvim-0.9')) then
-      api.nvim_win_set_hl_ns(sign_winid, hl_namespace)
-    end
-    set_window_option(sign_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
-    set_window_option(sign_winid, 'foldenable', false)
-    set_window_option(sign_winid, 'wrap', false)
-    api.nvim_win_set_var(sign_winid, win_var, win_val)
-    api.nvim_win_set_var(sign_winid, pending_async_removal_var, false)
-    local props = {
-      type = sign_type,
-      parent_winid = winid,
-      scrollview_winid = sign_winid,
-      row = row,
-      col = col,
-      lines = properties.lines,
-      zindex = properties.zindex,
-    }
-    api.nvim_win_set_var(sign_winid, props_var, props)
   end
 end
 
