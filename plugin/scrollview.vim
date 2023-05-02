@@ -33,6 +33,7 @@ let g:scrollview_excluded_filetypes =
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', 0)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
+" Set to 0 to disable signs.
 let g:scrollview_max_signs_per_row = get(g:, 'scrollview_max_signs_per_row', 3)
 let g:scrollview_mode = get(g:, 'scrollview_mode', 'virtual')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
