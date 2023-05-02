@@ -1080,7 +1080,7 @@ local show_signs = function(winid, sign_winids)
       return a.priority > b.priority
     end)
     local max_signs_per_row = get_variable('scrollview_max_signs_per_row', winnr)
-    if max_signs_per_row > 0 then
+    if max_signs_per_row >= 0 then
       props_list = {unpack(props_list, 1, max_signs_per_row)}
     end
     -- A set of 'row,col' pairs to prevent creating multiple signs in the same
