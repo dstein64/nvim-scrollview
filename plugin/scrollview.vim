@@ -32,13 +32,20 @@ let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', 0)
+" The maximum number of signs shown per row. Set to -1 to have no limit.
+let g:scrollview_max_signs_per_row = get(g:, 'scrollview_max_signs_per_row', 3)
 let g:scrollview_mode = get(g:, 'scrollview_mode', 'virtual')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
-" Whether bars and signs can overflow beyond the window boundary.
-let g:scrollview_out_of_bounds = get(g:, 'scrollview_overflow', 0)
+" Whether bars and signs beyond the window boundary (out-of-bounds) are
+" adjusted to be within the window.
+let g:scrollview_out_of_bounds_adjust =
+      \ get(g:, 'scrollview_out_of_bounds_adjust', 1)
 let g:scrollview_refresh_time = get(g:, 'scrollview_refresh_time', 100)
-" Sign column is relative to the scrollbar.
-let g:scrollview_sign_column = get(g:, 'scrollview_sign_column', 1)
+" Sign column is relative to the scrollbar. It specifies the initial column
+" for showing signs.
+let g:scrollview_sign_column = get(g:, 'scrollview_sign_column', -1)
+" Specifies the sign overflow direction ('left' or 'right').
+let g:scrollview_sign_overflow = get(g:, 'scrollview_sign_overflow', 'left')
 let g:scrollview_sign_symbol = get(g:, 'scrollview_sign_symbol', '*')
 let g:scrollview_sign_zindex = get(g:, 'scrollview_sign_zindex', 45)
 " Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
