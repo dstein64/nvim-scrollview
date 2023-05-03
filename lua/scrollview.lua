@@ -1140,7 +1140,7 @@ local show_signs = function(winid, sign_winids)
         symbol = symbol:gsub('\n', '')
         symbol = symbol:gsub('\r', '')
         if #symbol < 1 then symbol = ' ' end
-        symbol = string.sub(symbol, 1, 1)
+        symbol = vim.fn.strcharpart(symbol, 0, 1)
         api.nvim_buf_set_lines(
           sign_bufnr,
           sign_line_count - 1,
