@@ -6,7 +6,7 @@ local fn = vim.fn
 -- WARN: Functionality that temporarily moves the cursor and restores it should
 -- use a window workspace to prevent unwanted side effects. More details are in
 -- the documentation for with_win_workspace.
--- TODO: Some of the functionality is applicable to bars and signs, but is
+-- XXX: Some of the functionality is applicable to bars and signs, but is
 -- named as if it were only applicable to bars (since it was implemented prior
 -- to sign support).
 
@@ -183,28 +183,75 @@ local unregister_sign_spec = function(name)
   sign_specs[name] = nil
 end
 
--- TODO: remove these debugging specifications
-register_sign_spec('sign', {
-  priority = 50,
-  symbol = {'1', '2', '3'},
-  highlight = {'WildMenu', 'Normal'},
-})
-register_sign_spec('sign2', {
-  priority = 60,
-  symbol = 'x',
-  highlight = 'ErrorMsg'
-})
+-- TODO: Move diagnostic handling out of here.
 
--- Earlier versions don't have nvim_create_autocmd.
+local spec_data = {
+  [vim.diagnostic.severity.ERROR] =
+    {'scrollview_diagnostic_signs_error', 60, 'Error'},
+  [vim.diagnostic.severity.WARN] =
+    {'scrollview_diagnostic_signs_warn', 50, 'Todo'},
+  [vim.diagnostic.severity.INFO] =
+    {'scrollview_diagnostic_signs_info', 40, 'Title'},
+  [vim.diagnostic.severity.HINT] =
+    {'scrollview_diagnostic_signs_hint', 30, 'Question'},
+}
+for _, item in pairs(spec_data) do
+  local name, priority, highlight = unpack(item)
+  register_sign_spec(name, {
+    priority = priority,
+    symbol = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '+'},
+    highlight = highlight,
+  })
+end
+
+-- Earlier Neovim versions don't have nvim_create_autocmd.
 if vim.api.nvim_create_autocmd ~= nil then
   vim.api.nvim_create_autocmd('DiagnosticChanged', {
     callback = function(args)
-      local diagnostics = args.data.diagnostics
-      for _, x in ipairs(diagnostics) do
-        vim.b[x.bufnr].sign = {x.lnum}
+      local names = {
+        [vim.diagnostic.severity.ERROR] = 'scrollview_diagnostic_signs_error',
+        [vim.diagnostic.severity.WARN] = 'scrollview_diagnostic_signs_warn',
+        [vim.diagnostic.severity.INFO] = 'scrollview_diagnostic_signs_info',
+        [vim.diagnostic.severity.HINT] = 'scrollview_diagnostic_signs_hint',
+      }
+      local bufs = {[args.buf] = true}
+      for _, x in ipairs(args.data.diagnostics) do
+        bufs[x.bufnr] = true
       end
-      print(vim.inspect(args))
-      require('scrollview').scrollview_refresh()
+      local lookup = {}  -- maps diagnostic type to a list of line numbers
+      for severity, _ in pairs(names) do
+        lookup[severity] = {}
+      end
+      for bufnr, _ in pairs(bufs) do
+        local diagnostics = vim.diagnostic.get(bufnr)
+        for _, x in ipairs(diagnostics) do
+          if lookup[x.severity] ~= nil then
+            table.insert(lookup[x.severity], x.lnum + 1)
+          end
+        end
+      end
+      for severity, lines in pairs(lookup) do
+        local name = names[severity]
+        vim.b[args.buf][name] = lines
+      end
+      if vim.fn.mode() ~= 'i' or vim.diagnostic.config().update_in_insert then
+        -- Refresh scrollbars immediately when update_in_insert is set or the
+        -- current mode is not insert mode.
+        require('scrollview').scrollview_refresh()
+      else
+        -- Refresh scrollbars once leaving insert mode. Overwrite an existing
+        -- autocmd configured to already do this.
+        local group = vim.api.nvim_create_augroup('scrollview_diagnostic_signs', {
+          clear = true
+        })
+        vim.api.nvim_create_autocmd('InsertLeave', {
+          group = group,
+          callback = function(args)
+            require('scrollview').scrollview_refresh()
+          end,
+          once = true,
+        })
+      end
     end,
   })
 end
