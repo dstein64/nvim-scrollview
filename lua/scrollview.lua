@@ -1035,6 +1035,10 @@ local restore = function(state, restore_toplines)
       end
     end
   end
+  -- 'set title' when 'title' is on, so it's properly set. #84
+  if api.nvim_get_option('title') then
+    api.nvim_set_option('title', true)
+  end
   api.nvim_set_option('eventignore', state.eventignore)
   api.nvim_set_option('belloff', state.belloff)
 end
