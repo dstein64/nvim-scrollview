@@ -32,6 +32,10 @@ let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', 0)
+" A registered set of signs are not shown when the number of lines for the
+" specification exceeds the limit, to prevent a slowdown. Use -1 for no limit.
+let g:scrollview_lines_per_sign_spec_limit =
+      \ get(g:, 'scrollview_lines_per_sign_spec_limit', 5000)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_max_signs_per_row = get(g:, 'scrollview_max_signs_per_row', 3)
@@ -42,6 +46,10 @@ let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
 let g:scrollview_out_of_bounds_adjust =
       \ get(g:, 'scrollview_out_of_bounds_adjust', 1)
 let g:scrollview_refresh_time = get(g:, 'scrollview_refresh_time', 100)
+" Search signs are not shown when the number of buffer lines exceeds the
+" limit, to prevent a slowdown. Use -1 for no limit.
+let g:scrollview_search_signs_buffer_lines_limit =
+      \ get(g:, 'scrollview_search_signs_buffer_lines_limit', 20000)
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
 let g:scrollview_sign_column = get(g:, 'scrollview_sign_column', -1)

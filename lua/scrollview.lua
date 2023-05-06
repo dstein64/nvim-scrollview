@@ -1,6 +1,10 @@
 local api = vim.api
 local fn = vim.fn
 
+-- TODO: documentation for all new functionality (including User autocmd).
+-- TODO: perhaps you should support repeated lines. For example, for searching
+-- there could be multiple matches on the same line.
+
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
 -- WARN: Functionality that temporarily moves the cursor and restores it should
@@ -165,6 +169,18 @@ local binary_search = function(l, x)
   return lo
 end
 
+-- Slice an array-like table.
+local slice = function(tbl, first, last, step)
+  local result = {}
+  for idx = first, last, step do
+    if idx > #tbl or idx < 1 then
+      break
+    end
+    table.insert(result, tbl[idx])
+  end
+  return result
+end
+
 -- TODO Move the follwing functions to where they should go
 local register_sign_spec = function(name, specification)
   specification = copy(specification)
@@ -184,6 +200,8 @@ local unregister_sign_spec = function(name)
 end
 
 -- TODO: Move diagnostic handling out of here.
+-- TODO: Make highlight groups for the plugin (e.g., ScrollViewDiagnosticError)
+-- TODO: Update highlight colors and signs. Some match search highlights.
 
 local spec_data = {
   [vim.diagnostic.severity.ERROR] =
@@ -197,6 +215,7 @@ local spec_data = {
 }
 for _, item in pairs(spec_data) do
   local name, priority, highlight = unpack(item)
+  -- TODO: Use a different symbol.
   register_sign_spec(name, {
     priority = priority,
     symbol = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '+'},
@@ -204,8 +223,7 @@ for _, item in pairs(spec_data) do
   })
 end
 
--- Earlier Neovim versions don't have nvim_create_autocmd.
-if vim.api.nvim_create_autocmd ~= nil then
+if to_bool(fn.exists('*nvim_create_autocmd')) then
   vim.api.nvim_create_autocmd('DiagnosticChanged', {
     callback = function(args)
       local names = {
@@ -253,6 +271,92 @@ if vim.api.nvim_create_autocmd ~= nil then
         })
       end
     end,
+  })
+end
+
+-- TODO: Move search handling out of here.
+
+local signs_name = 'scrollview_search_signs'
+
+register_sign_spec(signs_name, {
+  priority = 50,
+  symbol = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '+'},
+  highlight = 'Search',
+})
+
+if to_bool(fn.exists('*nvim_create_autocmd')) then
+  vim.api.nvim_create_autocmd('User', {
+    pattern = 'ScrollViewRefresh',
+    callback = function(args)
+      for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
+        local winnr = api.nvim_win_get_number(winid)
+        local lines = {}
+        if to_bool(vim.v.hlsearch) then
+          lines = require('scrollview').with_win_workspace(winid, function()
+            local result = {}
+            local line_count = api.nvim_buf_line_count(0)
+            -- Search signs are not shown when the number of buffer lines
+            -- exceeds the limit, to prevent a slowdown.
+            local line_count_limit = require('scrollview').get_variable(
+              'scrollview_search_signs_buffer_lines_limit', winnr)
+            local within_limit = line_count_limit == -1
+              or line_count <= line_count_limit
+            if within_limit and fn.searchcount().total > 0 then
+              result = fn.split(fn.execute('global//echo line(".")'))
+            end
+            return result
+          end)
+          for idx, line in ipairs(lines) do
+            lines[idx] = tonumber(line)
+          end
+        end
+        local bufnr = api.nvim_win_get_buf(winid)
+        vim.b[bufnr][signs_name] = lines
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd('OptionSet', {
+    callback = function(args)
+      local amatch = fn.expand('<amatch>')
+      if amatch == 'hlsearch' then
+        require('scrollview').scrollview_refresh()
+      end
+    end
+  })
+
+  vim.api.nvim_create_autocmd('CmdlineLeave', {
+    callback = function(args)
+      if to_bool(vim.v.event.abort) then
+        return
+      end
+      local afile = fn.expand('<afile>')
+      -- Handle the case where a search is executed.
+      local refresh = afile == '/' or afile == '?'
+      -- Handle the case where :nohls may have been executed (this won't work
+      -- for e.g., <cmd>nohls<cr> in a mapping).
+      if afile == ':' then
+        -- TODO: Can this be limited to only :nohls? If not, can we check some
+        -- other way if a refresh is necessary?
+        refresh = true
+      end
+      if refresh then
+        require('scrollview').scrollview_refresh()
+      end
+    end
+  })
+
+  -- Handle the case where the cursor moves. This handles pressing 'n' or 'N'
+  -- to continue a search (except in the case where there's only one match and
+  -- the cursor doesn't move). The InsertEnter case handles when insert mode is
+  -- entered at the same time as v:hlsearch is turned off. The InsertLeave case
+  -- updates search signs after leaving insert mode, when newly added text
+  -- might correspond to new signs.
+  vim.api.nvim_create_autocmd({'CursorMoved', 'InsertEnter', 'InsertLeave'}, {
+    callback = function(args)
+      -- TODO: Can we check if a refresh is necessary?
+      require('scrollview').scrollview_refresh()
+    end
   })
 end
 
@@ -1091,9 +1195,18 @@ local show_signs = function(winid, sign_winids)
   local lookup = {}
   for name, sign_spec in pairs(sign_specs) do
     local lines = {}
-    for _, line in ipairs(sorted(fn.getbufvar(bufnr, name, {}))) do
-      if #lines == 0 or lines[#lines] ~= line then
-        table.insert(lines, line)
+    local lines_as_given = fn.getbufvar(bufnr, name, {})
+    -- Signs are not shown when the number of lines for each registered sign
+    -- specification exceeds the limit, to prevent a slowdown.
+    local lines_per_sign_spec_limit =
+      get_variable('scrollview_lines_per_sign_spec_limit', winnr)
+    local within_limit = lines_per_sign_spec_limit == -1
+      or #lines_as_given <= lines_per_sign_spec_limit
+    if within_limit then
+      for _, line in ipairs(sorted(lines_as_given)) do
+        if #lines == 0 or lines[#lines] ~= line then
+          table.insert(lines, line)
+        end
       end
     end
     if #lines > 0 and the_topline_lookup == nil then
@@ -1142,7 +1255,7 @@ local show_signs = function(winid, sign_winids)
     end)
     local max_signs_per_row = get_variable('scrollview_max_signs_per_row', winnr)
     if max_signs_per_row >= 0 then
-      props_list = {unpack(props_list, 1, max_signs_per_row)}
+      props_list = slice(props_list, 1, max_signs_per_row, 1)
     end
     -- A set of 'row,col' pairs to prevent creating multiple signs in the same
     -- location.
@@ -1670,6 +1783,10 @@ local refresh_bars = function(async_removal)
         table.insert(target_wins, winid)
       end
     end
+    local eventignore = api.nvim_get_option('eventignore')
+    api.nvim_set_option('eventignore', state.eventignore)
+    vim.cmd('doautocmd User ScrollViewRefresh')
+    api.nvim_set_option('eventignore', eventignore)
     local start_reltime = fn.reltime()
     -- Delete all signs and highlights in the sign buffer.
     if sign_bufnr ~= -1 and to_bool(fn.bufexists(sign_bufnr)) then
@@ -2148,11 +2265,14 @@ return {
   remove_if_command_line_window = remove_if_command_line_window,
 
   -- Functions called by commands and mappings defined in
-  -- plugin/scrollview.vim.
+  -- plugin/scrollview.vim, and sign handlers.
   scrollview_enable = scrollview_enable,
   scrollview_disable = scrollview_disable,
   scrollview_refresh = scrollview_refresh,
+  get_ordinary_windows = get_ordinary_windows,
+  get_variable = get_variable,
   handle_mouse = handle_mouse,
+  with_win_workspace = with_win_workspace,
 
   -- Functions called by tests.
   virtual_line_count_spanwise = virtual_line_count_spanwise,
