@@ -1059,11 +1059,11 @@ local should_show = function(winid)
 end
 
 -- Indicates whether the column is valid for showing a scrollbar or signs.
-local is_valid_column = function(winid, col)
+local is_valid_column = function(winid, col, width)
   local winnr = api.nvim_win_get_number(winid)
   local winwidth = fn.winwidth(winnr)
   local min_valid_col = 1
-  local max_valid_col = winwidth
+  local max_valid_col = winwidth - width + 1
   local base = get_variable('scrollview_base', winnr)
   if base == 'buffer' then
     min_valid_col = api.nvim_win_call(winid, buf_view_begins_col)
@@ -1091,7 +1091,8 @@ local show_scrollbar = function(winid, bar_winid)
     local winwidth = fn.winwidth(winnr)
     bar_position.col = math.max(1, math.min(winwidth, bar_position.col))
   end
-  if not is_valid_column(winid, bar_position.col) then
+  local bar_width = 1
+  if not is_valid_column(winid, bar_position.col, bar_width) then
     return -1
   end
   -- Height has to be positive for the call to nvim_open_win. When opening a
@@ -1144,7 +1145,7 @@ local show_scrollbar = function(winid, bar_winid)
     focusable = false,
     style = 'minimal',
     height = bar_position.height,
-    width = 1,
+    width = bar_width,
     row = bar_position.row - 1,
     col = bar_position.col - 1,
     zindex = zindex
@@ -1260,30 +1261,30 @@ local show_signs = function(winid, sign_winids)
     -- A set of 'row,col' pairs to prevent creating multiple signs in the same
     -- location.
     local shown = {}
+    local total_width = 0  -- running sum of sign widths
     for idx, properties in ipairs(props_list) do
-      local offset = idx - 1
+      local symbol = properties.symbol
+      if symbol == nil then symbol = vim.g['scrollview_sign_symbol'] end
+      symbol = symbol:gsub('\n', '')
+      symbol = symbol:gsub('\r', '')
+      if #symbol < 1 then symbol = ' ' end
+      symbol = vim.fn.strcharpart(symbol, 0, 1)
+      local sign_width = fn.strdisplaywidth(symbol)
+      local col = base_col
       if get_variable('scrollview_sign_overflow', winnr) == 'left' then
-        offset = -offset
+        col = col - total_width
+        col = col - sign_width + 1
+      else
+        col = col + total_width
       end
-      local col = base_col + offset
+      total_width = total_width + sign_width
       if to_bool(get_variable('scrollview_out_of_bounds_adjust', winnr)) then
         local winwidth = fn.winwidth(winnr)
-        col = math.max(1, math.min(winwidth, col))
+        col = math.max(1, math.min(winwidth - sign_width + 1, col))
       end
-      if is_valid_column(winid, col) and not shown[row .. ',' .. col] then
+      if is_valid_column(winid, col, sign_width)
+          and not shown[row .. ',' .. col] then
         shown[row .. ',' .. col] = true
-        local zindex = get_variable('scrollview_sign_zindex', winnr)
-        local config = {
-          win = winid,
-          relative = 'win',
-          focusable = false,
-          style = 'minimal',
-          height = 1,
-          width = 1,
-          row = row - 1,
-          col = col - 1,
-          zindex = zindex,
-        }
         if sign_bufnr == -1 or not to_bool(fn.bufexists(sign_bufnr)) then
           sign_bufnr = api.nvim_create_buf(false, true)
           api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
@@ -1295,12 +1296,6 @@ local show_signs = function(winid, sign_winids)
         end
         local sign_line_count = api.nvim_buf_line_count(sign_bufnr)
         api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
-        local symbol = properties.symbol
-        if symbol == nil then symbol = vim.g['scrollview_sign_symbol'] end
-        symbol = symbol:gsub('\n', '')
-        symbol = symbol:gsub('\r', '')
-        if #symbol < 1 then symbol = ' ' end
-        symbol = vim.fn.strcharpart(symbol, 0, 1)
         api.nvim_buf_set_lines(
           sign_bufnr,
           sign_line_count - 1,
@@ -1315,6 +1310,18 @@ local show_signs = function(winid, sign_winids)
             sign_bufnr, hl_namespace, highlight, sign_line_count - 1, 0, -1)
         end
         local sign_winid
+        local zindex = get_variable('scrollview_sign_zindex', winnr)
+        local config = {
+          win = winid,
+          relative = 'win',
+          focusable = false,
+          style = 'minimal',
+          height = 1,
+          width = sign_width,
+          row = row - 1,
+          col = col - 1,
+          zindex = zindex,
+        }
         if vim.tbl_isempty(sign_winids) then
           sign_winid = api.nvim_open_win(sign_bufnr, false, config)
         else
@@ -1344,6 +1351,7 @@ local show_signs = function(winid, sign_winids)
           scrollview_winid = sign_winid,
           row = row,
           col = col,
+          width = sign_width,
           lines = properties.lines,
           zindex = zindex,
         }
@@ -2137,7 +2145,7 @@ local handle_mouse = function(button)
           for _, sign_props in pairs(get_scrollview_sign_props(mouse_winid)) do
             if mouse_row == sign_props.row
               and mouse_col >= sign_props.col
-              and mouse_col <= sign_props.col
+              and mouse_col <= sign_props.col + sign_props.width
               and (not clicked_bar or sign_props.zindex > props.zindex) then
               restore_toplines = false
               api.nvim_win_call(mouse_winid, function()
