@@ -1268,7 +1268,6 @@ local show_signs = function(winid, sign_winids)
       symbol = symbol:gsub('\n', '')
       symbol = symbol:gsub('\r', '')
       if #symbol < 1 then symbol = ' ' end
-      symbol = vim.fn.strcharpart(symbol, 0, 1)
       local sign_width = fn.strdisplaywidth(symbol)
       local col = base_col
       if get_variable('scrollview_sign_overflow', winnr) == 'left' then
