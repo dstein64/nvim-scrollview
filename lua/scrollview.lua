@@ -2,8 +2,6 @@ local api = vim.api
 local fn = vim.fn
 
 -- TODO: documentation for all new functionality (including User autocmd).
--- TODO: perhaps you should support repeated lines. For example, for searching
--- there could be multiple matches on the same line.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
