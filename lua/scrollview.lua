@@ -298,7 +298,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
             -- Search signs are not shown when the number of buffer lines
             -- exceeds the limit, to prevent a slowdown.
             local line_count_limit = require('scrollview').get_variable(
-              'scrollview_search_signs_buffer_lines_limit', winnr)
+              'scrollview_signs_search_buffer_lines_limit', winnr)
             local within_limit = line_count_limit == -1
               or line_count <= line_count_limit
             if within_limit and fn.searchcount().total > 0 then
@@ -1191,7 +1191,7 @@ local show_signs = function(winid, sign_winids)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = nil  -- only set when needed
   local base_col = calculate_scrollbar_column(winnr)
-  base_col = base_col + get_variable('scrollview_sign_column', winnr)
+  base_col = base_col + get_variable('scrollview_signs_column', winnr)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
   for name, sign_spec in pairs(sign_specs) do
@@ -1200,7 +1200,7 @@ local show_signs = function(winid, sign_winids)
     -- Signs are not shown when the number of lines for each registered sign
     -- specification exceeds the limit, to prevent a slowdown.
     local lines_per_sign_spec_limit =
-      get_variable('scrollview_lines_per_sign_spec_limit', winnr)
+      get_variable('scrollview_signs_lines_per_spec_limit', winnr)
     local within_limit = lines_per_sign_spec_limit == -1
       or #lines_as_given <= lines_per_sign_spec_limit
     if within_limit then
@@ -1254,7 +1254,7 @@ local show_signs = function(winid, sign_winids)
     table.sort(props_list, function(a, b)
       return a.priority > b.priority
     end)
-    local max_signs_per_row = get_variable('scrollview_max_signs_per_row', winnr)
+    local max_signs_per_row = get_variable('scrollview_signs_max_per_row', winnr)
     if max_signs_per_row >= 0 then
       props_list = slice(props_list, 1, max_signs_per_row, 1)
     end
@@ -1264,13 +1264,13 @@ local show_signs = function(winid, sign_winids)
     local total_width = 0  -- running sum of sign widths
     for idx, properties in ipairs(props_list) do
       local symbol = properties.symbol
-      if symbol == nil then symbol = vim.g['scrollview_sign_symbol'] end
+      if symbol == nil then symbol = vim.g['scrollview_signs_symbol'] end
       symbol = symbol:gsub('\n', '')
       symbol = symbol:gsub('\r', '')
       if #symbol < 1 then symbol = ' ' end
       local sign_width = fn.strdisplaywidth(symbol)
       local col = base_col
-      if get_variable('scrollview_sign_overflow', winnr) == 'left' then
+      if get_variable('scrollview_signs_overflow', winnr) == 'left' then
         col = col - total_width
         col = col - sign_width + 1
       else
@@ -1309,7 +1309,7 @@ local show_signs = function(winid, sign_winids)
             sign_bufnr, hl_namespace, highlight, sign_line_count - 1, 0, -1)
         end
         local sign_winid
-        local zindex = get_variable('scrollview_sign_zindex', winnr)
+        local zindex = get_variable('scrollview_signs_zindex', winnr)
         local config = {
           win = winid,
           relative = 'win',
