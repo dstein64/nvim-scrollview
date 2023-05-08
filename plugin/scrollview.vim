@@ -71,9 +71,9 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 "   :highlight ScrollView ctermbg=159 guibg=LightCyan
 highlight default link ScrollView Visual
 highlight default link ScrollViewSignsSearch NonText
-highlight default link ScrollViewSignsDiagnosticsError Error
-highlight default link ScrollViewSignsDiagnosticsWarn Todo
-highlight default link ScrollViewSignsDiagnosticsInfo Title
+highlight default link ScrollViewSignsDiagnosticsError WarningMsg
+highlight default link ScrollViewSignsDiagnosticsWarn LineNr
+highlight default link ScrollViewSignsDiagnosticsInfo Identifier
 highlight default link ScrollViewSignsDiagnosticsHint Question
 
 " *************************************************
