@@ -1202,12 +1202,12 @@ local show_signs = function(winid, sign_winids)
       or #lines_as_given <= lines_per_sign_spec_limit
     if within_limit then
       for _, line in ipairs(sorted(lines_as_given)) do
-        if #lines == 0 or lines[#lines] ~= line then
+        if vim.tbl_isempty(lines) or lines[#lines] ~= line then
           table.insert(lines, line)
         end
       end
     end
-    if #lines > 0 and the_topline_lookup == nil then
+    if not vim.tbl_isempty(lines) and the_topline_lookup == nil then
       the_topline_lookup = topline_lookup(winid)
     end
     for _, line in ipairs(lines) do
