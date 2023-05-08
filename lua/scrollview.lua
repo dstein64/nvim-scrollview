@@ -359,6 +359,31 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
     end
   })
 
+  -- It's possible that <cmd>nohlsearch<cr> was executed from a mapping, and
+  -- wouldn't be handled by the CmdlineLeave callback above. Use a CursorMoved
+  -- event to check if search signs are shown when they shouldn't be, and
+  -- update accordingly. Also run under CursorHold as a backup.
+  -- NOTE: If there are scenarios where search signs become out of sync (i.e.,
+  -- shown when they shouldn't be), this same approach could be used with a
+  -- timer.
+  vim.api.nvim_create_autocmd({'CursorMoved', 'CursorHold'}, {
+    callback = function(args)
+      -- Use defer_fn since vim.v.hlsearch may not have been turned off yet.
+      vim.defer_fn(function()
+        for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
+          if not to_bool(vim.v.hlsearch) then
+            local bufnr = api.nvim_win_get_buf(winid)
+            local lines = vim.b[bufnr]['scrollview_signs_search']
+            if lines ~= nil and not vim.tbl_isempty(lines) then
+              require('scrollview').scrollview_refresh()
+              break
+            end
+          end
+        end
+      end, 0)
+    end
+  })
+
   -- The InsertEnter case handles when insert mode is entered at the same time
   -- as v:hlsearch is turned off. The InsertLeave case updates search signs
   -- after leaving insert mode, when newly added text might correspond to new
