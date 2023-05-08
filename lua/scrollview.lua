@@ -180,7 +180,7 @@ local slice = function(tbl, first, last, step)
   return result
 end
 
--- TODO Move the follwing functions to where they should go
+-- TODO Move the following functions to where they should go
 local register_sign_spec = function(name, specification)
   specification = copy(specification)
   -- priority, symbol and highlight can be arrays
@@ -286,6 +286,8 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
         local winnr = api.nvim_win_get_number(winid)
         local lines = {}
         if to_bool(vim.v.hlsearch) then
+          -- TODO: Can undotree()['time_cur'] or something similar be used to
+          -- cache?
           lines = require('scrollview').with_win_workspace(winid, function()
             local result = {}
             local line_count = api.nvim_buf_line_count(0)
@@ -329,35 +331,12 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
       local refresh = afile == '/' or afile == '?'
       -- Handle the case where :nohls may have been executed (this won't work
       -- for e.g., <cmd>nohls<cr> in a mapping).
-      if afile == ':' then
-        -- TODO: Can this be limited to only :nohls? If not, can we check some
-        -- other way if a refresh is necessary?
+      if afile == ':' and string.find(fn.getcmdline(), 'nohls') then
         refresh = true
       end
       if refresh then
         require('scrollview').scrollview_refresh()
       end
-    end
-  })
-
-  -- Handle the case where the cursor moves. This handles pressing 'n', 'N',
-  -- '*', or '#' (except in the case where there's only one match and the
-  -- cursor doesn't move). CursorMoved runs frequently. Execute a single
-  -- scrollview refresh for a batch of CursorMoved events that occur within a
-  -- specified time window.
-  vim.api.nvim_create_autocmd('CursorMoved', {
-    callback = function(args)
-      -- TODO: also check if scrollview refresh has been updated sometime
-      -- between here and when the callback executes. If so, this doesn't need
-      -- to execute.
-      -- TODO: redo the global handling (maybe make local scope, change variable name)
-      if _G.refresh_pending then
-        return
-      end
-      vim.defer_fn(function()
-        _G.refresh_pending = false
-        require('scrollview').scrollview_refresh()
-      end, 200)  -- TODO: make timeout a config option (-1 to turn off)
     end
   })
 
