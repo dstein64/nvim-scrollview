@@ -282,32 +282,38 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   vim.api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
+      -- Track visited buffers, to prevent duplicate computation when multiple
+      -- windows are showing the same buffer.
+      local visited = {}
       for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
-        local winnr = api.nvim_win_get_number(winid)
-        local lines = {}
-        if to_bool(vim.v.hlsearch) then
-          -- TODO: Can undotree()['time_cur'] or something similar be used to
-          -- cache?
-          lines = require('scrollview').with_win_workspace(winid, function()
-            local result = {}
-            local line_count = api.nvim_buf_line_count(0)
-            -- Search signs are not shown when the number of buffer lines
-            -- exceeds the limit, to prevent a slowdown.
-            local line_count_limit = require('scrollview').get_variable(
-              'scrollview_signs_search_buffer_lines_limit', winnr)
-            local within_limit = line_count_limit == -1
-              or line_count <= line_count_limit
-            if within_limit and fn.searchcount().total > 0 then
-              result = fn.split(fn.execute('global//echo line(".")'))
-            end
-            return result
-          end)
-          for idx, line in ipairs(lines) do
-            lines[idx] = tonumber(line)
-          end
-        end
         local bufnr = api.nvim_win_get_buf(winid)
-        vim.b[bufnr]['scrollview_signs_search'] = lines
+        if not visited[bufnr] then
+          local winnr = api.nvim_win_get_number(winid)
+          local lines = {}
+          if to_bool(vim.v.hlsearch) then
+            -- TODO: Can undotree()['time_cur'] or something similar be used to
+            -- cache?
+            lines = require('scrollview').with_win_workspace(winid, function()
+              local result = {}
+              local line_count = api.nvim_buf_line_count(0)
+              -- Search signs are not shown when the number of buffer lines
+              -- exceeds the limit, to prevent a slowdown.
+              local line_count_limit = require('scrollview').get_variable(
+                'scrollview_signs_search_buffer_lines_limit', winnr)
+              local within_limit = line_count_limit == -1
+                or line_count <= line_count_limit
+              if within_limit and fn.searchcount().total > 0 then
+                result = fn.split(fn.execute('global//echo line(".")'))
+              end
+              return result
+            end)
+            for idx, line in ipairs(lines) do
+              lines[idx] = tonumber(line)
+            end
+          end
+          vim.b[bufnr]['scrollview_signs_search'] = lines
+          visited[bufnr] = true
+        end
       end
     end,
   })
