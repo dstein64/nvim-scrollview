@@ -2,6 +2,7 @@ local api = vim.api
 local fn = vim.fn
 
 -- TODO: documentation for all new functionality (including User autocmd).
+-- TODO: api version
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
@@ -198,25 +199,22 @@ local unregister_sign_spec = function(name)
 end
 
 -- TODO: Move diagnostic handling out of here.
--- TODO: Make highlight groups for the plugin (e.g., ScrollViewDiagnosticError)
 -- TODO: Update highlight colors and signs. Some match search highlights.
-
 local spec_data = {
   [vim.diagnostic.severity.ERROR] =
-    {'scrollview_diagnostic_signs_error', 60, 'Error'},
+    {'scrollview_signs_diagnostics_error', 60, 'E', 'ScrollViewSignsDiagnosticsError'},
   [vim.diagnostic.severity.WARN] =
-    {'scrollview_diagnostic_signs_warn', 50, 'Todo'},
+    {'scrollview_signs_diagnostics_warn', 50, 'W', 'ScrollViewSignsDiagnosticsWarn'},
   [vim.diagnostic.severity.INFO] =
-    {'scrollview_diagnostic_signs_info', 40, 'Title'},
+    {'scrollview_signs_diagnostics_info', 40, 'I', 'ScrollViewSignsDiagnosticsInfo'},
   [vim.diagnostic.severity.HINT] =
-    {'scrollview_diagnostic_signs_hint', 30, 'Question'},
+    {'scrollview_sigsn_diagnostics_hint', 30, 'H', 'ScrollViewSignsDiagnosticsHint'},
 }
 for _, item in pairs(spec_data) do
-  local name, priority, highlight = unpack(item)
-  -- TODO: Use a different symbol.
+  local name, priority, symbol, highlight = unpack(item)
   register_sign_spec(name, {
     priority = priority,
-    symbol = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '+'},
+    symbol = symbol,
     highlight = highlight,
   })
 end
@@ -225,10 +223,10 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   vim.api.nvim_create_autocmd('DiagnosticChanged', {
     callback = function(args)
       local names = {
-        [vim.diagnostic.severity.ERROR] = 'scrollview_diagnostic_signs_error',
-        [vim.diagnostic.severity.WARN] = 'scrollview_diagnostic_signs_warn',
-        [vim.diagnostic.severity.INFO] = 'scrollview_diagnostic_signs_info',
-        [vim.diagnostic.severity.HINT] = 'scrollview_diagnostic_signs_hint',
+        [vim.diagnostic.severity.ERROR] = 'scrollview_signs_diagnostics_error',
+        [vim.diagnostic.severity.WARN] = 'scrollview_signs_diagnostics_warn',
+        [vim.diagnostic.severity.INFO] = 'scrollview_signs_diagnostics_info',
+        [vim.diagnostic.severity.HINT] = 'scrollview_sigsn_diagnostics_hint',
       }
       local bufs = {[args.buf] = true}
       for _, x in ipairs(args.data.diagnostics) do
@@ -274,12 +272,11 @@ end
 
 -- TODO: Move search handling out of here.
 
-local signs_name = 'scrollview_search_signs'
-
-register_sign_spec(signs_name, {
-  priority = 50,
-  symbol = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '+'},
-  highlight = 'Search',
+register_sign_spec('scrollview_signs_search', {
+  priority = 70,
+  -- (1) equals, (2) triple bar
+  symbol = {'=', fn.nr2char(0x2261)},
+  highlight = 'ScrollViewSignsSearch',
 })
 
 if to_bool(fn.exists('*nvim_create_autocmd')) then
@@ -309,7 +306,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
           end
         end
         local bufnr = api.nvim_win_get_buf(winid)
-        vim.b[bufnr][signs_name] = lines
+        vim.b[bufnr]['scrollview_signs_search'] = lines
       end
     end,
   })
@@ -344,15 +341,30 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
     end
   })
 
-  -- Handle the case where the cursor moves. This handles pressing 'n' or 'N'
-  -- to continue a search (except in the case where there's only one match and
-  -- the cursor doesn't move). The InsertEnter case handles when insert mode is
-  -- entered at the same time as v:hlsearch is turned off. The InsertLeave case
-  -- updates search signs after leaving insert mode, when newly added text
-  -- might correspond to new signs.
-  vim.api.nvim_create_autocmd({'CursorMoved', 'InsertEnter', 'InsertLeave'}, {
+  -- Handle the case where the cursor moves. This handles pressing 'n', 'N',
+  -- '*', or '#' (except in the case where there's only one match and the
+  -- cursor doesn't move). CursorMoved runs frequently. Execute a single
+  -- scrollview refresh for a batch of CursorMoved events that occur within a
+  -- specified time window.
+  vim.api.nvim_create_autocmd('CursorMoved', {
     callback = function(args)
-      -- TODO: Can we check if a refresh is necessary?
+      -- TODO: redo the global handling (maybe make local scope, change variable name)
+      if _G.refresh_pending then
+        return
+      end
+      vim.defer_fn(function()
+        _G.refresh_pending = false
+        require('scrollview').scrollview_refresh()
+      end, 200)  -- TODO: make timeout a config option (-1 to turn off)
+    end
+  })
+
+  -- The InsertEnter case handles when insert mode is entered at the same time
+  -- as v:hlsearch is turned off. The InsertLeave case updates search signs
+  -- after leaving insert mode, when newly added text might correspond to new
+  -- signs.
+  vim.api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
+    callback = function(args)
       require('scrollview').scrollview_refresh()
     end
   })

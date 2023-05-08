@@ -63,13 +63,18 @@ let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 " by default so that scrollbars don't cover floating windows.
 let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 
-" The default highlight group is specified below.
-" Change this default by defining or linking an alternative highlight group.
+" The default highlight groups are specified below.
+" Change the defaults by defining or linking an alternative highlight group.
 " E.g., the following will use the Pmenu highlight.
 "   :highlight link ScrollView Pmenu
 " E.g., the following will use custom highlight colors.
 "   :highlight ScrollView ctermbg=159 guibg=LightCyan
 highlight default link ScrollView Visual
+highlight default link ScrollViewSignsSearch NonText
+highlight default link ScrollViewSignsDiagnosticsError Error
+highlight default link ScrollViewSignsDiagnosticsWarn Todo
+highlight default link ScrollViewSignsDiagnosticsInfo Title
+highlight default link ScrollViewSignsDiagnosticsHint Question
 
 " *************************************************
 " * Global State
