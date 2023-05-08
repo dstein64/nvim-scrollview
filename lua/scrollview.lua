@@ -292,7 +292,8 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
           local lines = {}
           if to_bool(vim.v.hlsearch) then
             -- TODO: Can undotree()['time_cur'] or something similar be used to
-            -- cache?
+            -- cache? Will also have to save the pattern to check that it
+            -- hasn't changed.
             lines = require('scrollview').with_win_workspace(winid, function()
               local result = {}
               local line_count = api.nvim_buf_line_count(0)
