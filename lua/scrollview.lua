@@ -199,7 +199,6 @@ local unregister_sign_spec = function(name)
 end
 
 -- TODO: Move diagnostic handling out of here.
--- TODO: Update highlight colors and signs. Some match search highlights.
 local spec_data = {
   [vim.diagnostic.severity.ERROR] =
     {'scrollview_signs_diagnostics_error', 60, 'E', 'ScrollViewSignsDiagnosticsError'},
@@ -348,6 +347,9 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   -- specified time window.
   vim.api.nvim_create_autocmd('CursorMoved', {
     callback = function(args)
+      -- TODO: also check if scrollview refresh has been updated sometime
+      -- between here and when the callback executes. If so, this doesn't need
+      -- to execute.
       -- TODO: redo the global handling (maybe make local scope, change variable name)
       if _G.refresh_pending then
         return
