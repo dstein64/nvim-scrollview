@@ -3,6 +3,8 @@ local fn = vim.fn
 
 -- TODO: documentation for all new functionality (including User autocmd).
 -- TODO: api version
+-- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
+-- relevant for search signs since you're not changing "/".
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
