@@ -168,10 +168,18 @@ function s:CreateRefreshMapping(modes, seq) abort
   for l:idx in range(strchars(a:modes))
     let l:mode = strcharpart(a:modes, l:idx, 1)
     " A <plug> mapping is avoided since it doesn't work properly in
-    " terminal-job mode.
+    " terminal-job mode, and also to accommodate the RHS not starting with
+    " LHS, which is required to avoid infinite recursion (:help
+    " recursive_mapping).
+    " XXX: Refreshing is executed first on the RHS so that it will run even in
+    " the case of an error (e.g., pressing 'n' when there are no search
+    " matches, where we'd still want refreshing for other windows). Since
+    " refreshing is asynchronous, it still ends up being executed after the
+    " command.
+    let l:refresh_cmd = '<cmd>ScrollViewRefresh<cr>'
     execute printf(
-          \ 'silent! %snoremap <unique> %s %s<cmd>ScrollViewRefresh<cr>',
-          \ l:mode, a:seq, a:seq)
+          \ 'silent! %snoremap <unique> %s %s%s',
+          \ l:mode, a:seq, l:refresh_cmd, a:seq)
   endfor
 endfunction
 
