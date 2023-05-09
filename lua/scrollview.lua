@@ -170,18 +170,6 @@ local binary_search = function(l, x)
   return lo
 end
 
--- Slice an array-like table.
-local slice = function(tbl, first, last, step)
-  local result = {}
-  for idx = first, last, step do
-    if idx > #tbl or idx < 1 then
-      break
-    end
-    table.insert(result, tbl[idx])
-  end
-  return result
-end
-
 -- TODO Move the following functions to where they should go
 local register_sign_spec = function(name, specification)
   specification = copy(specification)
@@ -1338,7 +1326,7 @@ local show_signs = function(winid, sign_winids)
     end)
     local max_signs_per_row = get_variable('scrollview_signs_max_per_row', winnr)
     if max_signs_per_row >= 0 then
-      props_list = slice(props_list, 1, max_signs_per_row, 1)
+      props_list = vim.list_slice(props_list, 1, max_signs_per_row)
     end
     -- A set of 'row,col' pairs to prevent creating multiple signs in the same
     -- location.
