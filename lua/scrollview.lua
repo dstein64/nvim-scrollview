@@ -313,9 +313,14 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
                   'scrollview_signs_search_buffer_lines_limit', winnr)
                 local within_limit = line_count_limit == -1
                   or line_count <= line_count_limit
-                if within_limit and fn.searchcount().total > 0 then
-                  result = fn.split(fn.execute('global//echo line(".")'))
-                end
+                -- Use a pcall since searchcount() and :global throw an
+                -- exception (E383, E866) when the pattern is invalid (e.g.,
+                -- "\@a").
+                pcall(function()
+                  if within_limit and fn.searchcount().total > 0 then
+                    result = fn.split(fn.execute('global//echo line(".")'))
+                  end
+                end)
                 return result
               end)
               for idx, line in ipairs(lines) do
@@ -388,12 +393,16 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
             if not visited[bufnr] then
               visited[bufnr] = true
               refresh = api.nvim_win_call(winid, function()
-                if fn.searchcount().total > 0 then
-                  local lines = vim.b['scrollview_signs_search']
-                  if lines == nil or vim.tbl_isempty(lines) then
-                    return true
+                -- Use a pcall since searchcount() throws an exception (E383,
+                -- E866) when the pattern is invalid (e.g., "\@a").
+                pcall(function()
+                  if fn.searchcount().total > 0 then
+                    local lines = vim.b['scrollview_signs_search']
+                    if lines == nil or vim.tbl_isempty(lines) then
+                      return true
+                    end
                   end
-                end
+                end)
                 return false
               end)
               if refresh then
