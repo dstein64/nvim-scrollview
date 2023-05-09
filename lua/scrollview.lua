@@ -395,14 +395,16 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
               refresh = api.nvim_win_call(winid, function()
                 -- Use a pcall since searchcount() throws an exception (E383,
                 -- E866) when the pattern is invalid (e.g., "\@a").
+                local searchcount_total = 0
                 pcall(function()
-                  if fn.searchcount().total > 0 then
-                    local lines = vim.b['scrollview_signs_search']
-                    if lines == nil or vim.tbl_isempty(lines) then
-                      return true
-                    end
-                  end
+                  searchcount_total = fn.searchcount().total
                 end)
+                if searchcount_total > 0 then
+                  local lines = vim.b['scrollview_signs_search']
+                  if lines == nil or vim.tbl_isempty(lines) then
+                    return true
+                  end
+                end
                 return false
               end)
               if refresh then
