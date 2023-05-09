@@ -272,6 +272,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   vim.api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
+      local pattern = fn.getreg('/')
       -- Track visited buffers, to prevent duplicate computation when multiple
       -- windows are showing the same buffer.
       local visited = {}
@@ -282,15 +283,14 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
           local bufvars = vim.b[bufnr]
           local lines = {}
           if to_bool(vim.v.hlsearch) then
-            local pattern = fn.getreg('/')
             local cache_hit = false
             local seq_cur = fn.undotree()['seq_cur']
-            if bufvars['scrollview_signs_search_cache_pattern'] == pattern then
-              local cache_seq_cur = bufvars['scrollview_signs_search_cache_seq_cur']
+            if bufvars['scrollview_signs_search_pattern_cached'] == pattern then
+              local cache_seq_cur = bufvars['scrollview_signs_search_seq_cur_cached']
               cache_hit = cache_seq_cur == seq_cur
             end
             if cache_hit then
-              lines = bufvars['scrollview_signs_search_cache']
+              lines = bufvars['scrollview_signs_search_cached']
             else
               lines = require('scrollview').with_win_workspace(winid, function()
                 local result = {}
@@ -314,12 +314,13 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
               for idx, line in ipairs(lines) do
                 lines[idx] = tonumber(line)
               end
-              bufvars['scrollview_signs_search_cache_pattern'] = pattern
-              bufvars['scrollview_signs_search_cache_seq_cur'] = seq_cur
-              bufvars['scrollview_signs_search_cache'] = lines
+              bufvars['scrollview_signs_search_pattern_cached'] = pattern
+              bufvars['scrollview_signs_search_seq_cur_cached'] = seq_cur
+              bufvars['scrollview_signs_search_cached'] = lines
             end
           end
           bufvars['scrollview_signs_search'] = lines
+          bufvars['scrollview_signs_search_pattern'] = pattern
           visited[bufnr] = true
         end
       end
@@ -372,15 +373,21 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
         local refresh = false
         if to_bool(vim.v.hlsearch) then
           -- Refresh bars if (1) v:hlsearch is on, (2) search signs aren't
-          -- currently shown, and (3) searchcount().total > 0.
+          -- currently shown, and (3) searchcount().total > 0. Also refresh
+          -- bars if v:hlsearch is on and the shown search signs correspond to
+          -- a different pattern than the current one.
           -- Track visited buffers, to prevent duplicate computation when
           -- multiple windows are showing the same buffer.
+          local pattern = fn.getreg('/')
           local visited = {}
           for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
             if not visited[bufnr] then
               visited[bufnr] = true
               refresh = api.nvim_win_call(winid, function()
+                if pattern ~= vim.b['scrollview_signs_search_pattern'] then
+                  return true
+                end
                 local lines = vim.b['scrollview_signs_search']
                 if lines == nil or vim.tbl_isempty(lines) then
                   -- Use a pcall since searchcount() throws an exception (E383,
