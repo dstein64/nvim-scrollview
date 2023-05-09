@@ -357,26 +357,63 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   -- It's possible that <cmd>nohlsearch<cr> was executed from a mapping, and
   -- wouldn't be handled by the CmdlineLeave callback above. Use a CursorMoved
   -- event to check if search signs are shown when they shouldn't be, and
-  -- update accordingly. Also run under CursorHold as a backup.
+  -- update accordingly. Also run under CursorHold as a backup. Also handle the
+  -- case where 'n', 'N', '*', '#', 'g*', or 'g#' are pressed (although these
+  -- won't be properly handled when there is only one search result and the
+  -- cursor is already on it, since the cursor wouldn't move; creating
+  -- scrollview refresh mappings for those keys could handle that scenario).
   -- NOTE: If there are scenarios where search signs become out of sync (i.e.,
   -- shown when they shouldn't be), this same approach could be used with a
-  -- timer, with added handling for turning on search signs (see code at
-  -- 34c032e).
+  -- timer.
   vim.api.nvim_create_autocmd({'CursorMoved', 'CursorHold'}, {
     callback = function(args)
       -- Use defer_fn since vim.v.hlsearch may not have been properly set yet.
       vim.defer_fn(function()
-        if not to_bool(vim.v.hlsearch) then
+        local refresh = false
+        if to_bool(vim.v.hlsearch) then
+          -- Refresh bars if (1) v:hlsearch is on, (2) search signs aren't
+          -- currently shown, and (3) searchcount().total > 0.
+          -- Track visited buffers, to prevent duplicate computation when
+          -- multiple windows are showing the same buffer.
+          local visited = {}
+          for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
+            local bufnr = api.nvim_win_get_buf(winid)
+            if not visited[bufnr] then
+              visited[bufnr] = true
+              refresh = api.nvim_win_call(winid, function()
+                local lines = vim.b['scrollview_signs_search']
+                if lines == nil or vim.tbl_isempty(lines) then
+                  -- Use a pcall since searchcount() throws an exception (E383,
+                  -- E866) when the pattern is invalid (e.g., "\@a").
+                  local searchcount_total = 0
+                  pcall(function()
+                    searchcount_total = fn.searchcount().total
+                  end)
+                  if searchcount_total > 0 then
+                    return true
+                  end
+                end
+                return false
+              end)
+              if refresh then
+                break
+              end
+            end
+          end
+        else
           -- Refresh bars if v:hlsearch is off and search signs are currently
           -- shown.
           for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
             local lines = vim.b[bufnr]['scrollview_signs_search']
             if lines ~= nil and not vim.tbl_isempty(lines) then
-              require('scrollview').scrollview_refresh()
+              refresh = true
               break
             end
           end
+        end
+        if refresh then
+          require('scrollview').scrollview_refresh()
         end
       end, 0)
     end

@@ -55,10 +55,6 @@ let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
 " limit, to prevent a slowdown. Use -1 for no limit.
 let g:scrollview_signs_search_buffer_lines_limit =
       \ get(g:, 'scrollview_signs_search_buffer_lines_limit', 20000)
-" Key sequences that will be updated to subsequently refresh scrollbars.
-let g:scrollview_signs_search_refresh_sequences =
-      \ get(g:, 'scrollview_signs_search_refresh_sequences',
-      \   ['n', 'N', '*', '#', 'g*', 'g#'])
 let g:scrollview_signs_symbol = get(g:, 'scrollview_signs_symbol', '*')
 let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
 " Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
@@ -224,11 +220,6 @@ if g:scrollview_auto_workarounds
   " when there is a single ordinary window in the tab, as the workaround would
   " not be needed otherwise).
 endif
-
-" Create mappings to refresh scrollbars after search commands.
-for s:seq in g:scrollview_signs_search_refresh_sequences
-  call s:CreateRefreshMapping('nx', s:seq)
-endfor
 
 " *************************************************
 " * Core
