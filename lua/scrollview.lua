@@ -385,8 +385,8 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
         if to_bool(vim.v.hlsearch) then
           -- Refresh bars if (1) v:hlsearch is on, (2) search signs aren't
           -- currently shown, and (3) searchcount().total > 0.
-          -- Track visited buffers, to prevent duplicate computation when multiple
-          -- windows are showing the same buffer.
+          -- Track visited buffers, to prevent duplicate computation when
+          -- multiple windows are showing the same buffer.
           local visited = {}
           for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
