@@ -383,8 +383,8 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
       vim.defer_fn(function()
         local refresh = false
         if to_bool(vim.v.hlsearch) then
-          -- Refresh bars if (1) v:hlsearch is on, (2) searchcount().total > 0,
-          -- and (3) search signs aren't currently shown.
+          -- Refresh bars if (1) v:hlsearch is on, (2) search signs aren't
+          -- currently shown, and (3) searchcount().total > 0.
           -- Track visited buffers, to prevent duplicate computation when multiple
           -- windows are showing the same buffer.
           local visited = {}
@@ -393,15 +393,15 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
             if not visited[bufnr] then
               visited[bufnr] = true
               refresh = api.nvim_win_call(winid, function()
-                -- Use a pcall since searchcount() throws an exception (E383,
-                -- E866) when the pattern is invalid (e.g., "\@a").
-                local searchcount_total = 0
-                pcall(function()
-                  searchcount_total = fn.searchcount().total
-                end)
-                if searchcount_total > 0 then
-                  local lines = vim.b['scrollview_signs_search']
-                  if lines == nil or vim.tbl_isempty(lines) then
+                local lines = vim.b['scrollview_signs_search']
+                if lines == nil or vim.tbl_isempty(lines) then
+                  -- Use a pcall since searchcount() throws an exception (E383,
+                  -- E866) when the pattern is invalid (e.g., "\@a").
+                  local searchcount_total = 0
+                  pcall(function()
+                    searchcount_total = fn.searchcount().total
+                  end)
+                  if searchcount_total > 0 then
                     return true
                   end
                 end
