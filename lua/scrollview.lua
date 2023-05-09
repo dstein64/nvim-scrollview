@@ -5,6 +5,9 @@ local fn = vim.fn
 -- TODO: api version
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
 -- relevant for search signs since you're not changing "/".
+-- TODO: marks signs.
+-- TODO: :ScrollViewNext, :ScrollViewPrev
+-- TODO: cursor sign.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
