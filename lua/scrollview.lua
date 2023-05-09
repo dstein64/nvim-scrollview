@@ -390,7 +390,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
               refresh = api.nvim_win_call(winid, function()
                 if fn.searchcount().total > 0 then
                   local lines = vim.b['scrollview_signs_search']
-                  if lines ~= nil and vim.tbl_isempty(lines) then
+                  if lines == nil or vim.tbl_isempty(lines) then
                     return true
                   end
                 end
