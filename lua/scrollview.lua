@@ -2221,7 +2221,7 @@ local handle_mouse = function(button)
           for _, sign_props in pairs(get_scrollview_sign_props(mouse_winid)) do
             if mouse_row == sign_props.row
               and mouse_col >= sign_props.col
-              and mouse_col <= sign_props.col + sign_props.width
+              and mouse_col <= sign_props.col + sign_props.width - 1
               and (not clicked_bar or sign_props.zindex > props.zindex) then
               restore_toplines = false
               api.nvim_win_call(mouse_winid, function()
