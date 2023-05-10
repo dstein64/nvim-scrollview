@@ -2216,7 +2216,6 @@ local move_to_nearest_sign_line = function(previous)
     target = subsequent(lines, current)
   end
   vim.cmd('normal!' .. target .. 'G')
-  vim.cmd('normal! zz')
 end
 
 -- Move the cursor to the next line that has a sign.
@@ -2359,7 +2358,6 @@ local handle_mouse = function(button)
                 local current = fn.line('.')
                 local target = subsequent(sign_props.lines, current)
                 vim.cmd('normal!' .. target .. 'G')
-                vim.cmd('normal! zz')
               end)
               refresh_bars(false)
               return
