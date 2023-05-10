@@ -75,6 +75,7 @@ highlight default link ScrollViewSignsDiagnosticsError WarningMsg
 highlight default link ScrollViewSignsDiagnosticsWarn LineNr
 highlight default link ScrollViewSignsDiagnosticsInfo Identifier
 highlight default link ScrollViewSignsDiagnosticsHint Question
+highlight default link ScrollViewSignsCursor Identifier
 
 " *************************************************
 " * Global State

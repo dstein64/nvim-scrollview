@@ -7,7 +7,6 @@ local fn = vim.fn
 -- relevant for search signs since you're not changing "/".
 -- TODO: marks signs.
 -- TODO: :ScrollViewNext, :ScrollViewPrev
--- TODO: cursor sign.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
@@ -436,6 +435,35 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   vim.api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
     callback = function(args)
       require('scrollview').scrollview_refresh()
+    end
+  })
+end
+
+-- TODO: Move cursor handling out of here.
+
+register_sign_spec('scrollview_signs_cursor', {
+  priority = 100,
+  symbol = fn.nr2char(0x2bc8),  -- a triangle pointing rightward
+  highlight = 'ScrollViewSignsCursor',
+})
+
+if to_bool(fn.exists('*nvim_create_autocmd')) then
+  vim.api.nvim_create_autocmd('User', {
+    pattern = 'ScrollViewRefresh',
+    callback = function(args)
+      for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
+        local bufnr = api.nvim_win_get_buf(winid)
+        vim.b[bufnr]['scrollview_signs_cursor'] = {fn.line('.')}
+      end
+    end
+  })
+
+  vim.api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
+    callback = function(args)
+      local lines = vim.b['scrollview_signs_cursor']
+      if lines == nil or lines[1] ~= fn.line('.') then
+        require('scrollview').scrollview_refresh()
+      end
     end
   })
 end
