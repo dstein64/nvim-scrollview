@@ -215,15 +215,6 @@ local preceding = function(l, item)
   return l[idx]
 end
 
--- Return a reversed version of a list.
-local reverse = function(l)
-  local result = {}
-  for idx = #l, 1, -1 do
-    table.insert(result, l[idx])
-  end
-  return result
-end
-
 -- TODO Move the following functions to where they should go
 local register_sign_spec = function(name, specification)
   specification = copy(specification)
