@@ -263,7 +263,7 @@ for _, item in pairs(spec_data) do
 end
 
 if to_bool(fn.exists('*nvim_create_autocmd')) then
-  vim.api.nvim_create_autocmd('DiagnosticChanged', {
+  api.nvim_create_autocmd('DiagnosticChanged', {
     callback = function(args)
       local names = {
         [vim.diagnostic.severity.ERROR] = 'scrollview_signs_diagnostics_error',
@@ -291,17 +291,17 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
         local name = names[severity]
         vim.b[args.buf][name] = lines
       end
-      if vim.fn.mode() ~= 'i' or vim.diagnostic.config().update_in_insert then
+      if fn.mode() ~= 'i' or vim.diagnostic.config().update_in_insert then
         -- Refresh scrollbars immediately when update_in_insert is set or the
         -- current mode is not insert mode.
         require('scrollview').scrollview_refresh()
       else
         -- Refresh scrollbars once leaving insert mode. Overwrite an existing
         -- autocmd configured to already do this.
-        local group = vim.api.nvim_create_augroup('scrollview_diagnostic_signs', {
+        local group = api.nvim_create_augroup('scrollview_diagnostic_signs', {
           clear = true
         })
-        vim.api.nvim_create_autocmd('InsertLeave', {
+        api.nvim_create_autocmd('InsertLeave', {
           group = group,
           callback = function(args)
             require('scrollview').scrollview_refresh()
@@ -323,7 +323,7 @@ register_sign_spec('scrollview_signs_search', {
 })
 
 if to_bool(fn.exists('*nvim_create_autocmd')) then
-  vim.api.nvim_create_autocmd('User', {
+  api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
       local pattern = fn.getreg('/')
@@ -381,7 +381,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
     end,
   })
 
-  vim.api.nvim_create_autocmd('OptionSet', {
+  api.nvim_create_autocmd('OptionSet', {
     callback = function(args)
       local amatch = fn.expand('<amatch>')
       if amatch == 'hlsearch' then
@@ -390,7 +390,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
     end
   })
 
-  vim.api.nvim_create_autocmd('CmdlineLeave', {
+  api.nvim_create_autocmd('CmdlineLeave', {
     callback = function(args)
       if to_bool(vim.v.event.abort) then
         return
@@ -420,7 +420,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   -- NOTE: If there are scenarios where search signs become out of sync (i.e.,
   -- shown when they shouldn't be), this same approach could be used with a
   -- timer.
-  vim.api.nvim_create_autocmd({'CursorMoved', 'CursorHold'}, {
+  api.nvim_create_autocmd({'CursorMoved', 'CursorHold'}, {
     callback = function(args)
       -- Use defer_fn since vim.v.hlsearch may not have been properly set yet.
       vim.defer_fn(function()
@@ -484,7 +484,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
   -- as v:hlsearch is turned off. The InsertLeave case updates search signs
   -- after leaving insert mode, when newly added text might correspond to new
   -- signs.
-  vim.api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
+  api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
     callback = function(args)
       require('scrollview').scrollview_refresh()
     end
@@ -500,7 +500,7 @@ register_sign_spec('scrollview_signs_cursor', {
 })
 
 if to_bool(fn.exists('*nvim_create_autocmd')) then
-  vim.api.nvim_create_autocmd('User', {
+  api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
       for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
@@ -510,7 +510,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
     end
   })
 
-  vim.api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
+  api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
     callback = function(args)
       local lines = vim.b.scrollview_signs_cursor
       if lines == nil or lines[1] ~= fn.line('.') then
