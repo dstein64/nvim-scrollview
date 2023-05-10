@@ -7,7 +7,6 @@ local fn = vim.fn
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
 -- relevant for search signs since you're not changing "/".
 -- TODO: marks signs.
--- TODO: cursor sign should only show in the current window.
 -- TODO: make sign options configurable (e.g., priority, etc.)
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
@@ -225,6 +224,9 @@ local register_sign_spec = function(name, specification)
     else
       specification[key] = copy(specification[key])
     end
+  end
+  if specification.current_only == nil then
+    specification.current_only = false
   end
   sign_specs[name] = specification
 end
@@ -488,6 +490,7 @@ register_sign_spec('scrollview_signs_cursor', {
   priority = 100,
   symbol = fn.nr2char(0x2bc8),  -- a triangle pointing rightward
   highlight = 'ScrollViewSignsCursor',
+  current_only = true,
 })
 
 if to_bool(fn.exists('*nvim_create_autocmd')) then
@@ -1337,6 +1340,7 @@ end
 -- winids, 'sign_winids', is specified for possible reuse. Reused windows are
 -- removed from the list.
 local show_signs = function(winid, sign_winids)
+  local cur_winid = api.nvim_get_current_win()
   local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
@@ -1354,7 +1358,12 @@ local show_signs = function(winid, sign_winids)
       get_variable('scrollview_signs_lines_per_spec_limit', winnr)
     local within_limit = lines_per_sign_spec_limit == -1
       or #lines_as_given <= lines_per_sign_spec_limit
-    if within_limit then
+    local satisfied_current_only = true
+    if sign_spec.current_only then
+      satisfied_current_only = winid == cur_winid
+    end
+    local should_show = within_limit and satisfied_current_only
+    if should_show then
       for _, line in ipairs(sorted(lines_as_given)) do
         if vim.tbl_isempty(lines) or lines[#lines] ~= line then
           table.insert(lines, line)
