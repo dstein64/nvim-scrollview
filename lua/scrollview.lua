@@ -5,7 +5,9 @@ local fn = vim.fn
 -- ScrollViewToggle, etc.).
 -- TODO: api version
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
--- relevant for search signs since you're not changing "/".
+-- relevant for search signs since you're not changing "/". Or using autocmds
+-- might suffice since "autocommands" do not change the current search patterns
+-- (see :help autocmd-sarchpat).
 -- TODO: marks signs.
 -- TODO: make sign options configurable (e.g., priority, etc.)
 
