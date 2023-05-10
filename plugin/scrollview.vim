@@ -124,6 +124,16 @@ if !exists(':ScrollViewPrev')
         \ require('scrollview').scrollview_prev()
 endif
 
+if !exists(':ScrollViewFirst')
+  command -bar ScrollViewFirst :lua
+        \ require('scrollview').scrollview_first()
+endif
+
+if !exists(':ScrollViewLast')
+  command -bar ScrollViewLast :lua
+        \ require('scrollview').scrollview_last()
+endif
+
 " *************************************************
 " * Mappings
 " *************************************************

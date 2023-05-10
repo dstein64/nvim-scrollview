@@ -2181,9 +2181,10 @@ local scrollview_refresh = function()
   end
 end
 
--- Move the cursor to nearest line that has a sign. Set the optional 'previous'
--- argumen to true to move backwards; otherwise the movement will be forward.
-local move_to_nearest_sign_line = function(previous)
+-- Move the cursor to the specified line with a sign. Can take (1) an integer
+-- value, (2) '$' for the last line, (3) 'next' for the next line, or (4)
+-- 'prev' for the previous line.
+local move_to_sign_line = function(location)
   if previous == nil then
     previous = false
   end
@@ -2200,23 +2201,39 @@ local move_to_nearest_sign_line = function(previous)
   table.sort(lines)
   lines = remove_duplicates(lines)
   local current = fn.line('.')
-  local target
-  if previous then
-    target = preceding(lines, current)
-  else
+  local target = nil
+  if location == 'next' then
     target = subsequent(lines, current)
+  elseif location == 'prev' then
+    target = preceding(lines, current)
+  elseif location == '$' then
+    target = lines[#lines]
+  elseif type(location) == 'number' then
+    target = lines[location]
   end
-  vim.cmd('normal!' .. target .. 'G')
+  if target ~= nil then
+    vim.cmd('normal!' .. target .. 'G')
+  end
 end
 
 -- Move the cursor to the next line that has a sign.
 local scrollview_next = function()
-  move_to_nearest_sign_line()
+  move_to_sign_line('next')
 end
 
 -- Move the cursor to the previous line that has a sign.
 local scrollview_prev = function()
-  move_to_nearest_sign_line(true)
+  move_to_sign_line('prev')
+end
+
+-- Move the cursor to the first line with a sign.
+local scrollview_first = function()
+  move_to_sign_line(1)
+end
+
+-- Move the cursor to the last line with a sign.
+local scrollview_last = function()
+  move_to_sign_line('$')
 end
 
 -- 'button' can be 'left', 'middle', 'right', 'x1', or 'x2'.
@@ -2467,6 +2484,8 @@ return {
   scrollview_refresh = scrollview_refresh,
   scrollview_next = scrollview_next,
   scrollview_prev = scrollview_prev,
+  scrollview_first = scrollview_first,
+  scrollview_last = scrollview_last,
   get_ordinary_windows = get_ordinary_windows,
   get_variable = get_variable,
   handle_mouse = handle_mouse,
