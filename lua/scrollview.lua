@@ -1,7 +1,8 @@
 local api = vim.api
 local fn = vim.fn
 
--- TODO: documentation for all new functionality (including User autocmd).
+-- TODO: documentation for all new functionality (including User autocmd,
+-- ScrollViewToggle, etc.).
 -- TODO: api version
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
 -- relevant for search signs since you're not changing "/".
@@ -2118,6 +2119,14 @@ local scrollview_disable = function()
   restore(state)
 end
 
+local scrollview_toggle = function()
+  if scrollview_enabled then
+    scrollview_disable()
+  else
+    scrollview_enable()
+  end
+end
+
 local scrollview_refresh = function()
   if scrollview_enabled then
     -- This refresh is asynchronous to keep interactions responsive (e.g.,
@@ -2383,6 +2392,7 @@ return {
   -- plugin/scrollview.vim, and sign handlers.
   scrollview_enable = scrollview_enable,
   scrollview_disable = scrollview_disable,
+  scrollview_toggle = scrollview_toggle,
   scrollview_refresh = scrollview_refresh,
   get_ordinary_windows = get_ordinary_windows,
   get_variable = get_variable,

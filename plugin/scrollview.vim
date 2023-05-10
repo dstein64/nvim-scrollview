@@ -109,6 +109,11 @@ if !exists(':ScrollViewDisable')
         \ require('scrollview').scrollview_disable()
 endif
 
+if !exists(':ScrollViewToggle')
+  command -bar ScrollViewToggle :lua
+        \ require('scrollview').scrollview_toggle()
+endif
+
 " *************************************************
 " * Mappings
 " *************************************************
