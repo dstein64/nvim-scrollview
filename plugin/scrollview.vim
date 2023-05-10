@@ -114,6 +114,16 @@ if !exists(':ScrollViewToggle')
         \ require('scrollview').scrollview_toggle()
 endif
 
+if !exists(':ScrollViewNext')
+  command -bar ScrollViewNext :lua
+        \ require('scrollview').scrollview_next()
+endif
+
+if !exists(':ScrollViewPrev')
+  command -bar ScrollViewPrev :lua
+        \ require('scrollview').scrollview_prev()
+endif
+
 " *************************************************
 " * Mappings
 " *************************************************

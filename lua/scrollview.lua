@@ -7,7 +7,7 @@ local fn = vim.fn
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
 -- relevant for search signs since you're not changing "/".
 -- TODO: marks signs.
--- TODO: :ScrollViewNext, :ScrollViewPrev
+-- TODO: cursor sign should only show in the current window.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
@@ -171,6 +171,56 @@ local binary_search = function(l, x)
     end
   end
   return lo
+end
+
+-- Return a new list with duplicate elements removed from a sorted array-like
+-- table.
+local remove_duplicates = function(l)
+  local result = {}
+  for _, x in ipairs(l) do
+    if vim.tbl_isempty(result) or result[#result] ~= x then
+      table.insert(result, x)
+    end
+  end
+  return result
+end
+
+-- For sorted list l with no duplicates, return the next item after the
+-- specified item (wraps around).
+local subsequent = function(l, item)
+  if vim.tbl_isempty(l) then
+    return nil
+  end
+  local idx = binary_search(l, item)
+  if idx <= #l and l[idx] == item then
+    idx = idx + 1  -- use the next item
+  end
+  if idx > #l then
+    idx = 1
+  end
+  return l[idx]
+end
+
+-- For sorted list l with no duplicates, return the previous item before the
+-- specified item (wraps around).
+local preceding = function(l, item)
+  if vim.tbl_isempty(l) then
+    return nil
+  end
+  local idx = binary_search(l, item) - 1
+  if idx < 1 then
+    idx = #l
+  end
+  return l[idx]
+end
+
+-- Return a reversed version of a list.
+local reverse = function(l)
+  local result = {}
+  for idx = #l, 1, -1 do
+    table.insert(result, l[idx])
+  end
+  return result
 end
 
 -- TODO Move the following functions to where they should go
@@ -2139,6 +2189,45 @@ local scrollview_refresh = function()
   end
 end
 
+-- Move the cursor to nearest line that has a sign. Set the optional 'previous'
+-- argumen to true to move backwards; otherwise the movement will be forward.
+local move_to_nearest_sign_line = function(previous)
+  if previous == nil then
+    previous = false
+  end
+  local lines = {}
+  local winid = api.nvim_get_current_win()
+  for _, sign_props in pairs(get_scrollview_sign_props(winid)) do
+    for _, line in ipairs(sign_props.lines) do
+      table.insert(lines, line)
+    end
+  end
+  if vim.tbl_isempty(lines) then
+    return
+  end
+  table.sort(lines)
+  lines = remove_duplicates(lines)
+  local current = fn.line('.')
+  local target
+  if previous then
+    target = preceding(lines, current)
+  else
+    target = subsequent(lines, current)
+  end
+  vim.cmd('normal!' .. target .. 'G')
+  vim.cmd('normal! zz')
+end
+
+-- Move the cursor to the next line that has a sign.
+local scrollview_next = function()
+  move_to_nearest_sign_line()
+end
+
+-- Move the cursor to the previous line that has a sign.
+local scrollview_prev = function()
+  move_to_nearest_sign_line(true)
+end
+
 -- 'button' can be 'left', 'middle', 'right', 'x1', or 'x2'.
 local handle_mouse = function(button)
   if not vim.tbl_contains({'left', 'middle', 'right', 'x1', 'x2'}, button) then
@@ -2267,15 +2356,7 @@ local handle_mouse = function(button)
               api.nvim_win_call(mouse_winid, function()
                 -- Go to the next sign_props line after the cursor.
                 local current = fn.line('.')
-                local target_idx = binary_search(sign_props.lines, current)
-                if target_idx <= #sign_props.lines
-                    and sign_props.lines[target_idx] == current then
-                  target_idx = target_idx + 1  -- use the next line
-                end
-                if target_idx > #sign_props.lines then
-                  target_idx = 1
-                end
-                local target = sign_props.lines[target_idx]
+                local target = subsequent(sign_props.lines, current)
                 vim.cmd('normal!' .. target .. 'G')
                 vim.cmd('normal! zz')
               end)
@@ -2394,6 +2475,8 @@ return {
   scrollview_disable = scrollview_disable,
   scrollview_toggle = scrollview_toggle,
   scrollview_refresh = scrollview_refresh,
+  scrollview_next = scrollview_next,
+  scrollview_prev = scrollview_prev,
   get_ordinary_windows = get_ordinary_windows,
   get_variable = get_variable,
   handle_mouse = handle_mouse,
