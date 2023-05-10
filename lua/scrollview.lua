@@ -8,6 +8,7 @@ local fn = vim.fn
 -- relevant for search signs since you're not changing "/".
 -- TODO: marks signs.
 -- TODO: cursor sign should only show in the current window.
+-- TODO: make sign options configurable (e.g., priority, etc.)
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
@@ -337,13 +338,13 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
           local lines = {}
           if to_bool(vim.v.hlsearch) then
             local cache_hit = false
-            local seq_cur = fn.undotree()['seq_cur']
-            if bufvars['scrollview_signs_search_pattern_cached'] == pattern then
-              local cache_seq_cur = bufvars['scrollview_signs_search_seq_cur_cached']
+            local seq_cur = fn.undotree().seq_cur
+            if bufvars.scrollview_signs_search_pattern_cached == pattern then
+              local cache_seq_cur = bufvars.scrollview_signs_search_seq_cur_cached
               cache_hit = cache_seq_cur == seq_cur
             end
             if cache_hit then
-              lines = bufvars['scrollview_signs_search_cached']
+              lines = bufvars.scrollview_signs_search_cached
             else
               lines = require('scrollview').with_win_workspace(winid, function()
                 local result = {}
@@ -367,13 +368,13 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
               for idx, line in ipairs(lines) do
                 lines[idx] = tonumber(line)
               end
-              bufvars['scrollview_signs_search_pattern_cached'] = pattern
-              bufvars['scrollview_signs_search_seq_cur_cached'] = seq_cur
-              bufvars['scrollview_signs_search_cached'] = lines
+              bufvars.scrollview_signs_search_pattern_cached = pattern
+              bufvars.scrollview_signs_search_seq_cur_cached = seq_cur
+              bufvars.scrollview_signs_search_cached = lines
             end
           end
-          bufvars['scrollview_signs_search'] = lines
-          bufvars['scrollview_signs_search_pattern'] = pattern
+          bufvars.scrollview_signs_search = lines
+          bufvars.scrollview_signs_search_pattern = pattern
           visited[bufnr] = true
         end
       end
@@ -438,10 +439,10 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
             if not visited[bufnr] then
               visited[bufnr] = true
               refresh = api.nvim_win_call(winid, function()
-                if pattern ~= vim.b['scrollview_signs_search_pattern'] then
+                if pattern ~= vim.b.scrollview_signs_search_pattern then
                   return true
                 end
-                local lines = vim.b['scrollview_signs_search']
+                local lines = vim.b.scrollview_signs_search
                 if lines == nil or vim.tbl_isempty(lines) then
                   -- Use a pcall since searchcount() throws an exception (E383,
                   -- E866) when the pattern is invalid (e.g., "\@a").
@@ -465,7 +466,7 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
           -- shown.
           for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
-            local lines = vim.b[bufnr]['scrollview_signs_search']
+            local lines = vim.b[bufnr].scrollview_signs_search
             if lines ~= nil and not vim.tbl_isempty(lines) then
               refresh = true
               break
@@ -504,14 +505,14 @@ if to_bool(fn.exists('*nvim_create_autocmd')) then
     callback = function(args)
       for _, winid in ipairs(require('scrollview').get_ordinary_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
-        vim.b[bufnr]['scrollview_signs_cursor'] = {fn.line('.')}
+        vim.b[bufnr].scrollview_signs_cursor = {fn.line('.')}
       end
     end
   })
 
   vim.api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
     callback = function(args)
-      local lines = vim.b['scrollview_signs_cursor']
+      local lines = vim.b.scrollview_signs_cursor
       if lines == nil or lines[1] ~= fn.line('.') then
         require('scrollview').scrollview_refresh()
       end
@@ -1423,7 +1424,7 @@ local show_signs = function(winid, sign_winids)
     local total_width = 0  -- running sum of sign widths
     for idx, properties in ipairs(props_list) do
       local symbol = properties.symbol
-      if symbol == nil then symbol = vim.g['scrollview_signs_symbol'] end
+      if symbol == nil then symbol = vim.g.scrollview_signs_symbol end
       symbol = symbol:gsub('\n', '')
       symbol = symbol:gsub('\r', '')
       if #symbol < 1 then symbol = ' ' end
