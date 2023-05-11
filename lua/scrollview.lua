@@ -24,6 +24,7 @@ local to_bool = utils.to_bool
 -- (see :help autocmd-sarchpat).
 -- TODO: marks signs.
 -- TODO: make sign options configurable (e.g., priority, etc.)
+--       (see diagnostics.lua)
 -- TODO: default cursor sign off
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
