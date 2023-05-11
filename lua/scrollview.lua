@@ -238,26 +238,27 @@ local unregister_sign_spec = function(name)
 end
 
 -- TODO: Move diagnostic handling out of here.
-local spec_data = {
-  [vim.diagnostic.severity.ERROR] =
-    {'scrollview_signs_diagnostics_error', 60, 'E', 'ScrollViewSignsDiagnosticsError'},
-  [vim.diagnostic.severity.WARN] =
-    {'scrollview_signs_diagnostics_warn', 50, 'W', 'ScrollViewSignsDiagnosticsWarn'},
-  [vim.diagnostic.severity.INFO] =
-    {'scrollview_signs_diagnostics_info', 40, 'I', 'ScrollViewSignsDiagnosticsInfo'},
-  [vim.diagnostic.severity.HINT] =
-    {'scrollview_sigsn_diagnostics_hint', 30, 'H', 'ScrollViewSignsDiagnosticsHint'},
-}
-for _, item in pairs(spec_data) do
-  local name, priority, symbol, highlight = unpack(item)
-  register_sign_spec(name, {
-    priority = priority,
-    symbol = symbol,
-    highlight = highlight,
-  })
-end
 
-if to_bool(fn.exists('*nvim_create_autocmd')) then
+if api.nvim_create_autocmd ~= nil and vim.diagnostic ~= nil then
+  local spec_data = {
+    [vim.diagnostic.severity.ERROR] =
+      {'scrollview_signs_diagnostics_error', 60, 'E', 'ScrollViewSignsDiagnosticsError'},
+    [vim.diagnostic.severity.WARN] =
+      {'scrollview_signs_diagnostics_warn', 50, 'W', 'ScrollViewSignsDiagnosticsWarn'},
+    [vim.diagnostic.severity.INFO] =
+      {'scrollview_signs_diagnostics_info', 40, 'I', 'ScrollViewSignsDiagnosticsInfo'},
+    [vim.diagnostic.severity.HINT] =
+      {'scrollview_sigsn_diagnostics_hint', 30, 'H', 'ScrollViewSignsDiagnosticsHint'},
+  }
+  for _, item in pairs(spec_data) do
+    local name, priority, symbol, highlight = unpack(item)
+    register_sign_spec(name, {
+      priority = priority,
+      symbol = symbol,
+      highlight = highlight,
+    })
+  end
+
   api.nvim_create_autocmd('DiagnosticChanged', {
     callback = function(args)
       local names = {
@@ -310,14 +311,14 @@ end
 
 -- TODO: Move search handling out of here.
 
-register_sign_spec('scrollview_signs_search', {
-  priority = 70,
-  -- (1) equals, (2) triple bar
-  symbol = {'=', fn.nr2char(0x2261)},
-  highlight = 'ScrollViewSignsSearch',
-})
+if api.nvim_create_autocmd ~= nil then
+  register_sign_spec('scrollview_signs_search', {
+    priority = 70,
+    -- (1) equals, (2) triple bar
+    symbol = {'=', fn.nr2char(0x2261)},
+    highlight = 'ScrollViewSignsSearch',
+  })
 
-if to_bool(fn.exists('*nvim_create_autocmd')) then
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
@@ -488,14 +489,14 @@ end
 
 -- TODO: Move cursor handling out of here.
 
-register_sign_spec('scrollview_signs_cursor', {
-  priority = 100,
-  symbol = fn.nr2char(0x2bc8),  -- a triangle pointing rightward
-  highlight = 'ScrollViewSignsCursor',
-  current_only = true,
-})
+if api.nvim_create_autocmd ~= nil then
+  register_sign_spec('scrollview_signs_cursor', {
+    priority = 100,
+    symbol = fn.nr2char(0x2bc8),  -- a triangle pointing rightward
+    highlight = 'ScrollViewSignsCursor',
+    current_only = true,
+  })
 
-if to_bool(fn.exists('*nvim_create_autocmd')) then
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
