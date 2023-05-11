@@ -93,6 +93,8 @@ api.nvim_set_hl(hl_namespace, 'Normal', {})
 -- * Utils
 -- *************************************************
 
+-- TODO: move these to utils.lua?
+
 -- Round to the nearest integer.
 -- WARN: .5 rounds to the right on the number line, including for negatives
 -- (which would not result in rounding up in magnitude).
