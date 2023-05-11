@@ -24,8 +24,6 @@ local preceding = utils.preceding
 -- (see :help autocmd-sarchpat).
 -- TODO: marks signs.
 -- TODO: make sign options configurable (e.g., priority, etc.)
--- TODO: rename scrollview_enable and other external functions, and make
--- updates elsewhere. Also, sort that section of the return statement below.
 -- TODO: default cursor sign off
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
@@ -1498,7 +1496,7 @@ local refresh_bars = function(async_removal)
   -- worst case scenario is that bars won't be shown properly, which was
   -- deemed preferable to an obscure error message that can be interrupting.
   start_memoize()
-  -- pcall(function()
+  pcall(function()
     if in_command_line_window() then return end
     -- Don't refresh when the current window shows a scrollview buffer. This
     -- could cause a loop where TextChanged keeps firing.
@@ -1608,7 +1606,7 @@ local refresh_bars = function(async_removal)
         close_scrollview_window(winid)
       end
     end
-  -- end)
+  end)
   stop_memoize()
   reset_memoize()
   restore(state)
@@ -1650,7 +1648,7 @@ end
 -- responsive and it permits redundant refreshes to be dropped (e.g., for mouse
 -- wheel scrolling).
 
-local scrollview_enable = function()
+local enable = function()
   scrollview_enabled = true
   vim.cmd([[
     augroup scrollview
@@ -1732,7 +1730,7 @@ local scrollview_enable = function()
   refresh_bars_async()
 end
 
-local scrollview_disable = function()
+local disable = function()
   local winid = api.nvim_get_current_win()
   local state = init()
   pcall(function()
@@ -1760,15 +1758,15 @@ local scrollview_disable = function()
   restore(state)
 end
 
-local scrollview_toggle = function()
+local toggle = function()
   if scrollview_enabled then
-    scrollview_disable()
+    disable()
   else
-    scrollview_enable()
+    enable()
   end
 end
 
-local scrollview_refresh = function()
+local refresh = function()
   if scrollview_enabled then
     -- This refresh is asynchronous to keep interactions responsive (e.g.,
     -- mouse wheel scrolling, as redundant async refreshes are dropped). If
@@ -1816,22 +1814,22 @@ local move_to_sign_line = function(location)
 end
 
 -- Move the cursor to the next line that has a sign.
-local scrollview_next = function()
+local next = function()
   move_to_sign_line('next')
 end
 
 -- Move the cursor to the previous line that has a sign.
-local scrollview_prev = function()
+local prev = function()
   move_to_sign_line('prev')
 end
 
 -- Move the cursor to the first line with a sign.
-local scrollview_first = function()
+local first = function()
   move_to_sign_line(1)
 end
 
 -- Move the cursor to the last line with a sign.
-local scrollview_last = function()
+local last = function()
   move_to_sign_line('$')
 end
 
@@ -2097,17 +2095,17 @@ return {
 
   -- Functions called by commands and mappings defined in
   -- plugin/scrollview.vim, and sign handlers.
-  scrollview_enable = scrollview_enable,
-  scrollview_disable = scrollview_disable,
-  scrollview_toggle = scrollview_toggle,
-  scrollview_refresh = scrollview_refresh,
-  scrollview_next = scrollview_next,
-  scrollview_prev = scrollview_prev,
-  scrollview_first = scrollview_first,
-  scrollview_last = scrollview_last,
+  disable = disable,
+  enable = enable,
+  first = first,
   get_ordinary_windows = get_ordinary_windows,
   get_variable = get_variable,
   handle_mouse = handle_mouse,
+  last = last,
+  next = next,
+  prev = prev,
+  refresh = refresh,
+  toggle = toggle,
   with_win_workspace = with_win_workspace,
 
   -- Sign registration

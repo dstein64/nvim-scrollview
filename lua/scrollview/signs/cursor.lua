@@ -30,7 +30,7 @@ function M.init()
     callback = function(args)
       local lines = vim.b.scrollview_signs_cursor
       if lines == nil or lines[1] ~= fn.line('.') then
-        scrollview.scrollview_refresh()
+        scrollview.refresh()
       end
     end
   })

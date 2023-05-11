@@ -59,7 +59,7 @@ function M.init()
       if fn.mode() ~= 'i' or vim.diagnostic.config().update_in_insert then
         -- Refresh scrollbars immediately when update_in_insert is set or the
         -- current mode is not insert mode.
-        scrollview.scrollview_refresh()
+        scrollview.refresh()
       else
         -- Refresh scrollbars once leaving insert mode. Overwrite an existing
         -- autocmd configured to already do this.
@@ -69,7 +69,7 @@ function M.init()
         api.nvim_create_autocmd('InsertLeave', {
           group = group,
           callback = function(args)
-            scrollview.scrollview_refresh()
+            scrollview.refresh()
           end,
           once = true,
         })

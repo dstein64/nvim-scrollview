@@ -79,7 +79,7 @@ function M.init()
     callback = function(args)
       local amatch = fn.expand('<amatch>')
       if amatch == 'hlsearch' then
-        scrollview.scrollview_refresh()
+        scrollview.refresh()
       end
     end
   })
@@ -98,7 +98,7 @@ function M.init()
         refresh = true
       end
       if refresh then
-        scrollview.scrollview_refresh()
+        scrollview.refresh()
       end
     end
   })
@@ -168,7 +168,7 @@ function M.init()
           end
         end
         if refresh then
-          scrollview.scrollview_refresh()
+          scrollview.refresh()
         end
       end, 0)
     end
@@ -180,7 +180,7 @@ function M.init()
   -- signs.
   api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
     callback = function(args)
-      scrollview.scrollview_refresh()
+      scrollview.refresh()
     end
   })
 end
