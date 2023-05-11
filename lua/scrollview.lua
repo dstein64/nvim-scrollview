@@ -1,5 +1,7 @@
 local api = vim.api
 local fn = vim.fn
+local utils = require('scrollview.utils')
+local to_bool = utils.to_bool
 
 -- TODO: documentation for all new functionality (including User autocmd,
 -- ScrollViewToggle, etc.).
@@ -116,17 +118,6 @@ local tbl_get = function(table, key, default)
     result = default
   end
   return result
-end
-
--- Returns true for boolean true and any non-zero number, otherwise returns
--- false.
-local to_bool = function(x)
-  if type(x) == 'boolean' then
-    return x
-  elseif type(x) == 'number' then
-    return x ~= 0
-  end
-  return false
 end
 
 -- Create a shallow copy of a map-like table.
@@ -2221,7 +2212,6 @@ return {
   get_variable = get_variable,
   handle_mouse = handle_mouse,
   with_win_workspace = with_win_workspace,
-  to_bool = to_bool,
 
   -- Sign registration
   register_sign_spec = register_sign_spec,

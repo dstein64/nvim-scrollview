@@ -1,5 +1,7 @@
 local api = vim.api
 local fn = vim.fn
+local scrollview = require('scrollview')
+local to_bool = require('scrollview.utils').to_bool
 
 local M = {}
 
@@ -8,7 +10,7 @@ function M.init()
     return
   end
 
-  require('scrollview').register_sign_spec('scrollview_signs_search', {
+  scrollview.register_sign_spec('scrollview_signs_search', {
     priority = 70,
     -- (1) equals, (2) triple bar
     symbol = {'=', fn.nr2char(0x2261)},
@@ -18,7 +20,6 @@ function M.init()
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
-      local scrollview = require('scrollview')
       local pattern = fn.getreg('/')
       -- Track visited buffers, to prevent duplicate computation when multiple
       -- windows are showing the same buffer.
@@ -29,7 +30,7 @@ function M.init()
           local winnr = api.nvim_win_get_number(winid)
           local bufvars = vim.b[bufnr]
           local lines = {}
-          if scrollview.to_bool(vim.v.hlsearch) then
+          if to_bool(vim.v.hlsearch) then
             local cache_hit = false
             local seq_cur = fn.undotree().seq_cur
             if bufvars.scrollview_signs_search_pattern_cached == pattern then
@@ -78,15 +79,14 @@ function M.init()
     callback = function(args)
       local amatch = fn.expand('<amatch>')
       if amatch == 'hlsearch' then
-        require('scrollview').scrollview_refresh()
+        scrollview.scrollview_refresh()
       end
     end
   })
 
   api.nvim_create_autocmd('CmdlineLeave', {
     callback = function(args)
-      local scrollview = require('scrollview')
-      if scrollview.to_bool(vim.v.event.abort) then
+      if to_bool(vim.v.event.abort) then
         return
       end
       local afile = fn.expand('<afile>')
@@ -118,9 +118,8 @@ function M.init()
     callback = function(args)
       -- Use defer_fn since vim.v.hlsearch may not have been properly set yet.
       vim.defer_fn(function()
-        local scrollview = require('scrollview')
         local refresh = false
-        if scrollview.to_bool(vim.v.hlsearch) then
+        if to_bool(vim.v.hlsearch) then
           -- Refresh bars if (1) v:hlsearch is on, (2) search signs aren't
           -- currently shown, and (3) searchcount().total > 0. Also refresh
           -- bars if v:hlsearch is on and the shown search signs correspond to
@@ -181,7 +180,7 @@ function M.init()
   -- signs.
   api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
     callback = function(args)
-      require('scrollview').scrollview_refresh()
+      scrollview.scrollview_refresh()
     end
   })
 end
