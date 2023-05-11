@@ -29,6 +29,7 @@ local to_bool = utils.to_bool
 -- TODO: an option for whether signs are displayed. this should be considered
 -- only at global scope and should be considered by each callback for returning
 -- fast. Also can have the callbacks consider whether scrollview is enabled.
+-- TODO: maybe ScrollViewToggleSigns
 -- TODO: have to add <Plug> mappings for new commands.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
