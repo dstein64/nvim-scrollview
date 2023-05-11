@@ -2,18 +2,18 @@ local api = vim.api
 local fn = vim.fn
 
 local utils = require('scrollview.utils')
-local to_bool = utils.to_bool
-local round = utils.round
+local binary_search = utils.binary_search
+local concat = utils.concat
+local copy = utils.copy
+local preceding = utils.preceding
 local reltime_to_microseconds = utils.reltime_to_microseconds
+local remove_duplicates = utils.remove_duplicates
+local round = utils.round
+local sorted = utils.sorted
+local subsequent = utils.subsequent
 local t = utils.t
 local tbl_get = utils.tbl_get
-local copy = utils.copy
-local concat = utils.concat
-local sorted = utils.sorted
-local binary_search = utils.binary_search
-local remove_duplicates = utils.remove_duplicates
-local subsequent = utils.subsequent
-local preceding = utils.preceding
+local to_bool = utils.to_bool
 
 -- TODO: documentation for all new functionality (including User autocmd,
 -- ScrollViewToggle, etc.).
