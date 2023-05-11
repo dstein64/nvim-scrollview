@@ -127,7 +127,7 @@ endif
 
 if !exists(':ScrollViewLast')
   command -bar ScrollViewLast :lua
-        \ require('scrollview').scrollview_last()
+        \ require('scrollview').last()
 endif
 
 " *************************************************
