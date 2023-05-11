@@ -42,6 +42,8 @@ let g:scrollview_refresh_time = get(g:, 'scrollview_refresh_time', 100)
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
 let g:scrollview_signs_column = get(g:, 'scrollview_signs_column', -1)
+let g:scrollview_signs_cursor = get(g:, 'scrollview_signs_cursor', 1)
+let g:scrollview_signs_diagnostics = get(g:, 'scrollview_signs_diagnostics', 1)
 " A registered set of signs are not shown when the number of lines for the
 " specification exceeds the limit, to prevent a slowdown. Use -1 for no limit.
 let g:scrollview_signs_lines_per_spec_limit =
@@ -51,6 +53,7 @@ let g:scrollview_signs_lines_per_spec_limit =
 let g:scrollview_signs_max_per_row = get(g:, 'scrollview_signs_max_per_row', 3)
 " Specifies the sign overflow direction ('left' or 'right').
 let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
+let g:scrollview_signs_search = get(g:, 'scrollview_signs_search', 1)
 " Search signs are not shown when the number of buffer lines exceeds the
 " limit, to prevent a slowdown. Use -1 for no limit.
 let g:scrollview_signs_search_buffer_lines_limit =
@@ -256,6 +259,18 @@ if g:scrollview_on_startup
   " mode from functioning properly when it's launched at startup (i.e., with
   " nvim -d). The issue is reported in Neovim Issue #13720.
   lua vim.defer_fn(require('scrollview').scrollview_enable, 0)
+endif
+
+if g:scrollview_signs_cursor
+  lua vim.defer_fn(require('scrollview.signs.cursor').init, 0)
+endif
+
+if g:scrollview_signs_diagnostics
+  lua vim.defer_fn(require('scrollview.signs.diagnostics').init, 0)
+endif
+
+if g:scrollview_signs_search
+  lua vim.defer_fn(require('scrollview.signs.search').init, 0)
 endif
 
 " *************************************************
