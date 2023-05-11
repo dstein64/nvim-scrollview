@@ -1093,7 +1093,8 @@ local show_signs = function(winid, sign_winids)
         if to_bool(fn.has('nvim-0.8')) and not to_bool(fn.has('nvim-0.9')) then
           api.nvim_win_set_hl_ns(sign_winid, hl_namespace)
         end
-        set_window_option(sign_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
+        -- foldcolumn takes a string
+        set_window_option(sign_winid, 'foldcolumn', '0')
         set_window_option(sign_winid, 'foldenable', false)
         set_window_option(sign_winid, 'wrap', false)
         api.nvim_win_set_var(sign_winid, win_var, win_val)
