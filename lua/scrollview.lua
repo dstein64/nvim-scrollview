@@ -12,6 +12,10 @@ local to_bool = utils.to_bool
 -- (see :help autocmd-sarchpat).
 -- TODO: marks signs.
 -- TODO: make sign options configurable (e.g., priority, etc.)
+-- TODO: rename scrollview_enable and other external functions, and make
+-- updates elsewhere. Also, sort that section of the return statement below.
+-- TODO: move Utils section to utils.lua.
+-- TODO: default cursor sign off
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
@@ -92,8 +96,6 @@ api.nvim_set_hl(hl_namespace, 'Normal', {})
 -- *************************************************
 -- * Utils
 -- *************************************************
-
--- TODO: move these to utils.lua?
 
 -- Round to the nearest integer.
 -- WARN: .5 rounds to the right on the number line, including for negatives
