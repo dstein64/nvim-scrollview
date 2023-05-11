@@ -28,6 +28,7 @@ local to_bool = utils.to_bool
 -- TODO: default cursor sign off
 -- TODO: an option for whether signs are displayed (this can turn off signs per
 -- window or buffer)
+-- TODO: have to add <Plug> mappings for new commands.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
