@@ -1,5 +1,6 @@
 local api = vim.api
 local fn = vim.fn
+local scrollview = require('scrollview')
 
 local M = {}
 
@@ -20,7 +21,7 @@ function M.init()
   }
   for _, item in pairs(spec_data) do
     local name, priority, symbol, highlight = unpack(item)
-    require('scrollview').register_sign_spec(name, {
+    scrollview.register_sign_spec(name, {
       priority = priority,
       symbol = symbol,
       highlight = highlight,
@@ -58,7 +59,7 @@ function M.init()
       if fn.mode() ~= 'i' or vim.diagnostic.config().update_in_insert then
         -- Refresh scrollbars immediately when update_in_insert is set or the
         -- current mode is not insert mode.
-        require('scrollview').scrollview_refresh()
+        scrollview.scrollview_refresh()
       else
         -- Refresh scrollbars once leaving insert mode. Overwrite an existing
         -- autocmd configured to already do this.
@@ -68,7 +69,7 @@ function M.init()
         api.nvim_create_autocmd('InsertLeave', {
           group = group,
           callback = function(args)
-            require('scrollview').scrollview_refresh()
+            scrollview.scrollview_refresh()
           end,
           once = true,
         })
