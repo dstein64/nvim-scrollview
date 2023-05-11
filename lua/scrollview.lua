@@ -1,7 +1,19 @@
 local api = vim.api
 local fn = vim.fn
+
 local utils = require('scrollview.utils')
 local to_bool = utils.to_bool
+local round = utils.round
+local reltime_to_microseconds = utils.reltime_to_microseconds
+local t = utils.t
+local tbl_get = utils.tbl_get
+local copy = utils.copy
+local concat = utils.concat
+local sorted = utils.sorted
+local binary_search = utils.binary_search
+local remove_duplicates = utils.remove_duplicates
+local subsequent = utils.subsequent
+local preceding = utils.preceding
 
 -- TODO: documentation for all new functionality (including User autocmd,
 -- ScrollViewToggle, etc.).
@@ -14,7 +26,6 @@ local to_bool = utils.to_bool
 -- TODO: make sign options configurable (e.g., priority, etc.)
 -- TODO: rename scrollview_enable and other external functions, and make
 -- updates elsewhere. Also, sort that section of the return statement below.
--- TODO: move Utils section to utils.lua.
 -- TODO: default cursor sign off
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
@@ -92,124 +103,6 @@ local sign_specs = {}
 -- workaround for Neovim #22906.
 local hl_namespace = api.nvim_create_namespace('')
 api.nvim_set_hl(hl_namespace, 'Normal', {})
-
--- *************************************************
--- * Utils
--- *************************************************
-
--- Round to the nearest integer.
--- WARN: .5 rounds to the right on the number line, including for negatives
--- (which would not result in rounding up in magnitude).
--- (e.g., round(3.5) == 3, round(-3.5) == -3 != -4)
-local round = function(x)
-  return math.floor(x + 0.5)
-end
-
-local reltime_to_microseconds = function(reltime)
-  local reltimestr = fn.reltimestr(reltime)
-  return tonumber(table.concat(vim.split(reltimestr, '%.'), ''))
-end
-
--- Replace termcodes.
-local t = function(str)
-  return api.nvim_replace_termcodes(str, true, true, true)
-end
-
--- Get value from a map-like table, using the specified default.
-local tbl_get = function(table, key, default)
-  local result = table[key]
-  if result == nil then
-    result = default
-  end
-  return result
-end
-
--- Create a shallow copy of a map-like table.
-local copy = function(table)
-  local result = {}
-  for key, val in pairs(table) do
-    result[key] = val
-  end
-  return result
-end
-
--- Concatenate two array-like tables.
-local concat = function(a, b)
-  local result = {}
-  for _, x in ipairs(a) do
-    table.insert(result, x)
-  end
-  for _, x in ipairs(b) do
-    table.insert(result, x)
-  end
-  return result
-end
-
--- A non-destructive sort function.
-local sorted = function(l)
-  local result = copy(l)
-  table.sort(result)
-  return result
-end
-
--- Returns the index of x in l if present, or the index for insertion
--- otherwise.
-local binary_search = function(l, x)
-  local lo = 1
-  local hi = #l
-  while lo <= hi do
-    local mid = math.floor((hi - lo) / 2 + lo)
-    if l[mid] == x then
-      return mid
-    elseif l[mid] < x then
-      lo = lo + 1
-    else
-      hi = hi - 1
-    end
-  end
-  return lo
-end
-
--- Return a new list with duplicate elements removed from a sorted array-like
--- table.
-local remove_duplicates = function(l)
-  local result = {}
-  for _, x in ipairs(l) do
-    if vim.tbl_isempty(result) or result[#result] ~= x then
-      table.insert(result, x)
-    end
-  end
-  return result
-end
-
--- For sorted list l with no duplicates, return the next item after the
--- specified item (wraps around).
-local subsequent = function(l, item)
-  if vim.tbl_isempty(l) then
-    return nil
-  end
-  local idx = binary_search(l, item)
-  if idx <= #l and l[idx] == item then
-    idx = idx + 1  -- use the next item
-  end
-  if idx > #l then
-    idx = 1
-  end
-  return l[idx]
-end
-
--- For sorted list l with no duplicates, return the previous item before the
--- specified item (wraps around).
-local preceding = function(l, item)
-  if vim.tbl_isempty(l) then
-    return nil
-  end
-  local idx = binary_search(l, item) - 1
-  if idx < 1 then
-    idx = #l
-  end
-  return l[idx]
-end
 
 -- *************************************************
 -- * Core
@@ -1605,7 +1498,7 @@ local refresh_bars = function(async_removal)
   -- worst case scenario is that bars won't be shown properly, which was
   -- deemed preferable to an obscure error message that can be interrupting.
   start_memoize()
-  pcall(function()
+  -- pcall(function()
     if in_command_line_window() then return end
     -- Don't refresh when the current window shows a scrollview buffer. This
     -- could cause a loop where TextChanged keeps firing.
@@ -1715,7 +1608,7 @@ local refresh_bars = function(async_removal)
         close_scrollview_window(winid)
       end
     end
-  end)
+  -- end)
   stop_memoize()
   reset_memoize()
   restore(state)
