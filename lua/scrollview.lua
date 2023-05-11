@@ -16,7 +16,7 @@ local tbl_get = utils.tbl_get
 local to_bool = utils.to_bool
 
 -- TODO: documentation for all new functionality (including User autocmd,
--- ScrollViewToggle, etc.).
+-- ScrollViewToggle, <plug> mappings, etc.).
 -- TODO: api version
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
 -- relevant for search signs since you're not changing "/". Or using autocmds
@@ -29,8 +29,6 @@ local to_bool = utils.to_bool
 -- TODO: an option for whether signs are displayed. this should be considered
 -- only at global scope and should be considered by each callback for returning
 -- fast. Also can have the callbacks consider whether scrollview is enabled.
--- TODO: maybe ScrollViewToggleSigns
--- TODO: have to add <Plug> mappings for new commands.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).

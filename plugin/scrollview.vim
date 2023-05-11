@@ -97,20 +97,20 @@ let g:scrollview_refresh_time_exceeded =
 " * Commands
 " *************************************************
 
-if !exists(':ScrollViewRefresh')
-  command -bar ScrollViewRefresh :lua require('scrollview').refresh()
+if !exists(':ScrollViewDisable')
+  command -bar ScrollViewDisable :lua require('scrollview').disable()
 endif
 
 if !exists(':ScrollViewEnable')
   command -bar ScrollViewEnable :lua require('scrollview').enable()
 endif
 
-if !exists(':ScrollViewDisable')
-  command -bar ScrollViewDisable :lua require('scrollview').disable()
+if !exists(':ScrollViewFirst')
+  command -bar ScrollViewFirst :lua require('scrollview').first()
 endif
 
-if !exists(':ScrollViewToggle')
-  command -bar ScrollViewToggle :lua require('scrollview').toggle()
+if !exists(':ScrollViewLast')
+  command -bar ScrollViewLast :lua require('scrollview').last()
 endif
 
 if !exists(':ScrollViewNext')
@@ -121,13 +121,12 @@ if !exists(':ScrollViewPrev')
   command -bar ScrollViewPrev :lua require('scrollview').prev()
 endif
 
-if !exists(':ScrollViewFirst')
-  command -bar ScrollViewFirst :lua require('scrollview').first()
+if !exists(':ScrollViewRefresh')
+  command -bar ScrollViewRefresh :lua require('scrollview').refresh()
 endif
 
-if !exists(':ScrollViewLast')
-  command -bar ScrollViewLast :lua
-        \ require('scrollview').last()
+if !exists(':ScrollViewToggle')
+  command -bar ScrollViewToggle :lua require('scrollview').toggle()
 endif
 
 " *************************************************
@@ -174,8 +173,18 @@ noremap  <silent> <plug>(ScrollViewDisable) <cmd>ScrollViewDisable<cr>
 inoremap <silent> <plug>(ScrollViewDisable) <cmd>ScrollViewDisable<cr>
 noremap  <silent> <plug>(ScrollViewEnable)  <cmd>ScrollViewEnable<cr>
 inoremap <silent> <plug>(ScrollViewEnable)  <cmd>ScrollViewEnable<cr>
+noremap  <silent> <plug>(ScrollViewFirst)   <cmd>ScrollViewFirst<cr>
+inoremap <silent> <plug>(ScrollViewFirst)   <cmd>ScrollViewFirst<cr>
+noremap  <silent> <plug>(ScrollViewLast)    <cmd>ScrollViewLast<cr>
+inoremap <silent> <plug>(ScrollViewLast)    <cmd>ScrollViewLast<cr>
+noremap  <silent> <plug>(ScrollViewNext)    <cmd>ScrollViewNext<cr>
+inoremap <silent> <plug>(ScrollViewNext)    <cmd>ScrollViewNext<cr>
+noremap  <silent> <plug>(ScrollViewPrev)    <cmd>ScrollViewPrev<cr>
+inoremap <silent> <plug>(ScrollViewPrev)    <cmd>ScrollViewPrev<cr>
 noremap  <silent> <plug>(ScrollViewRefresh) <cmd>ScrollViewRefresh<cr>
 inoremap <silent> <plug>(ScrollViewRefresh) <cmd>ScrollViewRefresh<cr>
+noremap  <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
+inoremap <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 
 " Creates a mapping where the left-hand-side key sequence is repeated on the
 " right-hand-side, followed by a scrollview refresh. 'modes' is a string with
