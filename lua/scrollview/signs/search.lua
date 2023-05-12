@@ -110,15 +110,14 @@ function M.init()
   -- It's possible that <cmd>nohlsearch<cr> was executed from a mapping, and
   -- wouldn't be handled by the CmdlineLeave callback above. Use a CursorMoved
   -- event to check if search signs are shown when they shouldn't be, and
-  -- update accordingly. Also run under CursorHold as a backup. Also handle the
-  -- case where 'n', 'N', '*', '#', 'g*', or 'g#' are pressed (although these
-  -- won't be properly handled when there is only one search result and the
-  -- cursor is already on it, since the cursor wouldn't move; creating
-  -- scrollview refresh mappings for those keys could handle that scenario).
-  -- NOTE: If there are scenarios where search signs become out of sync (i.e.,
-  -- shown when they shouldn't be), this same approach could be used with a
-  -- timer.
-  api.nvim_create_autocmd({'CursorMoved', 'CursorHold'}, {
+  -- update accordingly. Also handle the case where 'n', 'N', '*', '#', 'g*',
+  -- or 'g#' are pressed (although these won't be properly handled when there
+  -- is only one search result and the cursor is already on it, since the
+  -- cursor wouldn't move; creating scrollview refresh mappings for those keys
+  -- could handle that scenario). NOTE: If there are scenarios where search
+  -- signs become out of sync (i.e., shown when they shouldn't be), this same
+  -- approach could be used with a timer.
+  api.nvim_create_autocmd('CursorMoved', {
     callback = function(args)
       -- Use defer_fn since vim.v.hlsearch may not have been properly set yet.
       vim.defer_fn(function()

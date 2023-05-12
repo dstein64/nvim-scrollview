@@ -1725,6 +1725,10 @@ local enable = function()
 
       " Scrollbar positions can become stale after adding or removing winbars.
       autocmd OptionSet winbar :lua require('scrollview').refresh_bars_async()
+
+      " Scrollbars and signs can become out of sync.
+      " (:help scrollview-synchronization-issues)
+      autocmd CursorHold * :lua require('scrollview').refresh_bars_async()
     augroup END
   ]])
   -- The initial refresh is asynchronous, since :ScrollViewEnable can be used
