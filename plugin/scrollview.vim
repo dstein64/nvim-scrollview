@@ -48,6 +48,20 @@ let g:scrollview_signs_diagnostics = get(g:, 'scrollview_signs_diagnostics', 1)
 " specification exceeds the limit, to prevent a slowdown. Use -1 for no limit.
 let g:scrollview_signs_lines_per_spec_limit =
       \ get(g:, 'scrollview_signs_lines_per_spec_limit', 5000)
+let g:scrollview_signs_marks = get(g:, 'scrollview_signs_marks', 1)
+" Characters for which mark signs will be shown.
+if !has_key(g:, 'scrollview_signs_marks_characters')
+  " Default to a-z ("lowercase marks, valid within one file") and A-Z
+  " ("uppercase marks, also called file marks, valid between files").
+  " Don't include numbered marks. These are set automatically ("They
+  " are only present when using a shada file").
+  let g:scrollview_signs_marks_characters = []
+  let s:codes = range(char2nr('a'), char2nr('z'))
+  call extend(s:codes, range(char2nr('A'), char2nr('Z')))
+  for s:code in s:codes
+    call add(g:scrollview_signs_marks_characters, nr2char(s:code))
+  endfor
+endif
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row = get(g:, 'scrollview_signs_max_per_row', 3)
@@ -73,12 +87,13 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 " E.g., the following will use custom highlight colors.
 "   :highlight ScrollView ctermbg=159 guibg=LightCyan
 highlight default link ScrollView Visual
-highlight default link ScrollViewSignsSearch NonText
-highlight default link ScrollViewSignsDiagnosticsError WarningMsg
-highlight default link ScrollViewSignsDiagnosticsWarn LineNr
-highlight default link ScrollViewSignsDiagnosticsInfo Identifier
-highlight default link ScrollViewSignsDiagnosticsHint Question
 highlight default link ScrollViewSignsCursor Identifier
+highlight default link ScrollViewSignsDiagnosticsError WarningMsg
+highlight default link ScrollViewSignsDiagnosticsHint Question
+highlight default link ScrollViewSignsDiagnosticsInfo Identifier
+highlight default link ScrollViewSignsDiagnosticsWarn LineNr
+highlight default link ScrollViewSignsMarks ColorColumn
+highlight default link ScrollViewSignsSearch NonText
 
 " *************************************************
 " * Global State
@@ -252,16 +267,16 @@ if g:scrollview_auto_workarounds
   " not be needed otherwise).
 endif
 
-" *************************************************
-" * Core
-" *************************************************
-
-if g:scrollview_on_startup
-  " Enable scrollview asynchronously. This avoids an issue that prevents diff
-  " mode from functioning properly when it's launched at startup (i.e., with
-  " nvim -d). The issue is reported in Neovim Issue #13720.
-  lua vim.defer_fn(require('scrollview').enable, 0)
+" Create mappings to refresh scrollbars after adding marks.
+if g:scrollview_signs_marks
+  for s:char in g:scrollview_signs_marks_characters
+    call s:CreateRefreshMapping('nx', 'm' .. s:char)
+  endfor
 endif
+
+" *************************************************
+" * Sign Initialization
+" *************************************************
 
 if g:scrollview_signs_cursor
   lua vim.defer_fn(require('scrollview.signs.cursor').init, 0)
@@ -271,8 +286,23 @@ if g:scrollview_signs_diagnostics
   lua vim.defer_fn(require('scrollview.signs.diagnostics').init, 0)
 endif
 
+if g:scrollview_signs_marks
+  lua vim.defer_fn(require('scrollview.signs.marks').init, 0)
+endif
+
 if g:scrollview_signs_search
   lua vim.defer_fn(require('scrollview.signs.search').init, 0)
+endif
+
+" *************************************************
+" * Core
+" *************************************************
+
+if g:scrollview_on_startup
+  " Enable scrollview asynchronously. This avoids an issue that prevents diff
+  " mode from functioning properly when it's launched at startup (i.e., with
+  " nvim -d). The issue is reported in Neovim Issue #13720.
+  lua vim.defer_fn(require('scrollview').enable, 0)
 endif
 
 " *************************************************

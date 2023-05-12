@@ -53,7 +53,10 @@ function M.init()
                 -- exception (E383, E866) when the pattern is invalid (e.g.,
                 -- "\@a").
                 pcall(function()
-                  if within_limit and fn.searchcount().total > 0 then
+                  -- searchcount() can return {} (e.g., when launching Neovim
+                  -- with -i NONE).
+                  searchcount_total = fn.searchcount().total or 0
+                  if within_limit and searchcount_total > 0 then
                     result = fn.split(fn.execute('global//echo line(".")'))
                   end
                 end)
@@ -94,6 +97,7 @@ function M.init()
       local refresh = afile == '/' or afile == '?'
       -- Handle the case where :nohls may have been executed (this won't work
       -- for e.g., <cmd>nohls<cr> in a mapping).
+      -- WARN: CmdlineLeave is not executed for command mappings (<cmd>).
       if afile == ':' and string.find(fn.getcmdline(), 'nohls') then
         refresh = true
       end
@@ -142,7 +146,9 @@ function M.init()
                   -- E866) when the pattern is invalid (e.g., "\@a").
                   local searchcount_total = 0
                   pcall(function()
-                    searchcount_total = fn.searchcount().total
+                    -- searchcount() can return {} (e.g., when launching Neovim
+                    -- with -i NONE).
+                    searchcount_total = fn.searchcount().total or 0
                   end)
                   if searchcount_total > 0 then
                     return true

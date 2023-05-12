@@ -22,13 +22,13 @@ local to_bool = utils.to_bool
 -- relevant for search signs since you're not changing "/". Or using autocmds
 -- might suffice since "autocommands" do not change the current search patterns
 -- (see :help autocmd-sarchpat).
--- TODO: marks signs.
 -- TODO: make sign options configurable (e.g., priority, etc.)
 --       (see diagnostics.lua)
 -- TODO: default cursor sign off
 -- TODO: an option for whether signs are displayed. this should be considered
 -- only at global scope and should be considered by each callback for returning
 -- fast. Also can have the callbacks consider whether scrollview is enabled.
+-- TODO: add support for storing columns along with lines?
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).

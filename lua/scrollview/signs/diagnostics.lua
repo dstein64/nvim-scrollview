@@ -12,12 +12,12 @@ function M.init()
   local spec_data = {
     [vim.diagnostic.severity.ERROR] =
     {'scrollview_signs_diagnostics_error', 60, 'E', 'ScrollViewSignsDiagnosticsError'},
-    [vim.diagnostic.severity.WARN] =
-    {'scrollview_signs_diagnostics_warn', 50, 'W', 'ScrollViewSignsDiagnosticsWarn'},
-    [vim.diagnostic.severity.INFO] =
-    {'scrollview_signs_diagnostics_info', 40, 'I', 'ScrollViewSignsDiagnosticsInfo'},
     [vim.diagnostic.severity.HINT] =
     {'scrollview_sigsn_diagnostics_hint', 30, 'H', 'ScrollViewSignsDiagnosticsHint'},
+    [vim.diagnostic.severity.INFO] =
+    {'scrollview_signs_diagnostics_info', 40, 'I', 'ScrollViewSignsDiagnosticsInfo'},
+    [vim.diagnostic.severity.WARN] =
+    {'scrollview_signs_diagnostics_warn', 50, 'W', 'ScrollViewSignsDiagnosticsWarn'},
   }
   for _, item in pairs(spec_data) do
     local name, priority, symbol, highlight = unpack(item)
@@ -32,9 +32,9 @@ function M.init()
     callback = function(args)
       local names = {
         [vim.diagnostic.severity.ERROR] = 'scrollview_signs_diagnostics_error',
-        [vim.diagnostic.severity.WARN] = 'scrollview_signs_diagnostics_warn',
-        [vim.diagnostic.severity.INFO] = 'scrollview_signs_diagnostics_info',
         [vim.diagnostic.severity.HINT] = 'scrollview_sigsn_diagnostics_hint',
+        [vim.diagnostic.severity.INFO] = 'scrollview_signs_diagnostics_info',
+        [vim.diagnostic.severity.WARN] = 'scrollview_signs_diagnostics_warn',
       }
       local bufs = {[args.buf] = true}
       for _, x in ipairs(args.data.diagnostics) do
