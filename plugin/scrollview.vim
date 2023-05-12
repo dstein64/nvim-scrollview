@@ -64,7 +64,7 @@ if !has_key(g:, 'scrollview_signs_marks_characters')
 endif
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
-let g:scrollview_signs_max_per_row = get(g:, 'scrollview_signs_max_per_row', 3)
+let g:scrollview_signs_max_per_row = get(g:, 'scrollview_signs_max_per_row', 5)
 " Specifies the sign overflow direction ('left' or 'right').
 let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
 let g:scrollview_signs_search = get(g:, 'scrollview_signs_search', 1)
