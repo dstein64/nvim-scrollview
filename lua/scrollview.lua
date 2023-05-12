@@ -16,7 +16,8 @@ local tbl_get = utils.tbl_get
 local to_bool = utils.to_bool
 
 -- TODO: documentation for all new functionality (including User autocmd,
--- ScrollViewToggle, <plug> mappings, etc.).
+-- ScrollViewToggle, <plug> mappings, etc., options that are only at global
+-- level or only considered at startup). Mention signs_autocmd_callback.
 -- TODO: api version
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
 -- relevant for search signs since you're not changing "/". Or using autocmds
@@ -25,9 +26,6 @@ local to_bool = utils.to_bool
 -- TODO: make sign options configurable (e.g., priority, etc.)
 --       (see diagnostics.lua)
 -- TODO: default cursor sign off
--- TODO: an option for whether signs are displayed. this should be considered
--- only at global scope and should be considered by each callback for returning
--- fast. Also can have the callbacks consider whether scrollview is enabled.
 -- TODO: add support for storing columns along with lines? (when sorting, sort
 -- by columns too)
 -- TODO: test symbols across a variet of platforms.
@@ -934,6 +932,9 @@ end
 -- winids, 'sign_winids', is specified for possible reuse. Reused windows are
 -- removed from the list.
 local show_signs = function(winid, sign_winids)
+  if not to_bool(vim.g.scrollview_signs) then
+    return
+  end
   local cur_winid = api.nvim_get_current_win()
   local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
@@ -1741,6 +1742,16 @@ local enable = function()
   refresh_bars_async()
 end
 
+-- Returns a wrapper around fun, that runs fun only if signs are active.
+local signs_autocmd_callback = function(fun)
+  local callback = function(args)
+    if scrollview_enabled and to_bool(vim.g.scrollview_signs) then
+      fun(args)
+    end
+  end
+  return callback
+end
+
 local disable = function()
   local winid = api.nvim_get_current_win()
   local state = init()
@@ -2116,6 +2127,7 @@ return {
   next = next,
   prev = prev,
   refresh = refresh,
+  signs_autocmd_callback = signs_autocmd_callback,
   toggle = toggle,
   with_win_workspace = with_win_workspace,
 

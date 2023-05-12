@@ -18,21 +18,21 @@ function M.init()
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = function(args)
+    callback = scrollview.signs_autocmd_callback(function(args)
       for _, winid in ipairs(scrollview.get_ordinary_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
         vim.b[bufnr].scrollview_signs_cursor = {fn.line('.')}
       end
-    end
+    end)
   })
 
   api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
-    callback = function(args)
+    callback = scrollview.signs_autocmd_callback(function(args)
       local lines = vim.b.scrollview_signs_cursor
       if lines == nil or lines[1] ~= fn.line('.') then
         scrollview.refresh()
       end
-    end
+    end)
   })
 end
 

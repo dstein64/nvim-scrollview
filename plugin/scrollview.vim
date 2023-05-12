@@ -39,6 +39,7 @@ let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
 let g:scrollview_out_of_bounds_adjust =
       \ get(g:, 'scrollview_out_of_bounds_adjust', 1)
 let g:scrollview_refresh_time = get(g:, 'scrollview_refresh_time', 100)
+let g:scrollview_signs = get(g:, 'scrollview_signs', 1)
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
 let g:scrollview_signs_column = get(g:, 'scrollview_signs_column', -1)

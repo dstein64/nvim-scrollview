@@ -29,7 +29,7 @@ function M.init()
   end
 
   api.nvim_create_autocmd('DiagnosticChanged', {
-    callback = function(args)
+    callback = scrollview.signs_autocmd_callback(function(args)
       local names = {
         [vim.diagnostic.severity.ERROR] = 'scrollview_signs_diagnostics_error',
         [vim.diagnostic.severity.HINT] = 'scrollview_sigsn_diagnostics_hint',
@@ -74,7 +74,7 @@ function M.init()
           once = true,
         })
       end
-    end,
+    end)
   })
 end
 

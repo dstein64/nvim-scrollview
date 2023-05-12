@@ -24,7 +24,7 @@ function M.init()
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = function(args)
+    callback = scrollview.signs_autocmd_callback(function(args)
       for _, winid in ipairs(scrollview.get_ordinary_windows()) do
         local winfile = api.nvim_win_call(winid, function()
           return fn.expand('%:p')
@@ -74,11 +74,11 @@ function M.init()
           vim.b[bufnr]['scrollview_signs_marks_' .. char] = value
         end
       end
-    end
+    end)
   })
 
   api.nvim_create_autocmd('CmdlineLeave', {
-    callback = function(args)
+    callback = scrollview.signs_autocmd_callback(function(args)
       if to_bool(vim.v.event.abort) then
         return
       end
@@ -101,7 +101,7 @@ function M.init()
           or vim.startswith(cmdline, 'kee') then
         scrollview.refresh()
       end
-    end
+    end)
   })
 end
 
