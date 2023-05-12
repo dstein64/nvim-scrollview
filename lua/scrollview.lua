@@ -28,7 +28,7 @@ local to_bool = utils.to_bool
 -- TODO: default cursor sign off
 -- TODO: add support for storing columns along with lines? (when sorting, sort
 -- by columns too)
--- TODO: test symbols across a variet of platforms.
+-- TODO: test symbols across a variety of platforms.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
