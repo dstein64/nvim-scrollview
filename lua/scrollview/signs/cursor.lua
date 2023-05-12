@@ -11,7 +11,7 @@ function M.init()
 
   scrollview.register_sign_spec('scrollview_signs_cursor', {
     priority = 100,
-    symbol = fn.nr2char(0x2bc8),  -- a triangle pointing rightward
+    symbol = fn.nr2char(0x25aa),  -- a small square, resembling a block cursor
     highlight = 'ScrollViewSignsCursor',
     current_only = true,
   })
