@@ -18,7 +18,7 @@ local to_bool = utils.to_bool
 -- TODO: documentation for all new functionality (including User autocmd,
 -- ScrollViewToggle, <plug> mappings, etc., options that are only at global
 -- level or only considered at startup). Mention signs_autocmd_callback.
--- TODO: api version
+-- Mention g:scrollview_signs_version.
 -- TODO: keywords signs. Use match() so that searching doesn't clobber "/" (not
 -- relevant for search signs since you're not changing "/". Or using autocmds
 -- might suffice since "autocommands" do not change the current search patterns

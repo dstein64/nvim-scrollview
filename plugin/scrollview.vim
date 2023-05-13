@@ -100,7 +100,12 @@ highlight default link ScrollViewSignsSearch NonText
 " * Global State
 " *************************************************
 
-" External global state that can be modified by the user is specified here.
+" An integer to be incremented when the interface for using signs changes.
+" For example, this would correspond to the register_sign_spec function
+" interface and the format for saving sign information in buffers.
+let g:scrollview_signs_version = 1
+
+" External global state that can be modified by the user is specified below.
 " Internal global state is represented with local variables in
 " autoload/scrollview.vim and lua/scrollview.lua.
 
