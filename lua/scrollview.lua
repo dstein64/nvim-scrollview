@@ -287,20 +287,35 @@ end
 local get_variable = function(name, winnr, precedence, default)
   if precedence == nil then precedence = 'wtbg' end
   if default == nil then default = 0 end
+  local winid = fn.win_getid(winnr)
+  -- WARN: This function was originally using getbufvar(., ''),
+  -- getwinvar(., ''), and gettabvar(., ''). For example:
+  --   local bufvars = fn.getbufvar(bufnr, '')
+  --   if bufvars[name] ~= nil then return bufvars[name] end
+  -- However, this was slow when the dictionaries were large (e.g., many items
+  -- in the b: dictionary for some NERDTree buffers), which you noticed after
+  -- adding signs for marks (in such a case, getbufvar(., '') was called many
+  -- times, for each mark sign registration). Switching to nvim_buf_get_var
+  -- resolved the issue.
   for idx = 1, #precedence do
     local c = precedence:sub(idx, idx)
     if c == 'w' then
-      local winvars = fn.getwinvar(winnr, '')
-      if winvars[name] ~= nil then return winvars[name] end
+      local success, result = pcall(function()
+        return api.nvim_win_get_var(winid, name)
+      end)
+      if success then return result end
     elseif c == 't' then
-      local winid = fn.win_getid(winnr)
       local tabnr = fn.getwininfo(winid)[1].tabnr
-      local tabvars = fn.gettabvar(tabnr, '')
-      if tabvars[name] ~= nil then return tabvars[name] end
+      local success, result = pcall(function()
+        return api.nvim_tabpage_get_var(tabnr, name)
+      end)
+      if success then return result end
     elseif c == 'b' then
       local bufnr = fn.winbufnr(winnr)
-      local bufvars = fn.getbufvar(bufnr, '')
-      if bufvars[name] ~= nil then return bufvars[name] end
+      local success, result = pcall(function()
+        return api.nvim_buf_get_var(bufnr, name)
+      end)
+      if success then return result end
     elseif c == 'g' then
       if vim.g[name] ~= nil then return vim.g[name] end
     else
@@ -945,7 +960,10 @@ local show_signs = function(winid, sign_winids)
   local lookup = {}
   for name, sign_spec in pairs(sign_specs) do
     local lines = {}
-    local lines_as_given = fn.getbufvar(bufnr, name, {})
+    local lines_as_given = {}
+    pcall(function()
+      lines_as_given = api.nvim_buf_get_var(bufnr, name)
+    end)
     -- Signs are not shown when the number of lines for each registered sign
     -- specification exceeds the limit, to prevent a slowdown.
     local lines_per_sign_spec_limit =
