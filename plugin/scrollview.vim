@@ -49,16 +49,30 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 
 " === Signs ===
 
+" General sign settings
 let g:scrollview_signs = get(g:, 'scrollview_signs', 1)
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
 let g:scrollview_signs_column = get(g:, 'scrollview_signs_column', -1)
-let g:scrollview_signs_cursor = get(g:, 'scrollview_signs_cursor', 1)
-let g:scrollview_signs_diagnostics = get(g:, 'scrollview_signs_diagnostics', 1)
 " A registered set of signs are not shown when the number of lines for the
 " specification exceeds the limit, to prevent a slowdown. Use -1 for no limit.
 let g:scrollview_signs_lines_per_spec_limit =
       \ get(g:, 'scrollview_signs_lines_per_spec_limit', 5000)
+" The maximum number of signs shown per row. Set to -1 to have no limit.
+" Set to 0 to disable signs.
+let g:scrollview_signs_max_per_row = get(g:, 'scrollview_signs_max_per_row', 5)
+" Specifies the sign overflow direction ('left' or 'right').
+let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
+let g:scrollview_signs_symbol = get(g:, 'scrollview_signs_symbol', '*')
+let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
+
+" Cursor signs
+let g:scrollview_signs_cursor = get(g:, 'scrollview_signs_cursor', 1)
+
+" Diagnostics signs
+let g:scrollview_signs_diagnostics = get(g:, 'scrollview_signs_diagnostics', 1)
+
+" Mark signs
 let g:scrollview_signs_marks = get(g:, 'scrollview_signs_marks', 1)
 " Characters for which mark signs will be shown.
 if !has_key(g:, 'scrollview_signs_marks_characters')
@@ -73,18 +87,12 @@ if !has_key(g:, 'scrollview_signs_marks_characters')
     call add(g:scrollview_signs_marks_characters, nr2char(s:code))
   endfor
 endif
-" The maximum number of signs shown per row. Set to -1 to have no limit.
-" Set to 0 to disable signs.
-let g:scrollview_signs_max_per_row = get(g:, 'scrollview_signs_max_per_row', 5)
-" Specifies the sign overflow direction ('left' or 'right').
-let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
+
 let g:scrollview_signs_search = get(g:, 'scrollview_signs_search', 1)
 " Search signs are not shown when the number of buffer lines exceeds the
 " limit, to prevent a slowdown. Use -1 for no limit.
 let g:scrollview_signs_search_buffer_lines_limit =
       \ get(g:, 'scrollview_signs_search_buffer_lines_limit', 20000)
-let g:scrollview_signs_symbol = get(g:, 'scrollview_signs_symbol', '*')
-let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
 
 " === Highlights ===
 
