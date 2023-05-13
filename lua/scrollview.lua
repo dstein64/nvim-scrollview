@@ -210,12 +210,11 @@ local with_win_workspace = function(winid, fun)
   -- it could end the diff session (e.g., when there is one other window in the
   -- session). Issue #57.
   set_window_option(workspace_winid, 'diff', false)
-  local result
-  local success, err = pcall(function()
-    result = api.nvim_win_call(workspace_winid, fun)
+  local success, result = pcall(function()
+    return api.nvim_win_call(workspace_winid, fun)
   end)
   api.nvim_win_close(workspace_winid, true)
-  if not success then error(err) end
+  if not success then error(result) end
   return result
 end
 
