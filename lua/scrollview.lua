@@ -26,8 +26,6 @@ local to_bool = utils.to_bool
 -- TODO: make sign options configurable (e.g., priority, etc.)
 --       (see diagnostics.lua)
 -- TODO: default cursor sign off
--- TODO: add support for storing columns along with lines? (when sorting, sort
--- by columns too)
 -- TODO: test symbols across a variety of platforms.
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
