@@ -93,7 +93,8 @@ function M.init()
       -- WARN: [range] is not handled.
       -- WARN: Only text at the beginning of the command is considered.
       -- WARN: CmdlineLeave is not executed for command mappings (<cmd>).
-      -- WARN: The outcome of :delmarks may not persist (Neovim #4925).
+      -- WARN: The outcome of :delmarks does not persist across Neovim sessions
+      -- (Neovim #4288, #4925). Workaround: run :wshada! after deleting marks.
       local cmdline = fn.getcmdline()
       if vim.startswith(cmdline, 'ma')
           or vim.startswith(cmdline, 'k')
