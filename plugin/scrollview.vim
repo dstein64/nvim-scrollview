@@ -22,6 +22,8 @@ endif
 " * User Configuration
 " *************************************************
 
+" === General ===
+
 let g:scrollview_auto_mouse = get(g:, 'scrollview_auto_mouse', 1)
 let g:scrollview_auto_workarounds = get(g:, 'scrollview_auto_workarounds', 1)
 let g:scrollview_base = get(g:, 'scrollview_base', 'right')
@@ -39,6 +41,14 @@ let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
 let g:scrollview_out_of_bounds_adjust =
       \ get(g:, 'scrollview_out_of_bounds_adjust', 1)
 let g:scrollview_refresh_time = get(g:, 'scrollview_refresh_time', 100)
+" Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
+let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
+" The default zindex for floating windows is 50. A smaller value is used here
+" by default so that scrollbars don't cover floating windows.
+let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
+
+" === Signs ===
+
 let g:scrollview_signs = get(g:, 'scrollview_signs', 1)
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
@@ -75,11 +85,8 @@ let g:scrollview_signs_search_buffer_lines_limit =
       \ get(g:, 'scrollview_signs_search_buffer_lines_limit', 20000)
 let g:scrollview_signs_symbol = get(g:, 'scrollview_signs_symbol', '*')
 let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
-" Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
-let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
-" The default zindex for floating windows is 50. A smaller value is used here
-" by default so that scrollbars don't cover floating windows.
-let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
+
+" === Highlights ===
 
 " The default highlight groups are specified below.
 " Change the defaults by defining or linking an alternative highlight group.
