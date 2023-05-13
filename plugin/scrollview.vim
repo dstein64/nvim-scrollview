@@ -68,6 +68,11 @@ let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
 
 " Cursor signs
 let g:scrollview_signs_cursor = get(g:, 'scrollview_signs_cursor', 1)
+let g:scrollview_signs_cursor_priority =
+      \ get(g:, 'scrollview_signs_cursor_priority', 100)
+" Use a small square, resembling a block cursor, for the default symbol.
+let g:scrollview_signs_cursor_symbol =
+      \ get(g:, 'scrollview_signs_cursor_symbol', nr2char(0x25aa))
 
 " Diagnostics signs
 let g:scrollview_signs_diagnostics = get(g:, 'scrollview_signs_diagnostics', 1)
@@ -87,6 +92,8 @@ if !has_key(g:, 'scrollview_signs_marks_characters')
     call add(g:scrollview_signs_marks_characters, nr2char(s:code))
   endfor
 endif
+let g:scrollview_signs_marks_priority =
+      \ get(g:, 'scrollview_signs_marks_priority', 50)
 
 let g:scrollview_signs_search = get(g:, 'scrollview_signs_search', 1)
 " Search signs are not shown when the number of buffer lines exceeds the

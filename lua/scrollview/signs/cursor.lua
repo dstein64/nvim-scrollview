@@ -10,8 +10,8 @@ function M.init()
   end
 
   scrollview.register_sign_spec('scrollview_signs_cursor', {
-    priority = 100,
-    symbol = fn.nr2char(0x25aa),  -- a small square, resembling a block cursor
+    priority = vim.g.scrollview_signs_cursor_priority,
+    symbol = vim.g.scrollview_signs_cursor_symbol,
     highlight = 'ScrollViewSignsCursor',
     current_only = true,
   })
