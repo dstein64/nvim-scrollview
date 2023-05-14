@@ -41,7 +41,7 @@ function M.init()
         for _, item in ipairs(items) do
           if item.pos ~= nil
               and item.mark ~= nil
-              and fn.strcharlen(item.mark) == 2 then
+              and fn.strchars(item.mark, 1) == 2 then
             -- Global marks include a file.
             local file = item.file
             local should_show = false
