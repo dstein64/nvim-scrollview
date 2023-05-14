@@ -293,27 +293,18 @@ local get_variable = function(name, winnr, precedence, default)
   -- However, this was slow when the dictionaries were large (e.g., many items
   -- in the b: dictionary for some NERDTree buffers), which you noticed after
   -- adding signs for marks (in such a case, getbufvar(., '') was called many
-  -- times, for each mark sign registration). Switching to nvim_buf_get_var
-  -- resolved the issue.
+  -- times, for each mark sign registration). Switching to vim.b (or
+  -- nvim_buf_get_var) resolves the issue.
   for idx = 1, #precedence do
     local c = precedence:sub(idx, idx)
     if c == 'w' then
-      local success, result = pcall(function()
-        return api.nvim_win_get_var(winid, name)
-      end)
-      if success then return result end
+      if vim.w[winid][name] ~= nil then return vim.w[winid][name] end
     elseif c == 't' then
       local tabnr = fn.getwininfo(winid)[1].tabnr
-      local success, result = pcall(function()
-        return api.nvim_tabpage_get_var(tabnr, name)
-      end)
-      if success then return result end
+      if vim.t[tabnr][name] ~= nil then return vim.t[tabnr][name] end
     elseif c == 'b' then
       local bufnr = fn.winbufnr(winnr)
-      local success, result = pcall(function()
-        return api.nvim_buf_get_var(bufnr, name)
-      end)
-      if success then return result end
+      if vim.b[bufnr][name] ~= nil then return vim.b[bufnr][name] end
     elseif c == 'g' then
       if vim.g[name] ~= nil then return vim.g[name] end
     else
