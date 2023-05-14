@@ -15,11 +15,11 @@ function M.init()
     return
   end
 
-  for _, char in ipairs(vim.g.scrollview_signs_marks_characters) do
-    scrollview.register_sign_spec('scrollview_signs_marks_' .. char, {
-      priority = vim.g.scrollview_signs_marks_priority,
+  for _, char in ipairs(vim.g.scrollview_marks_characters) do
+    scrollview.register_sign_spec('scrollview_marks_' .. char, {
+      priority = vim.g.scrollview_marks_priority,
       symbol = char,
-      highlight = 'ScrollViewSignsMarks',
+      highlight = 'ScrollViewMarks',
     })
   end
 
@@ -67,12 +67,12 @@ function M.init()
             end
           end
         end
-        for _, char in ipairs(vim.g.scrollview_signs_marks_characters) do
+        for _, char in ipairs(vim.g.scrollview_marks_characters) do
           local value = nil
           if marks[char] ~= nil then
             value = {marks[char]}
           end
-          vim.b[bufnr]['scrollview_signs_marks_' .. char] = value
+          vim.b[bufnr]['scrollview_marks_' .. char] = value
         end
       end
     end)

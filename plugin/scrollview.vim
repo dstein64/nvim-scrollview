@@ -67,44 +67,41 @@ let g:scrollview_signs_symbol = get(g:, 'scrollview_signs_symbol', '*')
 let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
 
 " Cursor signs
-let g:scrollview_signs_cursor = get(g:, 'scrollview_signs_cursor', 1)
-let g:scrollview_signs_cursor_priority =
-      \ get(g:, 'scrollview_signs_cursor_priority', 100)
+let g:scrollview_cursor = get(g:, 'scrollview_cursor', 1)
+let g:scrollview_cursor_priority = get(g:, 'scrollview_cursor_priority', 100)
 " Use a small square, resembling a block cursor, for the default symbol.
-let g:scrollview_signs_cursor_symbol =
-      \ get(g:, 'scrollview_signs_cursor_symbol', nr2char(0x25aa))
+let g:scrollview_cursor_symbol =
+      \ get(g:, 'scrollview_cursor_symbol', nr2char(0x25aa))
 
 " Diagnostics signs
-let g:scrollview_signs_diagnostics = get(g:, 'scrollview_signs_diagnostics', 1)
+let g:scrollview_diagnostics = get(g:, 'scrollview_diagnostics', 1)
 
 " Mark signs
-let g:scrollview_signs_marks = get(g:, 'scrollview_signs_marks', 1)
+let g:scrollview_marks = get(g:, 'scrollview_marks', 1)
 " Characters for which mark signs will be shown.
-if !has_key(g:, 'scrollview_signs_marks_characters')
+if !has_key(g:, 'scrollview_marks_characters')
   " Default to a-z ("lowercase marks, valid within one file") and A-Z
   " ("uppercase marks, also called file marks, valid between files").
   " Don't include numbered marks. These are set automatically ("They
   " are only present when using a shada file").
-  let g:scrollview_signs_marks_characters = []
+  let g:scrollview_marks_characters = []
   let s:codes = range(char2nr('a'), char2nr('z'))
   call extend(s:codes, range(char2nr('A'), char2nr('Z')))
   for s:code in s:codes
-    call add(g:scrollview_signs_marks_characters, nr2char(s:code))
+    call add(g:scrollview_marks_characters, nr2char(s:code))
   endfor
 endif
-let g:scrollview_signs_marks_priority =
-      \ get(g:, 'scrollview_signs_marks_priority', 50)
+let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
 
-let g:scrollview_signs_search = get(g:, 'scrollview_signs_search', 1)
+let g:scrollview_search = get(g:, 'scrollview_search', 1)
 " Search signs are not shown when the number of buffer lines exceeds the
 " limit, to prevent a slowdown. Use -1 for no limit.
-let g:scrollview_signs_search_buffer_lines_limit =
-      \ get(g:, 'scrollview_signs_search_buffer_lines_limit', 20000)
-let g:scrollview_signs_search_priority =
-      \ get(g:, 'scrollview_signs_search_priority', 70)
+let g:scrollview_search_buffer_lines_limit =
+      \ get(g:, 'scrollview_search_buffer_lines_limit', 20000)
+let g:scrollview_search_priority = get(g:, 'scrollview_search_priority', 70)
 " Default symbols: (1) equals, (2) triple bar
-let g:scrollview_signs_search_symbol =
-      \ get(g:, 'scrollview_signs_search_symbol', ['=', nr2char(0x2261)])
+let g:scrollview_search_symbol =
+      \ get(g:, 'scrollview_search_symbol', ['=', nr2char(0x2261)])
 
 " === Highlights ===
 
@@ -115,13 +112,13 @@ let g:scrollview_signs_search_symbol =
 " E.g., the following will use custom highlight colors.
 "   :highlight ScrollView ctermbg=159 guibg=LightCyan
 highlight default link ScrollView Visual
-highlight default link ScrollViewSignsCursor Identifier
-highlight default link ScrollViewSignsDiagnosticsError WarningMsg
-highlight default link ScrollViewSignsDiagnosticsHint Question
-highlight default link ScrollViewSignsDiagnosticsInfo Identifier
-highlight default link ScrollViewSignsDiagnosticsWarn LineNr
-highlight default link ScrollViewSignsMarks ColorColumn
-highlight default link ScrollViewSignsSearch NonText
+highlight default link ScrollViewCursor Identifier
+highlight default link ScrollViewDiagnosticsError WarningMsg
+highlight default link ScrollViewDiagnosticsHint Question
+highlight default link ScrollViewDiagnosticsInfo Identifier
+highlight default link ScrollViewDiagnosticsWarn LineNr
+highlight default link ScrollViewMarks ColorColumn
+highlight default link ScrollViewSearch NonText
 
 " *************************************************
 " * Global State
@@ -301,8 +298,8 @@ if g:scrollview_auto_workarounds
 endif
 
 " Create mappings to refresh scrollbars after adding marks.
-if g:scrollview_signs_marks
-  for s:char in g:scrollview_signs_marks_characters
+if g:scrollview_marks
+  for s:char in g:scrollview_marks_characters
     call s:CreateRefreshMapping('nx', 'm' .. s:char)
   endfor
 endif
@@ -311,19 +308,19 @@ endif
 " * Sign Initialization
 " *************************************************
 
-if g:scrollview_signs_cursor
+if g:scrollview_cursor
   lua vim.defer_fn(require('scrollview.signs.cursor').init, 0)
 endif
 
-if g:scrollview_signs_diagnostics
+if g:scrollview_diagnostics
   lua vim.defer_fn(require('scrollview.signs.diagnostics').init, 0)
 endif
 
-if g:scrollview_signs_marks
+if g:scrollview_marks
   lua vim.defer_fn(require('scrollview.signs.marks').init, 0)
 endif
 
-if g:scrollview_signs_search
+if g:scrollview_search
   lua vim.defer_fn(require('scrollview.signs.search').init, 0)
 endif
 

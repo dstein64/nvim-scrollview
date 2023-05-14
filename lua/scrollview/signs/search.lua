@@ -10,10 +10,10 @@ function M.init()
     return
   end
 
-  scrollview.register_sign_spec('scrollview_signs_search', {
-    priority = vim.g.scrollview_signs_search_priority,
-    symbol = vim.g.scrollview_signs_search_symbol,
-    highlight = 'ScrollViewSignsSearch',
+  scrollview.register_sign_spec('scrollview_search', {
+    priority = vim.g.scrollview_search_priority,
+    symbol = vim.g.scrollview_search_symbol,
+    highlight = 'ScrollViewSearch',
   })
 
   api.nvim_create_autocmd('User', {
@@ -32,12 +32,12 @@ function M.init()
           if to_bool(vim.v.hlsearch) then
             local cache_hit = false
             local seq_cur = fn.undotree().seq_cur
-            if bufvars.scrollview_signs_search_pattern_cached == pattern then
-              local cache_seq_cur = bufvars.scrollview_signs_search_seq_cur_cached
+            if bufvars.scrollview_search_pattern_cached == pattern then
+              local cache_seq_cur = bufvars.scrollview_search_seq_cur_cached
               cache_hit = cache_seq_cur == seq_cur
             end
             if cache_hit then
-              lines = bufvars.scrollview_signs_search_cached
+              lines = bufvars.scrollview_search_cached
             else
               lines = scrollview.with_win_workspace(winid, function()
                 local result = {}
@@ -45,7 +45,7 @@ function M.init()
                 -- Search signs are not shown when the number of buffer lines
                 -- exceeds the limit, to prevent a slowdown.
                 local line_count_limit = scrollview.get_variable(
-                  'scrollview_signs_search_buffer_lines_limit', winnr)
+                  'scrollview_search_buffer_lines_limit', winnr)
                 local within_limit = line_count_limit == -1
                   or line_count <= line_count_limit
                 -- Use a pcall since searchcount() and :global throw an
@@ -64,13 +64,13 @@ function M.init()
               for idx, line in ipairs(lines) do
                 lines[idx] = tonumber(line)
               end
-              bufvars.scrollview_signs_search_pattern_cached = pattern
-              bufvars.scrollview_signs_search_seq_cur_cached = seq_cur
-              bufvars.scrollview_signs_search_cached = lines
+              bufvars.scrollview_search_pattern_cached = pattern
+              bufvars.scrollview_search_seq_cur_cached = seq_cur
+              bufvars.scrollview_search_cached = lines
             end
           end
-          bufvars.scrollview_signs_search = lines
-          bufvars.scrollview_signs_search_pattern = pattern
+          bufvars.scrollview_search = lines
+          bufvars.scrollview_search_pattern = pattern
           visited[bufnr] = true
         end
       end
@@ -135,10 +135,10 @@ function M.init()
             if not visited[bufnr] then
               visited[bufnr] = true
               refresh = api.nvim_win_call(winid, function()
-                if pattern ~= vim.b.scrollview_signs_search_pattern then
+                if pattern ~= vim.b.scrollview_search_pattern then
                   return true
                 end
-                local lines = vim.b.scrollview_signs_search
+                local lines = vim.b.scrollview_search
                 if lines == nil or vim.tbl_isempty(lines) then
                   -- Use a pcall since searchcount() throws an exception (E383,
                   -- E866) when the pattern is invalid (e.g., "\@a").
@@ -164,7 +164,7 @@ function M.init()
           -- shown.
           for _, winid in ipairs(scrollview.get_ordinary_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
-            local lines = vim.b[bufnr].scrollview_signs_search
+            local lines = vim.b[bufnr].scrollview_search
             if lines ~= nil and not vim.tbl_isempty(lines) then
               refresh = true
               break
