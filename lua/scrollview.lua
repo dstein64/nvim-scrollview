@@ -1554,7 +1554,7 @@ local refresh_bars = function(async_removal)
     end
     local eventignore = api.nvim_get_option('eventignore')
     api.nvim_set_option('eventignore', state.eventignore)
-    vim.cmd('doautocmd User ScrollViewRefresh')
+    vim.cmd('doautocmd <nomodeline> User ScrollViewRefresh')
     api.nvim_set_option('eventignore', eventignore)
     local start_reltime = fn.reltime()
     -- Delete all signs and highlights in the sign buffer.
