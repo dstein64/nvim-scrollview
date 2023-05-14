@@ -100,6 +100,11 @@ let g:scrollview_signs_search = get(g:, 'scrollview_signs_search', 1)
 " limit, to prevent a slowdown. Use -1 for no limit.
 let g:scrollview_signs_search_buffer_lines_limit =
       \ get(g:, 'scrollview_signs_search_buffer_lines_limit', 20000)
+let g:scrollview_signs_search_priority =
+      \ get(g:, 'scrollview_signs_search_priority', 70)
+" Default symbols: (1) equals, (2) triple bar
+let g:scrollview_signs_search_symbol =
+      \ get(g:, 'scrollview_signs_search_symbol', ['=', nr2char(0x2261)])
 
 " === Highlights ===
 

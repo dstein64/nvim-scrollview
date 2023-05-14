@@ -11,9 +11,8 @@ function M.init()
   end
 
   scrollview.register_sign_spec('scrollview_signs_search', {
-    priority = 70,
-    -- (1) equals, (2) triple bar
-    symbol = {'=', fn.nr2char(0x2261)},
+    priority = vim.g.scrollview_signs_search_priority,
+    symbol = vim.g.scrollview_signs_search_symbol,
     highlight = 'ScrollViewSignsSearch',
   })
 
