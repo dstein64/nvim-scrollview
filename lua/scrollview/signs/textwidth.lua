@@ -68,11 +68,9 @@ function M.init()
   })
 
   api.nvim_create_autocmd('OptionSet', {
+    pattern = 'textwidth',
     callback = scrollview.signs_autocmd_callback(function(args)
-      local amatch = fn.expand('<amatch>')
-      if amatch == 'textwidth' then
-        scrollview.refresh()
-      end
+      scrollview.refresh()
     end)
   })
 end

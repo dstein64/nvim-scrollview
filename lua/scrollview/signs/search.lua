@@ -78,11 +78,9 @@ function M.init()
   })
 
   api.nvim_create_autocmd('OptionSet', {
+    pattern = 'hlsearch',
     callback = scrollview.signs_autocmd_callback(function(args)
-      local amatch = fn.expand('<amatch>')
-      if amatch == 'hlsearch' then
-        scrollview.refresh()
-      end
+      scrollview.refresh()
     end)
   })
 
