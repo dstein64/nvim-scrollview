@@ -37,7 +37,7 @@ function M.init()
           if cache_hit then
             lines = bufvars.scrollview_textwidth_cached
           else
-            local line_count = api.nvim_buf_line_count(0)
+            local line_count = api.nvim_buf_line_count(bufnr)
             -- Longline signs are not shown when the number of buffer
             -- lines exceeds the limit, to prevent a slowdown.
             -- TODO: set for real
