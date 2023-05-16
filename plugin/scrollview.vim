@@ -60,7 +60,8 @@ let g:scrollview_signs_lines_per_spec_limit =
       \ get(g:, 'scrollview_signs_lines_per_spec_limit', 5000)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
-let g:scrollview_signs_max_per_row = get(g:, 'scrollview_signs_max_per_row', 5)
+let g:scrollview_signs_max_per_row =
+      \ get(g:, 'scrollview_signs_max_per_row', -1)
 " Specifies the sign overflow direction ('left' or 'right').
 let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
 let g:scrollview_signs_symbol = get(g:, 'scrollview_signs_symbol', '*')
