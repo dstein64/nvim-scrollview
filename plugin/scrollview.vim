@@ -124,6 +124,8 @@ highlight default link ScrollViewDiagnosticsInfo Identifier
 highlight default link ScrollViewDiagnosticsWarn LineNr
 highlight default link ScrollViewMarks ColorColumn
 highlight default link ScrollViewSearch NonText
+highlight default link ScrollViewSpell Statement
+highlight default link ScrollViewTextWidth Question
 
 " *************************************************
 " * Global State

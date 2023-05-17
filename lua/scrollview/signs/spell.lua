@@ -12,7 +12,7 @@ function M.init()
   scrollview.register_sign_spec('scrollview_spell', {
     priority = 20,
     symbol = '~',
-    highlight = 'Statement', -- TODO
+    highlight = 'ScrollViewSpell',
     type = 'w',
   })
 

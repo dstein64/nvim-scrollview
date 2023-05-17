@@ -12,7 +12,7 @@ function M.init()
   scrollview.register_sign_spec('scrollview_textwidth', {
     priority = 20,
     symbol = fn.nr2char(0xbb),
-    highlight = 'MoreMsg', -- TODO
+    highlight = 'ScrollViewTextWidth',
   })
 
   api.nvim_create_autocmd('User', {
