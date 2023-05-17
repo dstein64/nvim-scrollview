@@ -104,6 +104,8 @@ let g:scrollview_search_priority = get(g:, 'scrollview_search_priority', 70)
 let g:scrollview_search_symbol =
       \ get(g:, 'scrollview_search_symbol', ['=', nr2char(0x2261)])
 
+let g:scrollview_spell = get(g:, 'scrollview_spell', 1)
+
 let g:scrollview_textwidth = get(g:, 'scrollview_textwidth', 1)
 
 " === Highlights ===
@@ -325,6 +327,10 @@ endif
 
 if g:scrollview_search
   lua vim.defer_fn(require('scrollview.signs.search').init, 0)
+endif
+
+if g:scrollview_spell
+  lua vim.defer_fn(require('scrollview.signs.spell').init, 0)
 endif
 
 if g:scrollview_textwidth

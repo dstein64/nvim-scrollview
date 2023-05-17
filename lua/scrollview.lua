@@ -951,7 +951,11 @@ local show_signs = function(winid, sign_winids)
     local lines = {}
     local lines_as_given = {}
     pcall(function()
-      lines_as_given = api.nvim_buf_get_var(bufnr, name)
+      if sign_spec.type == 'b' then
+        lines_as_given = api.nvim_buf_get_var(bufnr, name)
+      elseif sign_spec.type == 'w' then
+        lines_as_given = api.nvim_win_get_var(winid, name)
+      end
     end)
     -- Signs are not shown when the number of lines for each registered sign
     -- specification exceeds the limit, to prevent a slowdown.
@@ -1430,8 +1434,8 @@ local set_topline = function(winid, linenr)
       -- of the window.
       vim.cmd('keepjumps normal! Gzb')
     end
-    -- Position the cursor as if all scrolling was conducted with <ctrl-e> and/or
-    -- <ctrl-y>. H and L are used to get topline and botline instead of
+    -- Position the cursor as if all scrolling was conducted with <ctrl-e>
+    -- and/or <ctrl-y>. H and L are used to get topline and botline instead of
     -- getwininfo, to prevent jumping to a line that could result in a scroll if
     -- scrolloff>0.
     vim.cmd('keepjumps normal! H')
@@ -2103,6 +2107,9 @@ local register_sign_spec = function(name, specification)
   end
   if specification.current_only == nil then
     specification.current_only = false
+  end
+  if specification.type == nil then
+    specification.type = 'b'
   end
   sign_specs[name] = specification
 end
