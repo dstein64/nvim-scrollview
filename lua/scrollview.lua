@@ -1832,9 +1832,9 @@ local move_to_sign_line = function(location)
   local current = fn.line('.')
   local target = nil
   if location == 'next' then
-    target = subsequent(lines, current)
+    target = subsequent(lines, current, vim.o.wrapscan)
   elseif location == 'prev' then
-    target = preceding(lines, current)
+    target = preceding(lines, current, vim.o.wrapscan)
   elseif location == '$' then
     target = lines[#lines]
   elseif type(location) == 'number' then
@@ -1993,7 +1993,7 @@ local handle_mouse = function(button)
               api.nvim_win_call(mouse_winid, function()
                 -- Go to the next sign_props line after the cursor.
                 local current = fn.line('.')
-                local target = subsequent(sign_props.lines, current)
+                local target = subsequent(sign_props.lines, current, true)
                 vim.cmd('normal!' .. target .. 'G')
               end)
               refresh_bars(false)
