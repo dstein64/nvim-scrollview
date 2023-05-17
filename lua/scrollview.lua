@@ -1638,7 +1638,7 @@ end
 -- e.g., echom works as expected.
 local refresh_bars_async = function()
   pending_async_refresh_count = pending_async_refresh_count + 1
-  -- Use defer_fn twice so that refreshing happens after other processing. Issue #59.
+  -- Use defer_fn twice so that refreshing happens after other processing. #59.
   vim.defer_fn(function()
     vim.defer_fn(function()
       pending_async_refresh_count = math.max(0, pending_async_refresh_count - 1)
@@ -1647,8 +1647,8 @@ local refresh_bars_async = function()
         -- don't execute this one.
         return
       end
-      -- ScrollView may have already been disabled by time this callback executes
-      -- asynchronously.
+      -- ScrollView may have already been disabled by time this callback
+      -- executes asynchronously.
       if scrollview_enabled then
         refresh_bars()
       end
@@ -1963,8 +1963,8 @@ local handle_mouse = function(button)
             -- already been processed. The current window (from prior to
             -- scrolling) is not changed.
             -- Refresh scrollbars to handle the scenario where
-            -- scrollview_hide_on_intersect is enabled and dragging resulted in a
-            -- scrollbar overlapping a floating window.
+            -- scrollview_hide_on_intersect is enabled and dragging resulted in
+            -- a scrollbar overlapping a floating window.
             refresh_bars(false)
           end
           return
@@ -2007,19 +2007,19 @@ local handle_mouse = function(button)
             return
           end
           -- The click was on a scrollbar.
-          -- It's possible that the clicked scrollbar is out-of-sync. Refresh the
-          -- scrollbars and check if the mouse is still over a scrollbar. If not,
-          -- ignore all mouse events until a mouseup. This approach was deemed
-          -- preferable to refreshing scrollbars initially, as that could result
-          -- in unintended clicking/dragging where there is no scrollbar.
+          -- It's possible that the clicked scrollbar is out-of-sync. Refresh
+          -- the scrollbars and check if the mouse is still over a scrollbar. If
+          -- not, ignore all mouse events until a mouseup. This approach was
+          -- deemed preferable to refreshing scrollbars initially, as that could
+          -- result in unintended clicking/dragging where there is no scrollbar.
           refresh_bars(false)
           vim.cmd('redraw')
           -- Don't restore toplines whenever a scrollbar was clicked. This
           -- prevents the window where a scrollbar is dragged from having its
           -- topline restored to the pre-drag position. This also prevents
-          -- restoring windows that may have had their windows shifted during the
-          -- course of scrollbar clicking/dragging, to prevent jumpiness in the
-          -- display.
+          -- restoring windows that may have had their windows shifted during
+          -- the course of scrollbar clicking/dragging, to prevent jumpiness in
+          -- the display.
           restore_toplines = false
           props = get_scrollview_bar_props(mouse_winid)
           if vim.tbl_isempty(props)
@@ -2057,12 +2057,12 @@ local handle_mouse = function(button)
             local topline = the_topline_lookup[row]
             topline = math.max(1, topline)
             if row == 1 then
-              -- If the scrollbar was dragged to the top of the window, always show
-              -- the first line.
+              -- If the scrollbar was dragged to the top of the window, always
+              -- show the first line.
               topline = 1
             elseif row + props.height - 1 >= winheight then
-              -- If the scrollbar was dragged to the bottom of the window, always
-              -- show the bottom line.
+              -- If the scrollbar was dragged to the bottom of the window,
+              -- always show the bottom line.
               topline = api.nvim_buf_line_count(bufnr)
             end
             set_topline(winid, topline)
