@@ -19,10 +19,8 @@ local to_bool = utils.to_bool
 -- ScrollViewToggle, <plug> mappings, etc., options that are only at global
 -- level or only considered at startup). Mention signs_autocmd_callback.
 -- Mention g:scrollview_signs_version.
--- TODO: keywords signs. Use search() or match() so that searching doesn't
--- clobber "/" (not relevant for search signs since you're not changing "/". Or
--- using autocmds might suffice since "autocommands" do not change the current
--- search patterns (see :help autocmd-searchpat).
+-- TODO: 'folds' signs, 'conflicts' signs
+-- TODO: demo
 -- TODO: make sign options configurable (e.g., priority, etc.)
 --       (diagnostics.lua, textwidth.lua)
 -- TODO: default cursor sign off
