@@ -41,13 +41,13 @@ end
 
 -- For sorted list l with no duplicates, return the previous item before the
 -- specified item (wraps around).
-function M.preceding(l, item)
+function M.preceding(l, item, wrapscan)
   if vim.tbl_isempty(l) then
     return nil
   end
   local idx = M.binary_search(l, item) - 1
   if idx < 1 then
-    idx = #l
+    idx = wrapscan and #l or 1
   end
   return l[idx]
 end
@@ -85,8 +85,8 @@ function M.sorted(l)
 end
 
 -- For sorted list l with no duplicates, return the next item after the
--- specified item (wraps around).
-function M.subsequent(l, item)
+-- specified item.
+function M.subsequent(l, item, wrapscan)
   if vim.tbl_isempty(l) then
     return nil
   end
@@ -95,7 +95,7 @@ function M.subsequent(l, item)
     idx = idx + 1  -- use the next item
   end
   if idx > #l then
-    idx = 1
+    idx = wrapscan and 1 or #l
   end
   return l[idx]
 end
