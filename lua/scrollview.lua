@@ -19,7 +19,7 @@ local to_bool = utils.to_bool
 -- ScrollViewToggle, <plug> mappings, etc., options that are only at global
 -- level or only considered at startup). Mention signs_autocmd_callback.
 -- Mention g:scrollview_signs_version.
--- TODO: 'folds' signs, 'conflicts' signs
+-- TODO: 'folds' signs, 'conflicts' signs, 'quickfix' signs
 -- TODO: demo
 -- TODO: make sign options configurable (e.g., priority, etc.)
 --       (diagnostics.lua, textwidth.lua)
