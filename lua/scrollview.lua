@@ -20,7 +20,7 @@ local to_bool = utils.to_bool
 -- level or only considered at startup). Mention signs_autocmd_callback.
 -- Mention g:scrollview_signs_version.
 -- TODO: 'folds' signs, 'conflicts' signs, 'quickfix' signs
--- TODO: demo
+-- TODO: demo: trailing whitespace
 -- TODO: make sign options configurable (e.g., priority, etc.)
 --       (diagnostics.lua, textwidth.lua)
 -- TODO: default cursor sign off
