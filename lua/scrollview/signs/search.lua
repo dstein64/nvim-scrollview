@@ -44,6 +44,7 @@ function M.init()
                 local line_count = api.nvim_buf_line_count(0)
                 -- Search signs are not shown when the number of buffer lines
                 -- exceeds the limit, to prevent a slowdown.
+                -- TODO: use a global setting for this instead of get_variable.
                 local line_count_limit = scrollview.get_variable(
                   'scrollview_search_buffer_lines_limit', winnr)
                 local within_limit = line_count_limit == -1
