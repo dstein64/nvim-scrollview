@@ -2118,7 +2118,7 @@ local register_sign_spec = function(specification)
   end
   local name = 'scrollview_signs_' .. id .. '_' .. specification.group
   specification.name = name
-  -- priority, symbol and highlight can be arrays
+  -- priority, symbol, and highlight can be arrays
   for _, key in ipairs({'priority', 'highlight', 'symbol',}) do
     if type(specification[key]) ~= 'table' then
       specification[key] = {specification[key]}
