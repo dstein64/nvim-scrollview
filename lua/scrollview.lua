@@ -1564,7 +1564,10 @@ local refresh_bars = function(async_removal)
       -- Clear existing highlights to prevent memory leak.
       api.nvim_buf_clear_namespace(sign_bufnr, hl_namespace, 0, -1)
       api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
-      fn.deletebufline(sign_bufnr, 1, '$')
+      -- Don't use fn.deletebufline to avoid the "--No lines in buffer--"
+      -- message that shows when the buffer is empty.
+      api.nvim_buf_set_lines(
+        sign_bufnr, 0, api.nvim_buf_line_count(sign_bufnr), true, {})
       api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
     end
     for _, winid in ipairs(target_wins) do
