@@ -9,12 +9,14 @@ function M.init()
     return
   end
 
-  scrollview.register_sign_spec('scrollview_spell', {
+  local registration = scrollview.register_sign_spec({
+    group = 'spell',
+    highlight = 'ScrollViewSpell',
     priority = 20,
     symbol = '~',
-    highlight = 'ScrollViewSpell',
     type = 'w',
   })
+  local name = registration.name
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
@@ -46,7 +48,7 @@ function M.init()
             winvars.scrollview_spell_cached = lines
           end
         end
-        winvars.scrollview_spell = lines
+        winvars[name] = lines
       end
     end)
   })

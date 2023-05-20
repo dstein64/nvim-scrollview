@@ -10,32 +10,25 @@ function M.init()
   end
 
   local spec_data = {
-    [vim.diagnostic.severity.ERROR] =
-    {'scrollview_diagnostics_error', 60, 'E', 'ScrollViewDiagnosticsError'},
-    [vim.diagnostic.severity.HINT] =
-    {'scrollview_sigsn_diagnostics_hint', 30, 'H', 'ScrollViewDiagnosticsHint'},
-    [vim.diagnostic.severity.INFO] =
-    {'scrollview_diagnostics_info', 40, 'I', 'ScrollViewDiagnosticsInfo'},
-    [vim.diagnostic.severity.WARN] =
-    {'scrollview_diagnostics_warn', 50, 'W', 'ScrollViewDiagnosticsWarn'},
+    [vim.diagnostic.severity.ERROR] = {60, 'E', 'ScrollViewDiagnosticsError'},
+    [vim.diagnostic.severity.HINT] = {30, 'H', 'ScrollViewDiagnosticsHint'},
+    [vim.diagnostic.severity.INFO] = {40, 'I', 'ScrollViewDiagnosticsInfo'},
+    [vim.diagnostic.severity.WARN] = {50, 'W', 'ScrollViewDiagnosticsWarn'},
   }
-  for _, item in pairs(spec_data) do
-    local name, priority, symbol, highlight = unpack(item)
-    scrollview.register_sign_spec(name, {
+  local names = {}  -- maps severity to registration name
+  for severity, item in pairs(spec_data) do
+    local priority, symbol, highlight = unpack(item)
+    local registration = scrollview.register_sign_spec({
+      group = 'diagnostics',
+      highlight = highlight,
       priority = priority,
       symbol = symbol,
-      highlight = highlight,
     })
+    names[severity] = registration.name
   end
 
   api.nvim_create_autocmd('DiagnosticChanged', {
     callback = scrollview.signs_autocmd_callback(function(args)
-      local names = {
-        [vim.diagnostic.severity.ERROR] = 'scrollview_diagnostics_error',
-        [vim.diagnostic.severity.HINT] = 'scrollview_sigsn_diagnostics_hint',
-        [vim.diagnostic.severity.INFO] = 'scrollview_diagnostics_info',
-        [vim.diagnostic.severity.WARN] = 'scrollview_diagnostics_warn',
-      }
       local bufs = {[args.buf] = true}
       for _, x in ipairs(args.data.diagnostics) do
         bufs[x.bufnr] = true

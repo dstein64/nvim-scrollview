@@ -9,11 +9,13 @@ function M.init()
     return
   end
 
-  scrollview.register_sign_spec('scrollview_textwidth', {
+  local registration = scrollview.register_sign_spec({
+    group = 'textwidth',
+    highlight = 'ScrollViewTextWidth',
     priority = 20,
     symbol = fn.nr2char(0xbb),
-    highlight = 'ScrollViewTextWidth',
   })
+  local name = registration.name
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
@@ -60,7 +62,7 @@ function M.init()
             bufvars.scrollview_textwidth_seq_cur_cached = seq_cur
             bufvars.scrollview_textwidth_cached = lines
           end
-          bufvars.scrollview_textwidth = lines
+          bufvars[name] = lines
           visited[bufnr] = true
         end
       end

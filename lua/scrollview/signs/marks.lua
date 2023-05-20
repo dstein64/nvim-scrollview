@@ -17,12 +17,15 @@ function M.init()
     return
   end
 
+  local names = {}  -- maps character to registration name
   for _, char in ipairs(vim.g.scrollview_marks_characters) do
-    scrollview.register_sign_spec('scrollview_marks_' .. char, {
+    local registration = scrollview.register_sign_spec({
+      group = 'marks',
+      highlight = 'ScrollViewMarks',
       priority = vim.g.scrollview_marks_priority,
       symbol = char,
-      highlight = 'ScrollViewMarks',
     })
+    names[char] = registration.name
   end
 
   api.nvim_create_autocmd('User', {
@@ -60,7 +63,8 @@ function M.init()
           if marks[char] ~= nil then
             value = {marks[char]}
           end
-          vim.b[bufnr]['scrollview_marks_' .. char] = value
+          local name = names[char]
+          vim.b[bufnr][name] = value
         end
       end
     end)

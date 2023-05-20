@@ -1,7 +1,7 @@
 local M = {}
 
 -- Returns the index of x in l if present, or the index for insertion
--- otherwise.
+-- otherwise. Assumes that l is sorted.
 function M.binary_search(l, x)
   local lo = 1
   local hi = #l
@@ -37,6 +37,18 @@ function M.copy(table)
     result[key] = val
   end
   return result
+end
+
+-- Returns the index of x in l if present, or -1 otherwise. If l is sorted,
+-- use binary_search (also checking for element after since that returns an
+-- index for insertion when the element is missing).
+function M.index(l, x)
+  for idx, val in ipairs(l) do
+    if val == x then
+      return idx
+    end
+  end
+  return -1
 end
 
 -- For sorted list l with no duplicates, return the previous item before the

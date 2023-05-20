@@ -10,11 +10,13 @@ function M.init()
     return
   end
 
-  scrollview.register_sign_spec('scrollview_search', {
+  local registration = scrollview.register_sign_spec({
+    group = 'search',
+    highlight = 'ScrollViewSearch',
     priority = vim.g.scrollview_search_priority,
     symbol = vim.g.scrollview_search_symbol,
-    highlight = 'ScrollViewSearch',
   })
+  local name = registration.name
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
@@ -70,7 +72,7 @@ function M.init()
               bufvars.scrollview_search_cached = lines
             end
           end
-          bufvars.scrollview_search = lines
+          bufvars[name] = lines
           bufvars.scrollview_search_pattern = pattern
           visited[bufnr] = true
         end
@@ -137,7 +139,7 @@ function M.init()
                 if pattern ~= vim.b.scrollview_search_pattern then
                   return true
                 end
-                local lines = vim.b.scrollview_search
+                local lines = vim.b[name]
                 if lines == nil or vim.tbl_isempty(lines) then
                   -- Use a pcall since searchcount() throws an exception (E383,
                   -- E866) when the pattern is invalid (e.g., "\@a").
@@ -163,7 +165,7 @@ function M.init()
           -- shown.
           for _, winid in ipairs(scrollview.get_ordinary_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
-            local lines = vim.b[bufnr].scrollview_search
+            local lines = vim.b[bufnr][name]
             if lines ~= nil and not vim.tbl_isempty(lines) then
               refresh = true
               break

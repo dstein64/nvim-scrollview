@@ -94,7 +94,7 @@ local props_var = 'scrollview_props'
 -- A key for flagging windows that are pending async removal.
 local pending_async_removal_var = 'scrollview_pending_async_removal'
 
--- Stores registered sign specifications, mapping names to specs.
+-- Stores registered sign specifications.
 local sign_specs = {}
 
 -- A highlight namespace that is used for buffer highlighting and as part of a
@@ -945,7 +945,8 @@ local show_signs = function(winid, sign_winids)
   base_col = base_col + get_variable('scrollview_signs_column', winnr)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
-  for name, sign_spec in pairs(sign_specs) do
+  for _, sign_spec in ipairs(sign_specs) do
+    local name = sign_spec.name
     local lines = {}
     local lines_as_given = {}
     pcall(function()
@@ -965,7 +966,9 @@ local show_signs = function(winid, sign_winids)
     if sign_spec.current_only then
       satisfied_current_only = winid == cur_winid
     end
-    local should_show = within_limit and satisfied_current_only
+    local should_show = sign_spec.enabled
+      and within_limit
+      and satisfied_current_only
     if should_show then
       for _, line in ipairs(sorted(lines_as_given)) do
         if vim.tbl_isempty(lines) or lines[#lines] ~= line then
@@ -1027,7 +1030,6 @@ local show_signs = function(winid, sign_winids)
     local total_width = 0  -- running sum of sign widths
     for idx, properties in ipairs(props_list) do
       local symbol = properties.symbol
-      if symbol == nil then symbol = vim.g.scrollview_signs_symbol end
       symbol = symbol:gsub('\n', '')
       symbol = symbol:gsub('\r', '')
       if #symbol < 1 then symbol = ' ' end
@@ -2096,27 +2098,40 @@ local setup = function(opts)
   end
 end
 
-local register_sign_spec = function(name, specification)
+local register_sign_spec = function(specification)
+  local id = #sign_specs + 1
+  local name = 'scrollview_signs_' .. id
   specification = copy(specification)
+  specification.id = id
+  specification.name = name
+  local defaults = {
+    current_only = false,
+    enabled = true,
+    group = 'other',
+    highlight = 'Pmenu',
+    priority = 50,
+    symbol = '',  -- effectively ' '
+    type = 'b',
+  }
+  for key, val in pairs(defaults) do
+    if specification[key] == nil then
+      specification[key] = val
+    end
+  end
   -- priority, symbol and highlight can be arrays
-  for _, key in ipairs({'priority', 'symbol', 'highlight'}) do
+  for _, key in ipairs({'priority', 'highlight', 'symbol',}) do
     if type(specification[key]) ~= 'table' then
       specification[key] = {specification[key]}
     else
       specification[key] = copy(specification[key])
     end
   end
-  if specification.current_only == nil then
-    specification.current_only = false
-  end
-  if specification.type == nil then
-    specification.type = 'b'
-  end
-  sign_specs[name] = specification
-end
-
-local unregister_sign_spec = function(name)
-  sign_specs[name] = nil
+  table.insert(sign_specs, specification)
+  local registration = {
+    id = id,
+    name = name,
+  }
+  return registration
 end
 
 -- *************************************************
@@ -2147,7 +2162,6 @@ return {
 
   -- Sign registration
   register_sign_spec = register_sign_spec,
-  unregister_sign_spec = unregister_sign_spec,
 
   -- Functions called by tests.
   virtual_line_count_spanwise = virtual_line_count_spanwise,
