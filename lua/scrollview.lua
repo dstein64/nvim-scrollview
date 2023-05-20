@@ -2100,10 +2100,8 @@ end
 
 local register_sign_spec = function(specification)
   local id = #sign_specs + 1
-  local name = 'scrollview_signs_' .. id
   specification = copy(specification)
   specification.id = id
-  specification.name = name
   local defaults = {
     current_only = false,
     enabled = true,
@@ -2118,6 +2116,8 @@ local register_sign_spec = function(specification)
       specification[key] = val
     end
   end
+  local name = 'scrollview_signs_' .. id .. '_' .. specification.group
+  specification.name = name
   -- priority, symbol and highlight can be arrays
   for _, key in ipairs({'priority', 'highlight', 'symbol',}) do
     if type(specification[key]) ~= 'table' then
