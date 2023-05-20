@@ -44,27 +44,13 @@ function M.init()
               and fn.strchars(item.mark, 1) == 2 then
             -- Global marks include a file.
             local file = item.file
-            local should_show = false
-            if file == nil then
-              should_show = true  -- buffer mark
-            else
-              -- WARN: Marks won't show properly in cases where getmarklist()
-              -- only includes a filename with no path, like for help files. We
-              -- have no reliable way to know the corresponding buffer. Only
-              -- proceed if we have a path.
-              if file ~= fn.fnamemodify(file, ':t') then
-                -- WARN: Marks wouldn't show properly for filenames that are
-                -- empty (unsaved files), since getmarklist() doesn't return
-                -- enough information to know which is the corresponding buffer
-                -- (it just returns an empty string for the file, which could
-                -- match multiple buffers).
-                if file ~= '' then
-                  should_show = fn.fnamemodify(file, ':p') == winfile
-                end
-              end
-            end
+            local char = fn.strcharpart(item.mark, 1, 1)
+            -- Marks are (1, 0)-indexed (so we only have to check the first
+            -- value for 0). Using nvim_buf_get_mark is a more reliable way to
+            -- check for global marks versus the existing approach (see commit
+            -- 53c14b5 and its WARN comments for details).
+            local should_show = api.nvim_buf_get_mark(bufnr, char)[1] ~= 0
             if should_show then
-              local char = fn.strcharpart(item.mark, 1, 1)
               marks[char] = item.pos[2]
             end
           end
