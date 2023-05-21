@@ -49,8 +49,8 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 
 " === Signs ===
 
-" Internal list of all sign groups.
-let s:signs = [
+" Internal list of all builtin sign groups.
+let s:available_signs = [
       \   'cursor',
       \   'diagnostics',
       \   'marks',
@@ -331,12 +331,12 @@ endfor
 
 function! s:InitializeSigns() abort
   let s:enable_lookup = {}
-  for s:group in s:signs
+  for s:group in s:available_signs
     let s:enable_lookup[s:group] = v:false
   endfor
   for s:group in g:scrollview_signs_on_startup
     if s:group ==# 'all'
-      for s:group2 in s:signs
+      for s:group2 in s:available_signs
         let s:enable_lookup[s:group2] = v:true
       endfor
       break
@@ -348,7 +348,7 @@ function! s:InitializeSigns() abort
       let s:enable_lookup[s:group] = v:true
     endif
   endfor
-  for s:group in s:signs
+  for s:group in s:available_signs
     let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
     call s:module.init(s:enable_lookup[s:group])
   endfor
