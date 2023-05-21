@@ -4,7 +4,7 @@ local scrollview = require('scrollview')
 
 local M = {}
 
-function M.init()
+function M.init(enable)
   if api.nvim_create_autocmd == nil or vim.diagnostic == nil then
     return
   end
@@ -25,6 +25,9 @@ function M.init()
       symbol = symbol,
     })
     names[severity] = registration.name
+  end
+  if enable then
+    scrollview.set_sign_group_status('diagnostics', enable)
   end
 
   api.nvim_create_autocmd('DiagnosticChanged', {

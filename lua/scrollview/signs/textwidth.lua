@@ -4,7 +4,7 @@ local scrollview = require('scrollview')
 
 local M = {}
 
-function M.init()
+function M.init(enable)
   if api.nvim_create_autocmd == nil then
     return
   end
@@ -16,6 +16,9 @@ function M.init()
     symbol = fn.nr2char(0xbb),
   })
   local name = registration.name
+  if enable then
+    scrollview.set_sign_group_status('textwidth', enable)
+  end
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',

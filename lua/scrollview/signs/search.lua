@@ -1,11 +1,12 @@
 local api = vim.api
 local fn = vim.fn
 local scrollview = require('scrollview')
-local to_bool = require('scrollview.utils').to_bool
+local utils = require('scrollview.utils')
+local to_bool = utils.to_bool
 
 local M = {}
 
-function M.init()
+function M.init(enable)
   if api.nvim_create_autocmd == nil then
     return
   end
@@ -17,6 +18,9 @@ function M.init()
     symbol = vim.g.scrollview_search_symbol,
   })
   local name = registration.name
+  if enable then
+    scrollview.set_sign_group_status('search', enable)
+  end
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',

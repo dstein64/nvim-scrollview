@@ -95,7 +95,12 @@ local props_var = 'scrollview_props'
 local pending_async_removal_var = 'scrollview_pending_async_removal'
 
 -- Stores registered sign specifications.
+-- WARN: There is an assumption in the code that signs specs cannot be
+-- unregistered. For example, the ID is currently the position in this array.
 local sign_specs = {}
+
+-- Maps sign groups to status (enabled or disabled).
+local sign_group_status = {}
 
 -- A highlight namespace that is used for buffer highlighting and as part of a
 -- workaround for Neovim #22906.
@@ -933,9 +938,6 @@ end
 -- winids, 'sign_winids', is specified for possible reuse. Reused windows are
 -- removed from the list.
 local show_signs = function(winid, sign_winids)
-  if not to_bool(vim.g.scrollview_signs) then
-    return
-  end
   local cur_winid = api.nvim_get_current_win()
   local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
@@ -966,7 +968,7 @@ local show_signs = function(winid, sign_winids)
     if sign_spec.current_only then
       satisfied_current_only = winid == cur_winid
     end
-    local should_show = sign_spec.enabled
+    local should_show = sign_group_status[sign_spec.group]
       and within_limit
       and satisfied_current_only
     if should_show then
@@ -1758,7 +1760,8 @@ end
 -- Returns a wrapper around fun, that runs fun only if signs are active.
 local signs_autocmd_callback = function(fun)
   local callback = function(args)
-    if scrollview_enabled and to_bool(vim.g.scrollview_signs) then
+    -- TODO: this should also take a group name and check if it's enabled.
+    if scrollview_enabled then
       fun(args)
     end
   end
@@ -2104,7 +2107,6 @@ local register_sign_spec = function(specification)
   specification.id = id
   local defaults = {
     current_only = false,
-    enabled = true,
     group = 'other',
     highlight = 'Pmenu',
     priority = 50,
@@ -2114,6 +2116,11 @@ local register_sign_spec = function(specification)
   for key, val in pairs(defaults) do
     if specification[key] == nil then
       specification[key] = val
+    end
+  end
+  for _, group in ipairs({'all', 'defaults'}) do
+    if specification.group == group then
+      error('Invalid group: ' .. group)
     end
   end
   local name = 'scrollview_signs_' .. id .. '_' .. specification.group
@@ -2127,11 +2134,26 @@ local register_sign_spec = function(specification)
     end
   end
   table.insert(sign_specs, specification)
+  if sign_group_status[specification.group] == nil then
+    sign_group_status[specification.group] = false
+  end
   local registration = {
     id = id,
     name = name,
   }
   return registration
+end
+
+-- status can be true, false, or nil to toggle.
+local set_sign_group_status = function(group, status)
+  if sign_group_status[group] == nil then
+    error('Unknown group: ' .. group)
+  end
+  if status == nil then
+    sign_group_status[group] = not sign_group_status[group]
+  else
+    sign_group_status[group] = status
+  end
 end
 
 -- *************************************************
@@ -2160,8 +2182,9 @@ return {
   toggle = toggle,
   with_win_workspace = with_win_workspace,
 
-  -- Sign registration
+  -- Sign registration/configuration
   register_sign_spec = register_sign_spec,
+  set_sign_group_status = set_sign_group_status,
 
   -- Functions called by tests.
   virtual_line_count_spanwise = virtual_line_count_spanwise,

@@ -12,7 +12,7 @@ local M = {}
 -- (however, this could delete information, like the changelist for unedited
 -- files).
 
-function M.init()
+function M.init(enable)
   if api.nvim_create_autocmd == nil then
     return
   end
@@ -26,6 +26,9 @@ function M.init()
       symbol = char,
     })
     names[char] = registration.name
+  end
+  if enable then
+    scrollview.set_sign_group_status('marks', enable)
   end
 
   api.nvim_create_autocmd('User', {
