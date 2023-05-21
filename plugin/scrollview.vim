@@ -49,8 +49,17 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 
 " === Signs ===
 
+" Internal list of all sign groups.
+let s:signs = [
+      \   'cursor',
+      \   'diagnostics',
+      \   'marks',
+      \   'search',
+      \   'spell',
+      \   'textwidth',
+      \ ]
 " Internal list of sign groups that are enabled on startup by default.
-let s:default_signs = ['cursor', 'search']
+let s:default_signs = ['all']
 
 " *** General sign settings ***
 " Sign column is relative to the scrollbar. It specifies the initial column
@@ -322,14 +331,7 @@ endfor
 
 lua << EOF
 -- A list of all builtin sign groups.
-local groups = {
-  'cursor',
-  'diagnostics',
-  'marks',
-  'search',
-  'spell',
-  'textwidth',
-}
+local groups = vim.api.nvim_eval('s:signs')
 local enable_lookup = {}  -- maps groups to enable status
 for _, group in ipairs(groups) do
   enable_lookup[group] = false
