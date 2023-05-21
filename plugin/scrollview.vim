@@ -329,35 +329,33 @@ endfor
 " * Sign Initialization
 " *************************************************
 
-let s:enable_lookup = {}
-for s:group in s:signs
-  let s:enable_lookup[s:group] = 0
-endfor
-for s:group in g:scrollview_signs_on_startup
-  if s:group ==# 'all'
-    for s:group2 in s:signs
-      let s:enable_lookup[s:group2] = 1
-    endfor
-    break
-  elseif s:group ==# 'defaults'
-    for s:group2 in s:default_signs
-      let s:enable_lookup[s:group2] = 1
-    endfor
-  else
-    let s:enable_lookup[s:group] = 1
-  endif
-endfor
-for s:group in s:signs
-lua << EOF
-  local to_bool = require('scrollview.utils').to_bool
-  local group = vim.api.nvim_eval('s:group')
-  local module = 'scrollview.signs.' .. group
-  local status = to_bool(vim.api.nvim_eval('s:enable_lookup')[group])
-  vim.defer_fn(function()
-    require(module).init(status)
-  end, 0)
-EOF
-endfor
+function! s:InitializeSigns() abort
+  let s:enable_lookup = {}
+  for s:group in s:signs
+    let s:enable_lookup[s:group] = v:false
+  endfor
+  for s:group in g:scrollview_signs_on_startup
+    if s:group ==# 'all'
+      for s:group2 in s:signs
+        let s:enable_lookup[s:group2] = v:true
+      endfor
+      break
+    elseif s:group ==# 'defaults'
+      for s:group2 in s:default_signs
+        let s:enable_lookup[s:group2] = v:true
+      endfor
+    else
+      let s:enable_lookup[s:group] = v:true
+    endif
+  endfor
+  for s:group in s:signs
+    let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
+    call s:module.init(s:enable_lookup[s:group])
+  endfor
+endfunction
+
+call timer_start(0, {-> execute("call s:InitializeSigns()")})
+
 
 " *************************************************
 " * Core
