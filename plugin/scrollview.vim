@@ -330,7 +330,6 @@ endfor
 " *************************************************
 
 lua << EOF
--- A list of all builtin sign groups.
 local groups = vim.api.nvim_eval('s:signs')
 local enable_lookup = {}  -- maps groups to enable status
 for _, group in ipairs(groups) do
