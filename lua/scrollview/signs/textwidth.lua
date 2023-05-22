@@ -16,9 +16,7 @@ function M.init(enable)
     symbol = fn.nr2char(0xbb),
   })
   local name = registration.name
-  if enable then
-    scrollview.set_sign_group_state('textwidth', enable)
-  end
+  scrollview.set_sign_group_state('textwidth', enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
