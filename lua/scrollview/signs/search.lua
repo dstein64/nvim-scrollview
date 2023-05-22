@@ -11,18 +11,20 @@ function M.init(enable)
     return
   end
 
+  local group = 'search'
   local registration = scrollview.register_sign_spec({
-    group = 'search',
+    group = group,
     highlight = 'ScrollViewSearch',
     priority = vim.g.scrollview_search_priority,
     symbol = vim.g.scrollview_search_symbol,
   })
   local name = registration.name
-  scrollview.set_sign_group_state('search', enable)
+  scrollview.set_sign_group_state(group, enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       local pattern = fn.getreg('/')
       -- Track visited buffers, to prevent duplicate computation when multiple
       -- windows are showing the same buffer.
@@ -79,18 +81,20 @@ function M.init(enable)
           visited[bufnr] = true
         end
       end
-    end)
+    end
   })
 
   api.nvim_create_autocmd('OptionSet', {
     pattern = 'hlsearch',
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
-    end)
+    end
   })
 
   api.nvim_create_autocmd('CmdlineLeave', {
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       if to_bool(vim.v.event.abort) then
         return
       end
@@ -106,7 +110,7 @@ function M.init(enable)
       if refresh then
         scrollview.refresh()
       end
-    end)
+    end
   })
 
   -- It's possible that <cmd>nohlsearch<cr> was executed from a mapping, and
@@ -120,7 +124,8 @@ function M.init(enable)
   -- signs become out of sync (i.e., shown when they shouldn't be), this same
   -- approach could be used with a timer.
   api.nvim_create_autocmd('CursorMoved', {
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       -- Use defer_fn since vim.v.hlsearch may not have been properly set yet.
       vim.defer_fn(function()
         local refresh = false
@@ -178,7 +183,7 @@ function M.init(enable)
           scrollview.refresh()
         end
       end, 0)
-    end)
+    end
   })
 
   -- The InsertEnter case handles when insert mode is entered at the same time
@@ -186,9 +191,10 @@ function M.init(enable)
   -- after leaving insert mode, when newly added text might correspond to new
   -- signs.
   api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
-    end)
+    end
   })
 end
 

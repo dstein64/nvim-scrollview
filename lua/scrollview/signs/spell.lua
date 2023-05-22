@@ -9,19 +9,21 @@ function M.init(enable)
     return
   end
 
+  local group = 'spell'
   local registration = scrollview.register_sign_spec({
-    group = 'spell',
+    group = group,
     highlight = 'ScrollViewSpell',
     priority = 20,
     symbol = '~',
     type = 'w',
   })
   local name = registration.name
-  scrollview.set_sign_group_state('spell', enable)
+  scrollview.set_sign_group_state(group, enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       for _, winid in ipairs(scrollview.get_ordinary_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
         local spell = api.nvim_win_get_option(winid, 'spell')
@@ -51,14 +53,15 @@ function M.init(enable)
         end
         winvars[name] = lines
       end
-    end)
+    end
   })
 
   api.nvim_create_autocmd('OptionSet', {
     pattern = {'dictionary', 'spell'},
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
-    end)
+    end
   })
 end
 

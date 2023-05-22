@@ -9,6 +9,7 @@ function M.init(enable)
     return
   end
 
+  local group = 'diagnostics'
   local spec_data = {
     [vim.diagnostic.severity.ERROR] = {60, 'E', 'ScrollViewDiagnosticsError'},
     [vim.diagnostic.severity.HINT] = {30, 'H', 'ScrollViewDiagnosticsHint'},
@@ -19,17 +20,20 @@ function M.init(enable)
   for severity, item in pairs(spec_data) do
     local priority, symbol, highlight = unpack(item)
     local registration = scrollview.register_sign_spec({
-      group = 'diagnostics',
+      group = group,
       highlight = highlight,
       priority = priority,
       symbol = symbol,
     })
     names[severity] = registration.name
   end
-  scrollview.set_sign_group_state('diagnostics', enable)
+  scrollview.set_sign_group_state(group, enable)
 
   api.nvim_create_autocmd('DiagnosticChanged', {
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
+      -- TODO: move some of this out into a User autocmd callback, so you can
+      -- just have this section decide whether a refresh is necessary.
       local bufs = {[args.buf] = true}
       for _, x in ipairs(args.data.diagnostics) do
         bufs[x.bufnr] = true
@@ -68,7 +72,7 @@ function M.init(enable)
           once = true,
         })
       end
-    end)
+    end
   })
 end
 

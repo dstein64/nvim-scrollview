@@ -17,21 +17,23 @@ function M.init(enable)
     return
   end
 
+  local group = 'marks'
   local names = {}  -- maps character to registration name
   for _, char in ipairs(vim.g.scrollview_marks_characters) do
     local registration = scrollview.register_sign_spec({
-      group = 'marks',
+      group = group,
       highlight = 'ScrollViewMarks',
       priority = vim.g.scrollview_marks_priority,
       symbol = char,
     })
     names[char] = registration.name
   end
-  scrollview.set_sign_group_state('marks', enable)
+  scrollview.set_sign_group_state(group, enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       for _, winid in ipairs(scrollview.get_ordinary_windows()) do
         local winfile = api.nvim_win_call(winid, function()
           return fn.expand('%:p')
@@ -68,11 +70,12 @@ function M.init(enable)
           vim.b[bufnr][name] = value
         end
       end
-    end)
+    end
   })
 
   api.nvim_create_autocmd('CmdlineLeave', {
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       if to_bool(vim.v.event.abort) then
         return
       end
@@ -94,7 +97,7 @@ function M.init(enable)
           or vim.startswith(cmdline, 'kee') then
         scrollview.refresh()
       end
-    end)
+    end
   })
 end
 

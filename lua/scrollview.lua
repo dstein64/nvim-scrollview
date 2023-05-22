@@ -1757,17 +1757,6 @@ local enable = function()
   refresh_bars_async()
 end
 
--- Returns a wrapper around fun, that runs fun only if signs are active.
-local signs_autocmd_callback = function(fun)
-  local callback = function(args)
-    -- TODO: this should also take a group name and check if it's enabled.
-    if scrollview_enabled then
-      fun(args)
-    end
-  end
-  return callback
-end
-
 local disable = function()
   local winid = api.nvim_get_current_win()
   local state = init()
@@ -1807,10 +1796,6 @@ local set_state = function(value)
   else
     disable()
   end
-end
-
-local get_state = function()
-  return scrollview_enabled
 end
 
 local refresh = function()
@@ -2173,6 +2158,12 @@ local get_sign_group_state = function(group)
   return result
 end
 
+-- Indicates whether scrollview is enabled and the specified sign group is
+-- enabled.
+local is_sign_group_active = function(group)
+  return scrollview_enabled and get_sign_group_state(group)
+end
+
 -- *************************************************
 -- * API
 -- *************************************************
@@ -2187,7 +2178,6 @@ return {
   -- plugin/scrollview.vim, and sign handlers.
   first = first,
   get_ordinary_windows = get_ordinary_windows,
-  get_state = get_state,
   get_variable = get_variable,
   handle_mouse = handle_mouse,
   last = last,
@@ -2199,7 +2189,7 @@ return {
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
-  get_sign_group_state = get_sign_group_state,
+  is_sign_group_active = is_sign_group_active,
   register_sign_spec = register_sign_spec,
   set_sign_group_state = set_sign_group_state,
 

@@ -9,18 +9,20 @@ function M.init(enable)
     return
   end
 
+  local group = 'textwidth'
   local registration = scrollview.register_sign_spec({
-    group = 'textwidth',
+    group = group,
     highlight = 'ScrollViewTextWidth',
     priority = 20,
     symbol = fn.nr2char(0xbb),
   })
   local name = registration.name
-  scrollview.set_sign_group_state('textwidth', enable)
+  scrollview.set_sign_group_state(group, enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       -- Track visited buffers, to prevent duplicate computation when multiple
       -- windows are showing the same buffer.
       local visited = {}
@@ -67,14 +69,15 @@ function M.init(enable)
           visited[bufnr] = true
         end
       end
-    end)
+    end
   })
 
   api.nvim_create_autocmd('OptionSet', {
     pattern = 'textwidth',
-    callback = scrollview.signs_autocmd_callback(function(args)
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
-    end)
+    end
   })
 end
 
