@@ -2143,10 +2143,14 @@ local set_sign_group_state = function(group, state)
   if sign_group_state[group] == nil then
     error('Unknown group: ' .. group)
   end
+  local prior_state = sign_group_state[group]
   if state == nil then
     sign_group_state[group] = not sign_group_state[group]
   else
     sign_group_state[group] = state
+  end
+  if prior_state ~= sign_group_state[group] then
+    refresh_bars_async()
   end
 end
 
