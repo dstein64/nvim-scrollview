@@ -1796,12 +1796,21 @@ local disable = function()
   restore(state)
 end
 
-local toggle = function()
-  if scrollview_enabled then
-    disable()
-  else
-    enable()
+-- With no argument, toggles the current state. Otherwise, true enables and
+-- false disables.
+local set_state = function(value)
+  if value == nil then
+    value = not scrollview_enabled
   end
+  if value then
+    enable()
+  else
+    disable()
+  end
+end
+
+local get_state = function()
+  return scrollview_enabled
 end
 
 local refresh = function()
@@ -2168,18 +2177,17 @@ return {
 
   -- Functions called by commands and mappings defined in
   -- plugin/scrollview.vim, and sign handlers.
-  disable = disable,
-  enable = enable,
   first = first,
   get_ordinary_windows = get_ordinary_windows,
+  get_state = get_state,
   get_variable = get_variable,
   handle_mouse = handle_mouse,
   last = last,
   next = next,
   prev = prev,
   refresh = refresh,
+  set_state = set_state,
   signs_autocmd_callback = signs_autocmd_callback,
-  toggle = toggle,
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration

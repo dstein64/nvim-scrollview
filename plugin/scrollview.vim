@@ -165,11 +165,11 @@ let g:scrollview_refresh_time_exceeded =
 " *************************************************
 
 if !exists(':ScrollViewDisable')
-  command -bar ScrollViewDisable :lua require('scrollview').disable()
+  command -bar ScrollViewDisable :lua require('scrollview').set_state(false)
 endif
 
 if !exists(':ScrollViewEnable')
-  command -bar ScrollViewEnable :lua require('scrollview').enable()
+  command -bar ScrollViewEnable :lua require('scrollview').set_state(true)
 endif
 
 if !exists(':ScrollViewFirst')
@@ -193,7 +193,7 @@ if !exists(':ScrollViewRefresh')
 endif
 
 if !exists(':ScrollViewToggle')
-  command -bar ScrollViewToggle :lua require('scrollview').toggle()
+  command -bar ScrollViewToggle :lua require('scrollview').set_state()
 endif
 
 " *************************************************
@@ -364,7 +364,7 @@ if g:scrollview_on_startup
   " Enable scrollview asynchronously. This avoids an issue that prevents diff
   " mode from functioning properly when it's launched at startup (i.e., with
   " nvim -d). The issue is reported in Neovim Issue #13720.
-  lua vim.defer_fn(require('scrollview').enable, 0)
+  lua vim.defer_fn(function() require('scrollview').set_state(true) end, 0)
 endif
 
 " *************************************************
