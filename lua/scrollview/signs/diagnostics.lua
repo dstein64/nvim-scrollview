@@ -27,7 +27,7 @@ function M.init(enable)
     names[severity] = registration.name
   end
   if enable then
-    scrollview.set_sign_group_status('diagnostics', enable)
+    scrollview.set_sign_group_state('diagnostics', enable)
   end
 
   api.nvim_create_autocmd('DiagnosticChanged', {

@@ -99,8 +99,8 @@ local pending_async_removal_var = 'scrollview_pending_async_removal'
 -- unregistered. For example, the ID is currently the position in this array.
 local sign_specs = {}
 
--- Maps sign groups to status (enabled or disabled).
-local sign_group_status = {}
+-- Maps sign groups to state (enabled or disabled).
+local sign_group_state = {}
 
 -- A highlight namespace that is used for buffer highlighting and as part of a
 -- workaround for Neovim #22906.
@@ -968,7 +968,7 @@ local show_signs = function(winid, sign_winids)
     if sign_spec.current_only then
       satisfied_current_only = winid == cur_winid
     end
-    local should_show = sign_group_status[sign_spec.group]
+    local should_show = sign_group_state[sign_spec.group]
       and within_limit
       and satisfied_current_only
     if should_show then
@@ -2143,8 +2143,8 @@ local register_sign_spec = function(specification)
     end
   end
   table.insert(sign_specs, specification)
-  if sign_group_status[specification.group] == nil then
-    sign_group_status[specification.group] = false
+  if sign_group_state[specification.group] == nil then
+    sign_group_state[specification.group] = false
   end
   local registration = {
     id = id,
@@ -2153,16 +2153,24 @@ local register_sign_spec = function(specification)
   return registration
 end
 
--- status can be true, false, or nil to toggle.
-local set_sign_group_status = function(group, status)
-  if sign_group_status[group] == nil then
+-- state can be true, false, or nil to toggle.
+local set_sign_group_state = function(group, state)
+  if sign_group_state[group] == nil then
     error('Unknown group: ' .. group)
   end
-  if status == nil then
-    sign_group_status[group] = not sign_group_status[group]
+  if state == nil then
+    sign_group_state[group] = not sign_group_state[group]
   else
-    sign_group_status[group] = status
+    sign_group_state[group] = state
   end
+end
+
+local get_sign_group_state = function(group)
+  local result = sign_group_state[group]
+  if result == nil then
+    error('Unknown group: ' .. group)
+  end
+  return result
 end
 
 -- *************************************************
@@ -2191,8 +2199,9 @@ return {
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
+  get_sign_group_state = get_sign_group_state,
   register_sign_spec = register_sign_spec,
-  set_sign_group_status = set_sign_group_status,
+  set_sign_group_state = set_sign_group_state,
 
   -- Functions called by tests.
   virtual_line_count_spanwise = virtual_line_count_spanwise,

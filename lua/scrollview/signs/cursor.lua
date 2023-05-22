@@ -18,7 +18,7 @@ function M.init(enable)
   })
   local name = registration.name
   if enable then
-    scrollview.set_sign_group_status('cursor', enable)
+    scrollview.set_sign_group_state('cursor', enable)
   end
 
   api.nvim_create_autocmd('User', {
