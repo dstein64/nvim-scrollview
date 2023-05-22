@@ -2163,7 +2163,9 @@ local get_sign_group_state = function(group)
 end
 
 -- Indicates whether scrollview is enabled and the specified sign group is
--- enabled.
+-- enabled. Using this is more convenient than having to call (1) a
+-- (hypothetical) get_state function to check if scrollview is enabled and (2)
+-- a get_sign_group_state function to check if the group is enabled.
 local is_sign_group_active = function(group)
   return scrollview_enabled and get_sign_group_state(group)
 end
