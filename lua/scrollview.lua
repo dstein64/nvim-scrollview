@@ -2185,7 +2185,6 @@ return {
   prev = prev,
   refresh = refresh,
   set_state = set_state,
-  signs_autocmd_callback = signs_autocmd_callback,
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
