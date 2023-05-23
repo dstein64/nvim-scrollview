@@ -1789,11 +1789,16 @@ end
 
 -- With no argument, toggles the current state. Otherwise, true enables and
 -- false disables.
-local set_state = function(value)
-  if value == nil then
-    value = not scrollview_enabled
+-- WARN: 'state' is enable/disable state. This differs from how "state" is used
+-- in other parts of the code (for saving and restoring environment).
+local set_state = function(state)
+  if state == vim.NIL then
+    state = nil
   end
-  if value then
+  if state == nil then
+    state = not scrollview_enabled
+  end
+  if state then
     enable()
   else
     disable()
@@ -2150,9 +2155,14 @@ local register_sign_spec = function(specification)
 end
 
 -- state can be true, false, or nil to toggle.
+-- WARN: 'state' is enable/disable state. This differs from how "state" is used
+-- in other parts of the code (for saving and restoring environment).
 local set_sign_group_state = function(group, state)
   if sign_group_state[group] == nil then
     error('Unknown group: ' .. group)
+  end
+  if state == vim.NIL then
+    state = nil
   end
   local prior_state = sign_group_state[group]
   if state == nil then

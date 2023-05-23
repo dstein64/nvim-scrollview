@@ -176,44 +176,79 @@ function! s:Complete(...) abort
   return join(l:groups, "\n")
 endfunction
 
+" CompleteWithAll is similar to Complete, but also includes 'all'.
+function! s:CompleteWithAll(...) abort
+  let l:groups = luaeval('require("scrollview").get_sign_groups()')
+  call add(l:groups, 'all')
+  call sort(l:groups)
+  return join(l:groups, "\n")
+endfunction
+
+" A helper for :ScrollViewEnable, :ScrollViewDisable, and :ScrollViewToggle to
+" call the underlying functions. Set state to v:true to enable, v:false to
+" disable, and v:null to toggle.
+function! s:DispatchStateCommand(state, ...)
+  let s:module = luaeval('require("scrollview")')
+  if empty(a:000)
+    " The command had no arguments, so is for the plugin.
+    call s:module.set_state(a:state)
+  else
+    " The command had arguments, so is for signs.
+    let l:groups = []
+    for l:group in a:000
+      if l:group ==# 'all'
+        call extend(l:groups, luaeval('require("scrollview").get_sign_groups()'))
+      else
+        call add(l:groups, l:group)
+      endif
+    endfor
+    for l:group in l:groups
+      call s:module.set_sign_group_state(l:group, a:state)
+    endfor
+  endif
+endfunction
+
 if !exists(':ScrollViewDisable')
-  command -bar ScrollViewDisable :lua require('scrollview').set_state(false)
+  command -bar -nargs=* -complete=custom,s:CompleteWithAll ScrollViewDisable
+        \ call s:DispatchStateCommand(v:false, <f-args>)
 endif
 
 if !exists(':ScrollViewEnable')
-  command -bar ScrollViewEnable :lua require('scrollview').set_state(true)
+  command -bar -nargs=* -complete=custom,s:CompleteWithAll ScrollViewEnable
+        \ call s:DispatchStateCommand(v:true, <f-args>)
 endif
 
 if !exists(':ScrollViewFirst')
   command -bar -nargs=* -complete=custom,s:Complete ScrollViewFirst
-        \ :lua require('scrollview').first(
+        \ lua require('scrollview').first(
         \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewLast')
   command -bar -nargs=* -complete=custom,s:Complete ScrollViewLast
-        \ :lua require('scrollview').last(
+        \ lua require('scrollview').last(
         \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewNext')
   command -bar -nargs=* -complete=custom,s:Complete ScrollViewNext
-        \ :lua require('scrollview').next(
+        \ lua require('scrollview').next(
         \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewPrev')
   command -bar -nargs=* -complete=custom,s:Complete ScrollViewPrev
-        \ :lua require('scrollview').prev(
+        \ lua require('scrollview').prev(
         \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewRefresh')
-  command -bar ScrollViewRefresh :lua require('scrollview').refresh()
+  command -bar ScrollViewRefresh lua require('scrollview').refresh()
 endif
 
 if !exists(':ScrollViewToggle')
-  command -bar ScrollViewToggle :lua require('scrollview').set_state()
+  command -bar -nargs=* -complete=custom,s:CompleteWithAll ScrollViewToggle
+        \ call s:DispatchStateCommand(v:null, <f-args>)
 endif
 
 " *************************************************
@@ -350,31 +385,31 @@ endfor
 " *************************************************
 
 function! s:InitializeSigns() abort
-  let s:enable_lookup = {}
+  let s:lookup = {}  " maps sign groups to state (enabled/disabled)
   for s:group in s:available_signs
-    let s:enable_lookup[s:group] = v:false
+    let s:lookup[s:group] = v:false
   endfor
   for s:group in g:scrollview_signs_on_startup
     if s:group ==# 'all'
       for s:group2 in s:available_signs
-        let s:enable_lookup[s:group2] = v:true
+        let s:lookup[s:group2] = v:true
       endfor
       break
     elseif s:group ==# 'defaults'
       for s:group2 in s:default_signs
-        let s:enable_lookup[s:group2] = v:true
+        let s:lookup[s:group2] = v:true
       endfor
     else
-      let s:enable_lookup[s:group] = v:true
+      let s:lookup[s:group] = v:true
     endif
   endfor
   for s:group in s:available_signs
     let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
-    call s:module.init(s:enable_lookup[s:group])
+    call s:module.init(s:lookup[s:group])
   endfor
 endfunction
 
-call timer_start(0, {-> execute("call s:InitializeSigns()")})
+call timer_start(0, {-> execute('call s:InitializeSigns()')})
 
 " *************************************************
 " * Core
