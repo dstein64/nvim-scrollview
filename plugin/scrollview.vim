@@ -164,6 +164,18 @@ let g:scrollview_refresh_time_exceeded =
 " * Commands
 " *************************************************
 
+" Returns a list of groups for command completion. A 'custom' function is used
+" instead of a 'customlist' function, for the automatic filtering that is
+" conducted for the former, but not the latter.
+" XXX: This currently returns the full list of groups, including entries that
+" may not be relevant for the current command (for example, a disabled group
+" would not be relevant for :ScrollViewFirst).
+function! s:Complete(...) abort
+  let l:groups = luaeval('require("scrollview").get_sign_groups()')
+  call sort(l:groups)
+  return join(l:groups, "\n")
+endfunction
+
 if !exists(':ScrollViewDisable')
   command -bar ScrollViewDisable :lua require('scrollview').set_state(false)
 endif
@@ -173,19 +185,27 @@ if !exists(':ScrollViewEnable')
 endif
 
 if !exists(':ScrollViewFirst')
-  command -bar ScrollViewFirst :lua require('scrollview').first()
+  command -bar -nargs=* -complete=custom,s:Complete ScrollViewFirst
+        \ :lua require('scrollview').first(
+        \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewLast')
-  command -bar ScrollViewLast :lua require('scrollview').last()
+  command -bar -nargs=* -complete=custom,s:Complete ScrollViewLast
+        \ :lua require('scrollview').last(
+        \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewNext')
-  command -bar ScrollViewNext :lua require('scrollview').next()
+  command -bar -nargs=* -complete=custom,s:Complete ScrollViewNext
+        \ :lua require('scrollview').next(
+        \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewPrev')
-  command -bar ScrollViewPrev :lua require('scrollview').prev()
+  command -bar -nargs=* -complete=custom,s:Complete ScrollViewPrev
+        \ :lua require('scrollview').prev(
+        \   #{<f-args>} > 0 and {<f-args>} or nil)
 endif
 
 if !exists(':ScrollViewRefresh')

@@ -996,6 +996,7 @@ local show_signs = function(winid, sign_winids)
             symbol = sign_spec.symbol,
             highlight = sign_spec.highlight,
             priority = sign_spec.priority,
+            sign_spec_id = sign_spec.id,
           }
           properties.name = name
           properties.lines = {line}
@@ -1121,6 +1122,7 @@ local show_signs = function(winid, sign_winids)
           width = sign_width,
           lines = properties.lines,
           zindex = zindex,
+          sign_spec_id = properties.sign_spec_id,
         }
         api.nvim_win_set_var(sign_winid, props_var, props)
       end
@@ -1812,16 +1814,25 @@ end
 
 -- Move the cursor to the specified line with a sign. Can take (1) an integer
 -- value, (2) '$' for the last line, (3) 'next' for the next line, or (4)
--- 'prev' for the previous line.
-local move_to_sign_line = function(location)
-  if previous == nil then
-    previous = false
+-- 'prev' for the previous line. 'groups' specifies the sign groups that are
+-- considered; use nil for all.
+local move_to_sign_line = function(location, groups)
+  if groups ~= nil then
+    groups = utils.sorted(groups)
   end
   local lines = {}
   local winid = api.nvim_get_current_win()
-  for _, sign_props in pairs(get_scrollview_sign_props(winid)) do
-    for _, line in ipairs(sign_props.lines) do
-      table.insert(lines, line)
+  for _, sign_props in ipairs(get_scrollview_sign_props(winid)) do
+    local eligible = groups == nil
+    if not eligible then
+      local group = sign_specs[sign_props.sign_spec_id].group
+      local idx = utils.binary_search(groups, group)
+      eligible = idx <= #groups and groups[idx] == group
+    end
+    if eligible then
+      for _, line in ipairs(sign_props.lines) do
+        table.insert(lines, line)
+      end
     end
   end
   if vim.tbl_isempty(lines) then
@@ -1846,23 +1857,23 @@ local move_to_sign_line = function(location)
 end
 
 -- Move the cursor to the next line that has a sign.
-local next = function()
-  move_to_sign_line('next')
+local next = function(groups)
+  move_to_sign_line('next', groups)
 end
 
 -- Move the cursor to the previous line that has a sign.
-local prev = function()
-  move_to_sign_line('prev')
+local prev = function(groups)
+  move_to_sign_line('prev', groups)
 end
 
 -- Move the cursor to the first line with a sign.
-local first = function()
-  move_to_sign_line(1)
+local first = function(groups)
+  move_to_sign_line(1, groups)
 end
 
 -- Move the cursor to the last line with a sign.
-local last = function()
-  move_to_sign_line('$')
+local last = function(groups)
+  move_to_sign_line('$', groups)
 end
 
 -- 'button' can be 'left', 'middle', 'right', 'x1', or 'x2'.
@@ -1984,7 +1995,7 @@ local handle_mouse = function(button)
               and mouse_col <= props.col
           end
           -- First check for a click on a sign and handle accordingly.
-          for _, sign_props in pairs(get_scrollview_sign_props(mouse_winid)) do
+          for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
             if mouse_row == sign_props.row
               and mouse_col >= sign_props.col
               and mouse_col <= sign_props.col + sign_props.width - 1
@@ -2170,6 +2181,15 @@ local is_sign_group_active = function(group)
   return scrollview_enabled and get_sign_group_state(group)
 end
 
+-- Returns a list of sign groups.
+local get_sign_groups = function()
+  local groups = {}
+  for group, state in pairs(sign_group_state) do
+    table.insert(groups, group)
+  end
+  return groups
+end
+
 -- *************************************************
 -- * API
 -- *************************************************
@@ -2194,6 +2214,7 @@ return {
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
+  get_sign_groups = get_sign_groups,
   is_sign_group_active = is_sign_group_active,
   register_sign_spec = register_sign_spec,
   set_sign_group_state = set_sign_group_state,
