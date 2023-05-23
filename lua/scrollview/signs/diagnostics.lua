@@ -29,31 +29,33 @@ function M.init(enable)
   end
   scrollview.set_sign_group_state(group, enable)
 
-  api.nvim_create_autocmd('DiagnosticChanged', {
+  api.nvim_create_autocmd('User', {
+    pattern = 'ScrollViewRefresh',
     callback = function(args)
       if not scrollview.is_sign_group_active(group) then return end
-      -- TODO: move some of this out into a User autocmd callback, so you can
-      -- just have this section decide whether a refresh is necessary.
-      local bufs = {[args.buf] = true}
-      for _, x in ipairs(args.data.diagnostics) do
-        bufs[x.bufnr] = true
-      end
-      local lookup = {}  -- maps diagnostic type to a list of line numbers
-      for severity, _ in pairs(names) do
-        lookup[severity] = {}
-      end
-      for bufnr, _ in pairs(bufs) do
+      for _, winid in ipairs(scrollview.get_ordinary_windows()) do
+        local bufnr = api.nvim_win_get_buf(winid)
+        local lookup = {}  -- maps diagnostic type to a list of line numbers
+        for severity, _ in pairs(names) do
+          lookup[severity] = {}
+        end
         local diagnostics = vim.diagnostic.get(bufnr)
         for _, x in ipairs(diagnostics) do
           if lookup[x.severity] ~= nil then
             table.insert(lookup[x.severity], x.lnum + 1)
           end
         end
+        for severity, lines in pairs(lookup) do
+          local name = names[severity]
+          vim.b[args.buf][name] = lines
+        end
       end
-      for severity, lines in pairs(lookup) do
-        local name = names[severity]
-        vim.b[args.buf][name] = lines
-      end
+    end
+  })
+
+  api.nvim_create_autocmd('DiagnosticChanged', {
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
       if fn.mode() ~= 'i' or vim.diagnostic.config().update_in_insert then
         -- Refresh scrollbars immediately when update_in_insert is set or the
         -- current mode is not insert mode.
