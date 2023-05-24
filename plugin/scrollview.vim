@@ -393,12 +393,6 @@ if g:scrollview_auto_workarounds
   " not be needed otherwise).
 endif
 
-" Create mappings to refresh scrollbars after adding marks.
-" TODO: move this to marks.lua.
-for s:char in g:scrollview_marks_characters
-  call s:CreateRefreshMapping('nx', 'm' .. s:char)
-endfor
-
 " *************************************************
 " * Sign Initialization
 " *************************************************

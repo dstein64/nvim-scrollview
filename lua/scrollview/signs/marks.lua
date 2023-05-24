@@ -30,6 +30,18 @@ function M.init(enable)
   end
   scrollview.set_sign_group_state(group, enable)
 
+  -- Create mappings to refresh scrollbars after adding marks.
+  for _, char in ipairs(vim.g.scrollview_marks_characters) do
+    local seq = 'm' .. char
+    if fn.maparg(seq) == '' then
+      local rhs = seq .. '<cmd>ScrollViewRefresh<cr>'
+      vim.keymap.set({'n', 'x'}, seq, rhs, {
+        noremap = true,
+        unique = true,
+      })
+    end
+  end
+
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
     callback = function(args)
