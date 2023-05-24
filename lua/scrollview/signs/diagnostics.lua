@@ -11,10 +11,26 @@ function M.init(enable)
 
   local group = 'diagnostics'
   local spec_data = {
-    [vim.diagnostic.severity.ERROR] = {60, 'E', 'ScrollViewDiagnosticsError'},
-    [vim.diagnostic.severity.HINT] = {30, 'H', 'ScrollViewDiagnosticsHint'},
-    [vim.diagnostic.severity.INFO] = {40, 'I', 'ScrollViewDiagnosticsInfo'},
-    [vim.diagnostic.severity.WARN] = {50, 'W', 'ScrollViewDiagnosticsWarn'},
+    [vim.diagnostic.severity.ERROR] = {
+      vim.g.scrollview_diagnostics_error_priority,
+      vim.g.scrollview_diagnostics_error_symbol,
+      'ScrollViewDiagnosticsError'
+    },
+    [vim.diagnostic.severity.HINT] = {
+      vim.g.scrollview_diagnostics_hint_priority,
+      vim.g.scrollview_diagnostics_hint_symbol,
+      'ScrollViewDiagnosticsHint'
+    },
+    [vim.diagnostic.severity.INFO] = {
+      vim.g.scrollview_diagnostics_info_priority,
+      vim.g.scrollview_diagnostics_info_symbol,
+      'ScrollViewDiagnosticsInfo'
+    },
+    [vim.diagnostic.severity.WARN] = {
+      vim.g.scrollview_diagnostics_warn_priority,
+      vim.g.scrollview_diagnostics_warn_symbol,
+      'ScrollViewDiagnosticsWarn'
+    },
   }
   local names = {}  -- maps severity to registration name
   for severity, item in pairs(spec_data) do
@@ -63,7 +79,7 @@ function M.init(enable)
       else
         -- Refresh scrollbars once leaving insert mode. Overwrite an existing
         -- autocmd configured to already do this.
-        local group = api.nvim_create_augroup('scrollview_diagnostic_signs', {
+        local group = api.nvim_create_augroup('scrollview_diagnostics', {
           clear = true
         })
         api.nvim_create_autocmd('InsertLeave', {
