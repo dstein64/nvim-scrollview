@@ -91,18 +91,18 @@ let g:scrollview_cursor_symbol =
 " *** Diagnostics signs ***
 let g:scrollview_diagnostics_error_priority =
       \ get(g:, 'scrollview_diagnostics_error_priority', 60)
-let g:scrollview_diagnostics_hint_priority =
-      \ get(g:, 'scrollview_diagnostics_hint_priority', 30)
-let g:scrollview_diagnostics_info_priority =
-      \ get(g:, 'scrollview_diagnostics_info_priority', 40)
-let g:scrollview_diagnostics_warn_priority =
-      \ get(g:, 'scrollview_diagnostics_warn_priority', 50)
 let g:scrollview_diagnostics_error_symbol =
       \ get(g:, 'scrollview_diagnostics_error_symbol', 'E')
+let g:scrollview_diagnostics_hint_priority =
+      \ get(g:, 'scrollview_diagnostics_hint_priority', 30)
 let g:scrollview_diagnostics_hint_symbol =
       \ get(g:, 'scrollview_diagnostics_hint_symbol', 'H')
+let g:scrollview_diagnostics_info_priority =
+      \ get(g:, 'scrollview_diagnostics_info_priority', 40)
 let g:scrollview_diagnostics_info_symbol =
       \ get(g:, 'scrollview_diagnostics_info_symbol', 'I')
+let g:scrollview_diagnostics_warn_priority =
+      \ get(g:, 'scrollview_diagnostics_warn_priority', 50)
 let g:scrollview_diagnostics_warn_symbol =
       \ get(g:, 'scrollview_diagnostics_warn_symbol', 'W')
 
