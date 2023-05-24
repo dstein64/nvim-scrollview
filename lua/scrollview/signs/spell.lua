@@ -30,6 +30,7 @@ function M.init(enable)
         local winvars = vim.w[winid]
         local lines = {}
         if spell then
+          -- TODO: switch to b:changedtick
           local seq_cur = fn.undotree().seq_cur
           local cache_seq_cur = winvars.scrollview_spell_seq_cur_cached
           local cache_hit = cache_seq_cur == seq_cur

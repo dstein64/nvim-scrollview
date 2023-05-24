@@ -34,6 +34,7 @@ function M.init(enable)
           local bufvars = vim.b[bufnr]
           local lines = {}
           local cache_hit = false
+          -- TODO: switch to b:changedtick
           local seq_cur = fn.undotree().seq_cur
           if bufvars.scrollview_textwidth_option_cached == textwidth then
             local cache_seq_cur = bufvars.scrollview_textwidth_seq_cur_cached
