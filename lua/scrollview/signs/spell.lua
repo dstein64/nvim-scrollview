@@ -30,10 +30,11 @@ function M.init(enable)
         local winvars = vim.w[winid]
         local lines = {}
         if spell then
-          -- TODO: switch to b:changedtick
-          local seq_cur = fn.undotree().seq_cur
-          local cache_seq_cur = winvars.scrollview_spell_seq_cur_cached
-          local cache_hit = cache_seq_cur == seq_cur
+          local changedtick = vim.b[bufnr].changedtick
+          local changedtick_cached = winvars.scrollview_spell_changedtick_cached
+          local bufnr_cached = winvars.scrollview_spell_bufnr_cached
+          local cache_hit = changedtick_cached == changedtick
+            and bufnr_cached == bufnr
           -- XXX: Commands like zG invalidate the cache, but that's not
           -- currently handled.
           -- TODO: Add handling.
@@ -48,7 +49,8 @@ function M.init(enable)
                 if spellbadword[1] ~= '' then table.insert(lines, line) end
               end
             end)
-            winvars.scrollview_spell_seq_cur_cached = seq_cur
+            winvars.scrollview_spell_changedtick_cached = changedtick
+            winvars.scrollview_spell_bufnr_cached = bufnr
             winvars.scrollview_spell_cached = lines
           end
         end
