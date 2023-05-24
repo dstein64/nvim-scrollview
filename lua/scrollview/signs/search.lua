@@ -37,10 +37,11 @@ function M.init(enable)
           local lines = {}
           if to_bool(vim.v.hlsearch) then
             local cache_hit = false
-            local seq_cur = fn.undotree().seq_cur
+            local changedtick = bufvars.changedtick
             if bufvars.scrollview_search_pattern_cached == pattern then
-              local cache_seq_cur = bufvars.scrollview_search_seq_cur_cached
-              cache_hit = cache_seq_cur == seq_cur
+              local changedtick_cached
+                = bufvars.scrollview_search_changedtick_cached
+              cache_hit = changedtick_cached == changedtick
             end
             if cache_hit then
               lines = bufvars.scrollview_search_cached
@@ -72,7 +73,7 @@ function M.init(enable)
                 lines[idx] = tonumber(line)
               end
               bufvars.scrollview_search_pattern_cached = pattern
-              bufvars.scrollview_search_seq_cur_cached = seq_cur
+              bufvars.scrollview_search_changedtick_cached = changedtick
               bufvars.scrollview_search_cached = lines
             end
           end
