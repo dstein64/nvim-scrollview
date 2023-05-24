@@ -201,7 +201,7 @@ endfunction
 
 " A helper for :ScrollViewEnable, :ScrollViewDisable, and :ScrollViewToggle to
 " call the underlying functions. Set state to v:true to enable, v:false to
-" disable, and v:null to toggle.
+" disable, and v:null to toggle. Additional arguments specify sign groups.
 function! s:DispatchStateCommand(state, ...)
   let s:module = luaeval('require("scrollview")')
   if empty(a:000)
