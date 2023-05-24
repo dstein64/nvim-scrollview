@@ -39,8 +39,8 @@ function M.init(enable)
             local cache_hit = false
             local changedtick = bufvars.changedtick
             if bufvars.scrollview_search_pattern_cached == pattern then
-              local changedtick_cached
-                = bufvars.scrollview_search_changedtick_cached
+              local changedtick_cached =
+                bufvars.scrollview_search_changedtick_cached
               cache_hit = changedtick_cached == changedtick
             end
             if cache_hit then
