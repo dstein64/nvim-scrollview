@@ -13,8 +13,8 @@ function M.init(enable)
   local registration = scrollview.register_sign_spec({
     group = group,
     highlight = 'ScrollViewSpell',
-    priority = 20,
-    symbol = '~',
+    priority = vim.g.scrollview_spell_priority,
+    symbol = vim.g.scrollview_spell_symbol,
     type = 'w',
   })
   local name = registration.name

@@ -133,7 +133,8 @@ let g:scrollview_search_symbol =
       \ get(g:, 'scrollview_search_symbol', ['=', nr2char(0x2261)])
 
 " *** Spell signs ***
-" TODO
+let g:scrollview_spell_priority = get(g:, 'scrollview_spell_priority', 20)
+let g:scrollview_spell_symbol = get(g:, 'scrollview_spell_symbol', '~')
 
 " *** Textwidth signs ***
 " TODO
