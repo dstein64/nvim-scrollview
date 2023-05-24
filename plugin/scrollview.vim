@@ -137,7 +137,10 @@ let g:scrollview_spell_priority = get(g:, 'scrollview_spell_priority', 20)
 let g:scrollview_spell_symbol = get(g:, 'scrollview_spell_symbol', '~')
 
 " *** Textwidth signs ***
-" TODO
+let g:scrollview_textwidth_priority =
+      \ get(g:, 'scrollview_textwidth_priority', 20)
+let g:scrollview_textwidth_symbol =
+      \ get(g:, 'scrollview_textwidth_symbol', nr2char(0xbb))
 
 " === Highlights ===
 

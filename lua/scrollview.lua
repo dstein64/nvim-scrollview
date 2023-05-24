@@ -21,8 +21,6 @@ local to_bool = utils.to_bool
 -- Mention g:scrollview_signs_version.
 -- TODO: 'folds' signs, 'conflicts' signs, 'quickfix' signs
 -- TODO: demo: trailing whitespace
--- TODO: make sign options configurable (e.g., priority, etc.)
---       (diagnostics.lua, textwidth.lua)
 -- TODO: default cursor sign off
 -- TODO: test symbols across a variety of platforms.
 

@@ -13,8 +13,8 @@ function M.init(enable)
   local registration = scrollview.register_sign_spec({
     group = group,
     highlight = 'ScrollViewTextWidth',
-    priority = 20,
-    symbol = fn.nr2char(0xbb),
+    priority = vim.g.scrollview_textwidth_priority,
+    symbol = vim.g.scrollview_textwidth_symbol,
   })
   local name = registration.name
   scrollview.set_sign_group_state(group, enable)
