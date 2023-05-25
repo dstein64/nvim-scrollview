@@ -44,15 +44,7 @@ function M.init(enable)
             lines = bufvars.scrollview_textwidth_cached
           else
             local line_count = api.nvim_buf_line_count(bufnr)
-            -- Longline signs are not shown when the number of buffer
-            -- lines exceeds the limit, to prevent a slowdown.
-            -- TODO: set for real
-            -- local line_count_limit = scrollview.get_variable(
-            --   'scrollview_textwidth_buffer_lines_limit', winnr)
-            local line_count_limit = -1  -- TODO: delete
-            local within_limit = line_count_limit == -1
-                or line_count <= line_count_limit
-            if textwidth > 0 and within_limit then
+            if textwidth > 0 then
               api.nvim_win_call(winid, function()
                 for line = 1, line_count do
                   local line_length = fn.strchars(fn.getline(line), 1)
