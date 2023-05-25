@@ -114,10 +114,7 @@ function M.init(enable)
       -- WARN: Only text at the beginning of the command is considered.
       -- WARN: CmdlineLeave is not executed for command mappings (<cmd>).
       local cmdline = fn.getcmdline()
-      if vim.startswith(cmdline, 'spe')
-          or vim.startswith(cmdline, 'spellw')
-          or vim.startswith(cmdline, 'spellr')
-          or vim.startswith(cmdline, 'spellu') then
+      if vim.startswith(cmdline, 'spe') then
         invalidate_cache()
         scrollview.refresh()
       end
