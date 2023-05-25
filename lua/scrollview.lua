@@ -2189,7 +2189,6 @@ local is_sign_group_active = function(group)
   return scrollview_enabled and get_sign_group_state(group)
 end
 
--- Returns a list of sign groups.
 local get_sign_groups = function()
   local groups = {}
   for group, state in pairs(sign_group_state) do
