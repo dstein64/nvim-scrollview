@@ -7,7 +7,7 @@ local to_bool = utils.to_bool
 local M = {}
 
 function M.init(enable)
-  if api.nvim_create_autocmd == nil then
+  if api.nvim_create_autocmd == nil or vim.keymap == nil then
     return
   end
 
