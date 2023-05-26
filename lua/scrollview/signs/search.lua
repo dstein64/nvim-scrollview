@@ -105,6 +105,8 @@ function M.init(enable)
       -- Handle the case where :nohls may have been executed (this won't work
       -- for e.g., <cmd>nohls<cr> in a mapping).
       -- WARN: CmdlineLeave is not executed for command mappings (<cmd>).
+      -- WARN: CmdlineLeave is not executed for commands executed from Lua
+      -- (e.g., vim.cmd('help')).
       if afile == ':' and string.find(fn.getcmdline(), 'nohls') then
         refresh = true
       end

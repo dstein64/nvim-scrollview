@@ -102,6 +102,8 @@ function M.init(enable)
       -- WARN: [range] is not handled.
       -- WARN: Only text at the beginning of the command is considered.
       -- WARN: CmdlineLeave is not executed for command mappings (<cmd>).
+      -- WARN: CmdlineLeave is not executed for commands executed from Lua
+      -- (e.g., vim.cmd('help')).
       local cmdline = fn.getcmdline()
       if vim.startswith(cmdline, 'ma')
           or vim.startswith(cmdline, 'k')
