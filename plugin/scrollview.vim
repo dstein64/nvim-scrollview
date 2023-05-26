@@ -422,7 +422,7 @@ function! s:InitializeSigns() abort
   endfor
 endfunction
 
-call timer_start(0, {-> execute('call s:InitializeSigns()')})
+call timer_start(0, {-> execute('call s:InitializeSigns()', '')})
 
 " *************************************************
 " * Core

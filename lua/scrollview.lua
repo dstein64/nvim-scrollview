@@ -2131,6 +2131,13 @@ local register_sign_spec = function(specification)
       error('Invalid group: ' .. group)
     end
   end
+  -- Group names can be made up of letters, digits, and underscores, but cannot
+  -- start with a digit. This matches the rules for internal variables (:help
+  -- internal-variables), but is more restrictive than what is possible with
+  -- e.g., nvim_buf_set_var.
+  if string.match(specification.group, '^[a-zA-Z_][a-zA-Z0-9_]*$') == nil then
+    error('Invalid group: ' .. specification.group)
+  end
   local name = 'scrollview_signs_' .. id .. '_' .. specification.group
   specification.name = name
   -- priority, symbol, and highlight can be arrays
