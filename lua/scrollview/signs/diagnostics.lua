@@ -63,7 +63,7 @@ function M.init(enable)
         end
         for severity, lines in pairs(lookup) do
           local name = names[severity]
-          vim.b[args.buf][name] = lines
+          vim.b[bufnr][name] = lines
         end
       end
     end
