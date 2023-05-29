@@ -125,9 +125,9 @@ let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
 
 " *** Search signs ***
 let g:scrollview_search_priority = get(g:, 'scrollview_search_priority', 70)
-" Default symbols: (1) equals, (2) triple bar
+" Default symbols: (1,2) equals, (>=3) triple bar
 let g:scrollview_search_symbol =
-      \ get(g:, 'scrollview_search_symbol', ['=', nr2char(0x2261)])
+      \ get(g:, 'scrollview_search_symbol', ['=', '=', nr2char(0x2261)])
 
 " *** Spell signs ***
 let g:scrollview_spell_priority = get(g:, 'scrollview_spell_priority', 20)
