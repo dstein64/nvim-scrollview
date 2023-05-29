@@ -49,7 +49,7 @@ function M.init(enable)
     pattern = 'ScrollViewRefresh',
     callback = function(args)
       if not scrollview.is_sign_group_active(group) then return end
-      for _, winid in ipairs(scrollview.get_ordinary_windows()) do
+      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
         local spell = api.nvim_win_get_option(winid, 'spell')
         local winvars = vim.w[winid]

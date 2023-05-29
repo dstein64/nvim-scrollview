@@ -29,7 +29,7 @@ function M.init(enable)
       -- Track visited buffers, to prevent duplicate computation when multiple
       -- windows are showing the same buffer.
       local visited = {}
-      for _, winid in ipairs(scrollview.get_ordinary_windows()) do
+      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
         if not visited[bufnr] then
           local winnr = api.nvim_win_get_number(winid)
@@ -133,7 +133,7 @@ function M.init(enable)
           -- multiple windows are showing the same buffer.
           local pattern = fn.getreg('/')
           local visited = {}
-          for _, winid in ipairs(scrollview.get_ordinary_windows()) do
+          for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
             if not visited[bufnr] then
               visited[bufnr] = true
@@ -165,7 +165,7 @@ function M.init(enable)
         else
           -- Refresh bars if v:hlsearch is off and search signs are currently
           -- shown.
-          for _, winid in ipairs(scrollview.get_ordinary_windows()) do
+          for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
             local bufnr = api.nvim_win_get_buf(winid)
             local lines = vim.b[bufnr][name]
             if lines ~= nil and not vim.tbl_isempty(lines) then

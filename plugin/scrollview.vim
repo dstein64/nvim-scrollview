@@ -27,6 +27,9 @@ endif
 let g:scrollview_auto_mouse = get(g:, 'scrollview_auto_mouse', 1)
 let g:scrollview_auto_workarounds = get(g:, 'scrollview_auto_workarounds', 1)
 let g:scrollview_base = get(g:, 'scrollview_base', 'right')
+" The plugin enters a restricted state when the number of buffer bytes exceeds
+" the limit. Use -1 for no limit.
+let g:scrollview_byte_limit = get(g:, 'scrollview_byte_limit', 1000000)
 let g:scrollview_character = get(g:, 'scrollview_character', '')
 let g:scrollview_column = get(g:, 'scrollview_column', 2)
 let g:scrollview_current_only = get(g:, 'scrollview_current_only', 0)
@@ -34,6 +37,9 @@ let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', 0)
+" The plugin enters a restricted state when the number of buffer lines exceeds
+" the limit. Use -1 for no limit.
+let g:scrollview_line_limit = get(g:, 'scrollview_line_limit', 20000)
 let g:scrollview_mode = get(g:, 'scrollview_mode', 'virtual')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
 " Whether bars and signs beyond the window boundary (out-of-bounds) are
@@ -148,6 +154,7 @@ highlight default link ScrollViewDiagnosticsHint Question
 highlight default link ScrollViewDiagnosticsInfo Identifier
 highlight default link ScrollViewDiagnosticsWarn LineNr
 highlight default link ScrollViewMarks ColorColumn
+highlight default link ScrollViewRestricted SpellLocal
 highlight default link ScrollViewSearch NonText
 highlight default link ScrollViewSpell Statement
 highlight default link ScrollViewTextWidth Question

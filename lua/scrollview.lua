@@ -17,7 +17,7 @@ local to_bool = utils.to_bool
 -- TODO: documentation for all new functionality (including User autocmd,
 -- ScrollViewToggle, <plug> mappings, etc., options that are only at global
 -- level or only considered at startup). Mention signs_autocmd_callback.
--- Mention g:scrollview_signs_version.
+-- Mention g:scrollview_signs_version. byte_limit, line_limit, restricted mode.
 -- TODO: 'folds' signs, 'conflicts' signs, 'quickfix' signs
 -- TODO: demo: trailing whitespace
 -- TODO: default cursor sign off
@@ -314,10 +314,32 @@ local get_variable = function(name, winnr, precedence, default)
   return default
 end
 
+-- Returns a boolean indicating whether a restricted state should be used.
+-- The function signature matches s:GetVariable, without the 'name' argument.
+local scrollview_restricted = function(winnr, precedence, default)
+  local winid = fn.win_getid(winnr)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local line_limit
+    = get_variable('scrollview_line_limit', winnr, precedence, default)
+  if line_count > line_limit then
+    return true
+  end
+  local byte_count = api.nvim_win_call(winid, function()
+    return fn.line2byte(fn.line('$') + 1) - 1
+  end)
+  local byte_limit
+    = get_variable('scrollview_byte_limit', winnr, precedence, default)
+  if byte_count > byte_limit then
+    return true
+  end
+  return false
+end
+
 -- Returns the scrollview mode. The function signature matches s:GetVariable,
 -- without the 'name' argument.
 local scrollview_mode = function(winnr, precedence, default)
-  if to_bool(vim.g.scrollview_refresh_time_exceeded) then
+  if scrollview_restricted(winnr, precedence, default) then
     return 'simple'
   end
   return get_variable('scrollview_mode', winnr, precedence, default)
@@ -906,10 +928,12 @@ local show_scrollbar = function(winid, bar_winid)
   end
   -- Scroll to top so that the custom character spans full scrollbar height.
   vim.cmd('keepjumps call nvim_win_set_cursor(' .. bar_winid .. ', [1, 0])')
+  local group = 'ScrollView'
+  if scrollview_restricted(winnr) then group = group .. 'Restricted' end
   -- It's not sufficient to just specify Normal highlighting. With just that, a
   -- color scheme's specification of EndOfBuffer would be used to color the
   -- bottom of the scrollbar.
-  local winhighlight = 'Normal:ScrollView,EndOfBuffer:ScrollView'
+  local winhighlight = string.format('Normal:%s,EndOfBuffer:%s', group, group)
   set_window_option(bar_winid, 'winhighlight', winhighlight)
   local winblend = get_variable('scrollview_winblend', winnr)
   set_window_option(bar_winid, 'winblend', winblend)
@@ -937,6 +961,7 @@ end
 local show_signs = function(winid, sign_winids)
   local cur_winid = api.nvim_get_current_win()
   local winnr = api.nvim_win_get_number(winid)
+  if scrollview_restricted(winnr) then return end
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = nil  -- only set when needed
@@ -2189,6 +2214,20 @@ local get_sign_groups = function()
   return groups
 end
 
+-- Returns a list of window IDs that could potentially have signs.
+local get_sign_eligible_windows = function()
+  local winids = {}
+  for _, winid in ipairs(get_ordinary_windows()) do
+    if should_show(winid) then
+      local winnr = api.nvim_win_get_number(winid)
+      if not scrollview_restricted(winnr) then
+        table.insert(winids, winid)
+      end
+    end
+  end
+  return winids
+end
+
 -- *************************************************
 -- * API
 -- *************************************************
@@ -2202,8 +2241,7 @@ return {
   -- Functions called by commands and mappings defined in
   -- plugin/scrollview.vim, and sign handlers.
   first = first,
-  get_ordinary_windows = get_ordinary_windows,
-  get_variable = get_variable,
+  get_sign_eligible_windows = get_sign_eligible_windows,
   handle_mouse = handle_mouse,
   last = last,
   next = next,

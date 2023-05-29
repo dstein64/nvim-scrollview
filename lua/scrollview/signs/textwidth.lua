@@ -26,7 +26,7 @@ function M.init(enable)
       -- Track visited buffers, to prevent duplicate computation when multiple
       -- windows are showing the same buffer.
       local visited = {}
-      for _, winid in ipairs(scrollview.get_ordinary_windows()) do
+      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
         local textwidth = api.nvim_buf_get_option(bufnr, 'textwidth')
         if not visited[bufnr] then

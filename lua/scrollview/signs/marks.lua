@@ -46,7 +46,7 @@ function M.init(enable)
     pattern = 'ScrollViewRefresh',
     callback = function(args)
       if not scrollview.is_sign_group_active(group) then return end
-      for _, winid in ipairs(scrollview.get_ordinary_windows()) do
+      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local winfile = api.nvim_win_call(winid, function()
           return fn.expand('%:p')
         end)
