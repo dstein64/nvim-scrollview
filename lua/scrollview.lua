@@ -1867,7 +1867,7 @@ local move_to_sign_line = function(location, groups)
 end
 
 -- Move the cursor to the next line that has a sign.
-local next = function(groups)
+local next = function(groups)  -- luacheck: ignore 431 (shadowing upvalue next)
   move_to_sign_line('next', groups)
 end
 
