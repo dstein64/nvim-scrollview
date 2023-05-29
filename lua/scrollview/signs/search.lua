@@ -23,7 +23,7 @@ function M.init(enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       local pattern = fn.getreg('/')
       -- Track visited buffers, to prevent duplicate computation when multiple
@@ -32,7 +32,6 @@ function M.init(enable)
       for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
         if not visited[bufnr] then
-          local winnr = api.nvim_win_get_number(winid)
           local bufvars = vim.b[bufnr]
           local lines = {}
           if to_bool(vim.v.hlsearch) then
@@ -54,7 +53,7 @@ function M.init(enable)
                 pcall(function()
                   -- searchcount() can return {} (e.g., when launching Neovim
                   -- with -i NONE).
-                  searchcount_total = fn.searchcount().total or 0
+                  local searchcount_total = fn.searchcount().total or 0
                   if searchcount_total > 0 then
                     result = fn.split(fn.execute('global//echo line(".")'))
                   end
@@ -64,12 +63,17 @@ function M.init(enable)
               for idx, line in ipairs(lines) do
                 lines[idx] = tonumber(line)
               end
+              -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
               bufvars.scrollview_search_pattern_cached = pattern
+              -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
               bufvars.scrollview_search_changedtick_cached = changedtick
+              -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
               bufvars.scrollview_search_cached = lines
             end
           end
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
           bufvars[name] = lines
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
           bufvars.scrollview_search_pattern = pattern
           visited[bufnr] = true
         end
@@ -79,14 +83,14 @@ function M.init(enable)
 
   api.nvim_create_autocmd('OptionSet', {
     pattern = 'hlsearch',
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
     end
   })
 
   api.nvim_create_autocmd('CmdlineLeave', {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       if to_bool(vim.v.event.abort) then
         return
@@ -119,7 +123,7 @@ function M.init(enable)
   -- signs become out of sync (i.e., shown when they shouldn't be), this same
   -- approach could be used with a timer.
   api.nvim_create_autocmd('CursorMoved', {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       -- Use defer_fn since vim.v.hlsearch may not have been properly set yet.
       vim.defer_fn(function()
@@ -186,7 +190,7 @@ function M.init(enable)
   -- after leaving insert mode, when newly added text might correspond to new
   -- signs.
   api.nvim_create_autocmd({'InsertEnter', 'InsertLeave'}, {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
     end
