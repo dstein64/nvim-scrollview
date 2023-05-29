@@ -2205,7 +2205,7 @@ end
 
 local get_sign_groups = function()
   local groups = {}
-  for group, state in pairs(sign_group_state) do
+  for group, _ in pairs(sign_group_state) do
     table.insert(groups, group)
   end
   return groups
