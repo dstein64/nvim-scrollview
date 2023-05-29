@@ -21,7 +21,7 @@ function M.init(enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       -- Track visited buffers, to prevent duplicate computation when multiple
       -- windows are showing the same buffer.
@@ -30,7 +30,6 @@ function M.init(enable)
         local bufnr = api.nvim_win_get_buf(winid)
         local textwidth = api.nvim_buf_get_option(bufnr, 'textwidth')
         if not visited[bufnr] then
-          local winnr = api.nvim_win_get_number(winid)
           local bufvars = vim.b[bufnr]
           local lines = {}
           local cache_hit = false
@@ -54,10 +53,14 @@ function M.init(enable)
                 end
               end)
             end
+            -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
             bufvars.scrollview_textwidth_option_cached = textwidth
+            -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
             bufvars.scrollview_textwidth_changedtick_cached = changedtick
+            -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
             bufvars.scrollview_textwidth_cached = lines
           end
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
           bufvars[name] = lines
           visited[bufnr] = true
         end
@@ -67,7 +70,7 @@ function M.init(enable)
 
   api.nvim_create_autocmd('OptionSet', {
     pattern = 'textwidth',
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
     end
