@@ -65,10 +65,6 @@ let s:default_signs = ['all']
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
 let g:scrollview_signs_column = get(g:, 'scrollview_signs_column', -1)
-" A registered set of signs are not shown when the number of lines for the
-" specification exceeds the limit, to prevent a slowdown. Use -1 for no limit.
-let g:scrollview_signs_lines_per_spec_limit =
-      \ get(g:, 'scrollview_signs_lines_per_spec_limit', 5000)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =

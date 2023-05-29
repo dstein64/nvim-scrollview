@@ -956,18 +956,11 @@ local show_signs = function(winid, sign_winids)
         lines_as_given = api.nvim_win_get_var(winid, name)
       end
     end)
-    -- Signs are not shown when the number of lines for each registered sign
-    -- specification exceeds the limit, to prevent a slowdown.
-    local lines_per_sign_spec_limit =
-      get_variable('scrollview_signs_lines_per_spec_limit', winnr)
-    local within_limit = lines_per_sign_spec_limit == -1
-      or #lines_as_given <= lines_per_sign_spec_limit
     local satisfied_current_only = true
     if sign_spec.current_only then
       satisfied_current_only = winid == cur_winid
     end
     local should_show = sign_group_state[sign_spec.group]
-      and within_limit
       and satisfied_current_only
     if should_show then
       for _, line in ipairs(sorted(lines_as_given)) do
