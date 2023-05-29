@@ -48,14 +48,6 @@ function M.init(enable)
             else
               lines = scrollview.with_win_workspace(winid, function()
                 local result = {}
-                local line_count = api.nvim_buf_line_count(0)
-                -- Search signs are not shown when the number of buffer lines
-                -- exceeds the limit, to prevent a slowdown.
-                -- TODO: use a global setting for this instead of get_variable.
-                local line_count_limit = scrollview.get_variable(
-                  'scrollview_search_buffer_lines_limit', winnr)
-                local within_limit = line_count_limit == -1
-                  or line_count <= line_count_limit
                 -- Use a pcall since searchcount() and :global throw an
                 -- exception (E383, E866) when the pattern is invalid (e.g.,
                 -- "\@a").
@@ -63,7 +55,7 @@ function M.init(enable)
                   -- searchcount() can return {} (e.g., when launching Neovim
                   -- with -i NONE).
                   searchcount_total = fn.searchcount().total or 0
-                  if within_limit and searchcount_total > 0 then
+                  if searchcount_total > 0 then
                     result = fn.split(fn.execute('global//echo line(".")'))
                   end
                 end)

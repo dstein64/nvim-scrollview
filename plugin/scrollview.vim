@@ -123,10 +123,6 @@ endif
 let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
 
 " *** Search signs ***
-" Search signs are not shown when the number of buffer lines exceeds the
-" limit, to prevent a slowdown. Use -1 for no limit.
-let g:scrollview_search_buffer_lines_limit =
-      \ get(g:, 'scrollview_search_buffer_lines_limit', 20000)
 let g:scrollview_search_priority = get(g:, 'scrollview_search_priority', 70)
 " Default symbols: (1) equals, (2) triple bar
 let g:scrollview_search_symbol =
