@@ -44,12 +44,9 @@ function M.init(enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
-        local winfile = api.nvim_win_call(winid, function()
-          return fn.expand('%:p')
-        end)
         local bufnr = api.nvim_win_get_buf(winid)
         local marks = {}  -- a mapping of character to line for buffer marks
         local items = concat(
@@ -60,8 +57,6 @@ function M.init(enable)
           if item.pos ~= nil
               and item.mark ~= nil
               and fn.strchars(item.mark, 1) == 2 then
-            -- Global marks include a file.
-            local file = item.file
             local char = fn.strcharpart(item.mark, 1, 1)
             -- Marks are (1, 0)-indexed (so we only have to check the first
             -- value for 0). Using nvim_buf_get_mark is a more reliable way to
@@ -79,6 +74,7 @@ function M.init(enable)
             value = {marks[char]}
           end
           local name = names[char]
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
           vim.b[bufnr][name] = value
         end
       end
@@ -86,7 +82,7 @@ function M.init(enable)
   })
 
   api.nvim_create_autocmd('CmdlineLeave', {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       if to_bool(vim.v.event.abort) then
         return
