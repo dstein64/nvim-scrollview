@@ -1043,7 +1043,7 @@ local show_signs = function(winid, sign_winids)
     -- location.
     local shown = {}
     local total_width = 0  -- running sum of sign widths
-    for idx, properties in ipairs(props_list) do
+    for _, properties in ipairs(props_list) do
       local symbol = properties.symbol
       symbol = symbol:gsub('\n', '')
       symbol = symbol:gsub('\r', '')
