@@ -24,6 +24,7 @@ function M.init(enable)
 
   local invalidate_cache = function()
     for _, winid in ipairs(api.nvim_list_wins()) do
+      -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
       vim.w[winid].scrollview_spell_changedtick_cached = nil
     end
   end
@@ -47,7 +48,7 @@ function M.init(enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
@@ -71,11 +72,15 @@ function M.init(enable)
                 if spellbadword[1] ~= '' then table.insert(lines, line) end
               end
             end)
+            -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
             winvars.scrollview_spell_changedtick_cached = changedtick
+            -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
             winvars.scrollview_spell_bufnr_cached = bufnr
+            -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
             winvars.scrollview_spell_cached = lines
           end
         end
+        -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
         winvars[name] = lines
       end
     end
@@ -93,7 +98,7 @@ function M.init(enable)
   })
 
   api.nvim_create_autocmd('CmdlineLeave', {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       if to_bool(vim.v.event.abort) then
         return
