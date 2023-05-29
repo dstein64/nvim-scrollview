@@ -316,7 +316,7 @@ end
 
 -- Returns a boolean indicating whether a restricted state should be used.
 -- The function signature matches s:GetVariable, without the 'name' argument.
-local scrollview_restricted = function(winnr, precedence, default)
+local is_restricted = function(winnr, precedence, default)
   local winid = fn.win_getid(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
@@ -339,7 +339,7 @@ end
 -- Returns the scrollview mode. The function signature matches s:GetVariable,
 -- without the 'name' argument.
 local scrollview_mode = function(winnr, precedence, default)
-  if scrollview_restricted(winnr, precedence, default) then
+  if is_restricted(winnr, precedence, default) then
     return 'simple'
   end
   return get_variable('scrollview_mode', winnr, precedence, default)
@@ -929,7 +929,7 @@ local show_scrollbar = function(winid, bar_winid)
   -- Scroll to top so that the custom character spans full scrollbar height.
   vim.cmd('keepjumps call nvim_win_set_cursor(' .. bar_winid .. ', [1, 0])')
   local group = 'ScrollView'
-  if scrollview_restricted(winnr) then group = group .. 'Restricted' end
+  if is_restricted(winnr) then group = group .. 'Restricted' end
   -- It's not sufficient to just specify Normal highlighting. With just that, a
   -- color scheme's specification of EndOfBuffer would be used to color the
   -- bottom of the scrollbar.
@@ -961,7 +961,7 @@ end
 local show_signs = function(winid, sign_winids)
   local cur_winid = api.nvim_get_current_win()
   local winnr = api.nvim_win_get_number(winid)
-  if scrollview_restricted(winnr) then return end
+  if is_restricted(winnr) then return end
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local the_topline_lookup = nil  -- only set when needed
@@ -2220,7 +2220,7 @@ local get_sign_eligible_windows = function()
   for _, winid in ipairs(get_ordinary_windows()) do
     if should_show(winid) then
       local winnr = api.nvim_win_get_number(winid)
-      if not scrollview_restricted(winnr) then
+      if not is_restricted(winnr) then
         table.insert(winids, winid)
       end
     end
