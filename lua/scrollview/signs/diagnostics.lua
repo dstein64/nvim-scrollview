@@ -47,7 +47,7 @@ function M.init(enable)
 
   api.nvim_create_autocmd('User', {
     pattern = 'ScrollViewRefresh',
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
@@ -63,6 +63,7 @@ function M.init(enable)
         end
         for severity, lines in pairs(lookup) do
           local name = names[severity]
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
           vim.b[bufnr][name] = lines
         end
       end
@@ -70,7 +71,7 @@ function M.init(enable)
   })
 
   api.nvim_create_autocmd('DiagnosticChanged', {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       if fn.mode() ~= 'i' or vim.diagnostic.config().update_in_insert then
         -- Refresh scrollbars immediately when update_in_insert is set or the
@@ -79,12 +80,12 @@ function M.init(enable)
       else
         -- Refresh scrollbars once leaving insert mode. Overwrite an existing
         -- autocmd configured to already do this.
-        local group = api.nvim_create_augroup('scrollview_diagnostics', {
+        local augroup = api.nvim_create_augroup('scrollview_diagnostics', {
           clear = true
         })
         api.nvim_create_autocmd('InsertLeave', {
-          group = group,
-          callback = function(args)
+          group = augroup,
+          callback = function()
             scrollview.refresh()
           end,
           once = true,
