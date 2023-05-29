@@ -322,7 +322,7 @@ local is_restricted = function(winnr, precedence, default)
   local line_count = api.nvim_buf_line_count(bufnr)
   local line_limit
     = get_variable('scrollview_line_limit', winnr, precedence, default)
-  if line_count > line_limit then
+  if line_limit ~= -1 and line_count > line_limit then
     return true
   end
   local byte_count = api.nvim_win_call(winid, function()
@@ -330,7 +330,7 @@ local is_restricted = function(winnr, precedence, default)
   end)
   local byte_limit
     = get_variable('scrollview_byte_limit', winnr, precedence, default)
-  if byte_count > byte_limit then
+  if byte_limit ~= -1 and byte_count > byte_limit then
     return true
   end
   return false
