@@ -6,7 +6,6 @@ local binary_search = utils.binary_search
 local concat = utils.concat
 local copy = utils.copy
 local preceding = utils.preceding
-local reltime_to_microseconds = utils.reltime_to_microseconds
 local remove_duplicates = utils.remove_duplicates
 local round = utils.round
 local sorted = utils.sorted
@@ -1555,7 +1554,6 @@ local refresh_bars = function(async_removal)
     api.nvim_set_option('eventignore', state.eventignore)
     vim.cmd('doautocmd <nomodeline> User ScrollViewRefresh')
     api.nvim_set_option('eventignore', eventignore)
-    local start_reltime = fn.reltime()
     -- Delete all signs and highlights in the sign buffer.
     if sign_bufnr ~= -1 and to_bool(fn.bufexists(sign_bufnr)) then
       -- Clear existing highlights to prevent memory leak.
@@ -1589,12 +1587,6 @@ local refresh_bars = function(async_removal)
         -- Repeat a similar process for signs.
         show_signs(winid, existing_signids)
       end
-    end
-    -- The elapsed microseconds for showing scrollbars.
-    local elapsed_micro = reltime_to_microseconds(fn.reltime(start_reltime))
-    if vim.g.scrollview_refresh_time > -1
-        and elapsed_micro > vim.g.scrollview_refresh_time * 1000 then
-      vim.g.scrollview_refresh_time_exceeded = 1
     end
     local existing_wins = concat(existing_barids, existing_signids)
     if vim.tbl_isempty(existing_wins) then  -- luacheck: ignore 542 (empty if)

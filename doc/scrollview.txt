@@ -117,14 +117,6 @@ scrollview_on_startup  |Boolean| |Number| specifying whether scrollbars are
                        enabled on startup. Defaults to `1`. Considered only at
                        global scope, when the plugin is loaded.
 
-scrollview_refresh_time                    *scrollview_refresh_time*
-                       |Number| specifying the refresh limit. When scrollbar
-                       refreshing takes more than this many milliseconds,
-                       subsequent refreshing will use `simple` |scrollview_mode|.
-                       Defaults to `100`. A value of `-1` corresponds to no limit.
-                       Considered only at global scope. To reset the mode
-                       behavior, set `g:scrollview_refresh_time_exceeded` to `0`.
-
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
                        scrollbars. Defaults to `50`. Must be between `0` (opaque)

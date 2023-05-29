@@ -40,7 +40,6 @@ let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', 1)
 " adjusted to be within the window.
 let g:scrollview_out_of_bounds_adjust =
       \ get(g:, 'scrollview_out_of_bounds_adjust', 1)
-let g:scrollview_refresh_time = get(g:, 'scrollview_refresh_time', 100)
 " Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
 let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 " The default zindex for floating windows is 50. A smaller value is used here
@@ -154,22 +153,13 @@ highlight default link ScrollViewSpell Statement
 highlight default link ScrollViewTextWidth Question
 
 " *************************************************
-" * Global State
+" * Versioning
 " *************************************************
 
 " An integer to be incremented when the interface for using signs changes.
 " For example, this would correspond to the register_sign_spec function
 " interface and the format for saving sign information in buffers.
 let g:scrollview_signs_version = 1
-
-" External global state that can be modified by the user is specified below.
-" Internal global state is represented with local variables in
-" autoload/scrollview.vim and lua/scrollview.lua.
-
-" A flag that gets set to true if the time to refresh scrollbars exceeded
-" g:scrollview_refresh_time.
-let g:scrollview_refresh_time_exceeded =
-      \ get(g:, 'scrollview_refresh_time_exceeded', 0)
 
 " *************************************************
 " * Commands

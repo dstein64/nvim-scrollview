@@ -52,11 +52,6 @@ function M.preceding(l, item, wrapscan)
   return l[idx]
 end
 
-function M.reltime_to_microseconds(reltime)
-  local reltimestr = vim.fn.reltimestr(reltime)
-  return tonumber(table.concat(vim.split(reltimestr, '%.'), ''))
-end
-
 -- Return a new list with duplicate elements removed from a sorted array-like
 -- table.
 function M.remove_duplicates(l)
