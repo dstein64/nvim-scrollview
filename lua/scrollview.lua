@@ -982,9 +982,8 @@ local show_signs = function(winid, sign_winids)
     if sign_spec.current_only then
       satisfied_current_only = winid == cur_winid
     end
-    local should_show = sign_group_state[sign_spec.group]
-      and satisfied_current_only
-    if should_show then
+    local show = sign_group_state[sign_spec.group] and satisfied_current_only
+    if show then
       for _, line in ipairs(sorted(lines_as_given)) do
         if vim.tbl_isempty(lines) or lines[#lines] ~= line then
           table.insert(lines, line)
