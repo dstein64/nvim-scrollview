@@ -55,7 +55,8 @@ function M.init(enable)
                   -- with -i NONE).
                   local searchcount_total = fn.searchcount().total or 0
                   if searchcount_total > 0 then
-                    result = fn.split(fn.execute('global//echo line(".")'))
+                    result = fn.split(
+                      fn.execute('keepjumps global//echo line(".")'))
                   end
                 end)
                 return result
