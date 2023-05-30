@@ -984,7 +984,21 @@ local show_signs = function(winid, sign_winids)
     end
     local show = sign_group_state[sign_spec.group] and satisfied_current_only
     if show then
-      for _, line in ipairs(sorted(lines_as_given)) do
+      local lines_to_show = sorted(lines_as_given)
+      local show_in_folds
+        = to_bool(get_variable('scrollview_signs_show_in_folds', winnr))
+      if not show_in_folds then
+        lines_to_show = api.nvim_win_call(winid, function()
+          local result = {}
+          for _, line in ipairs(lines_to_show) do
+            if fn.foldclosedend(line) == -1 then
+              table.insert(result, line)
+            end
+          end
+          return result
+        end)
+      end
+      for _, line in ipairs(lines_to_show) do
         if vim.tbl_isempty(lines) or lines[#lines] ~= line then
           table.insert(lines, line)
         end

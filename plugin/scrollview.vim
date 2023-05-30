@@ -72,6 +72,9 @@ let s:default_signs = ['all']
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
 let g:scrollview_signs_column = get(g:, 'scrollview_signs_column', -1)
+" Whether signs in folds should be shown or hidden.
+let g:scrollview_signs_show_in_folds =
+      \ get(g:, 'scrollview_signs_show_in_folds', 0)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =
