@@ -31,11 +31,14 @@ function M.init(enable)
         vim.w[winid][name] = nil
       end
       for _, winid in ipairs(sign_winids) do
+        local bufnr = api.nvim_win_get_buf(winid)
         for _, item in ipairs(fn.getloclist(winid)) do
-          if winlines[winid] == nil then
-            winlines[winid] = {}
+          if item.bufnr == bufnr then
+            if winlines[winid] == nil then
+              winlines[winid] = {}
+            end
+            table.insert(winlines[winid], item.lnum)
           end
-          table.insert(winlines[winid], item.lnum)
         end
       end
       for winid, lines in pairs(winlines) do
