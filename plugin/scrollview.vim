@@ -124,7 +124,7 @@ let g:scrollview_folds_priority = get(g:, 'scrollview_folds_priority', 30)
 " Default symbol: a right pointing triangle, similar to what's shown in the
 " browser for a hidden <details>/<summary>.
 let g:scrollview_folds_symbol =
-      \ get(g:, 'scrollview_folds_symbol', nr2char(0x25B6))
+      \ get(g:, 'scrollview_folds_symbol', nr2char(0x25b6))
 
 " *** Location list signs ***
 let g:scrollview_loclist_priority = get(g:, 'scrollview_loclist_priority', 45)
