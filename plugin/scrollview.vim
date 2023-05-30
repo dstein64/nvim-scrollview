@@ -122,7 +122,9 @@ let g:scrollview_folds_symbol =
 
 " *** Location list signs ***
 let g:scrollview_loclist_priority = get(g:, 'scrollview_loclist_priority', 45)
-let g:scrollview_loclist_symbol = get(g:, 'scrollview_loclist_symbol', 'L')
+" Default symbol: a small circle
+let g:scrollview_loclist_symbol =
+      \ get(g:, 'scrollview_loclist_symbol', nr2char(0x2981))
 
 " *** Mark signs ***
 " Characters for which mark signs will be shown.
@@ -142,7 +144,9 @@ let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
 
 " *** Quickfix signs ***
 let g:scrollview_quickfix_priority = get(g:, 'scrollview_quickfix_priority', 45)
-let g:scrollview_quickfix_symbol = get(g:, 'scrollview_quickfix_symbol', 'Q')
+" Default symbol: a small circle
+let g:scrollview_quickfix_symbol =
+      \ get(g:, 'scrollview_quickfix_symbol', nr2char(0x2981))
 
 " *** Search signs ***
 let g:scrollview_search_priority = get(g:, 'scrollview_search_priority', 70)
@@ -176,9 +180,9 @@ highlight default link ScrollViewDiagnosticsHint Question
 highlight default link ScrollViewDiagnosticsInfo Identifier
 highlight default link ScrollViewDiagnosticsWarn LineNr
 highlight default link ScrollViewFolds Directory
-highlight default link ScrollViewLocList DiffDelete
+highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks ColorColumn
-highlight default link ScrollViewQuickFix DiffAdd
+highlight default link ScrollViewQuickFix Constant
 highlight default link ScrollViewRestricted SpellLocal
 highlight default link ScrollViewSearch NonText
 highlight default link ScrollViewSpell Statement
