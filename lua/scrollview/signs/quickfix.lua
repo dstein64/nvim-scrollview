@@ -27,7 +27,6 @@ function M.init(enable)
         local bufnr = api.nvim_win_get_buf(winid)
         vim.b[bufnr][name] = nil
       end
-      -- TODO: If there is no quickfix list then return (make this configurable)
       local buflines = {}  -- maps buffers to a list of quickfix lines
       for _, item in ipairs(fn.getqflist()) do
         if buflines[item.bufnr] == nil then

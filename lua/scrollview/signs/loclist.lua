@@ -29,7 +29,6 @@ function M.init(enable)
       for _, winid in ipairs(sign_winids) do
         vim.w[winid][name] = nil
       end
-      -- TODO: If no loclist for window, return (make this configurable)
       for _, winid in ipairs(sign_winids) do
         for _, item in ipairs(fn.getloclist(winid)) do
           if winlines[winid] == nil then
