@@ -58,6 +58,7 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 let s:available_signs = [
       \   'cursor',
       \   'diagnostics',
+      \   'folds',
       \   'loclist',
       \   'marks',
       \   'quickfix',
@@ -112,6 +113,13 @@ let g:scrollview_diagnostics_warn_priority =
 let g:scrollview_diagnostics_warn_symbol =
       \ get(g:, 'scrollview_diagnostics_warn_symbol', 'W')
 
+" *** Fold signs ***
+let g:scrollview_folds_priority = get(g:, 'scrollview_folds_priority', 30)
+" Default symbol: a right pointing triangle, similar to what's shown in the
+" browser for a hidden <details>/<summary>.
+let g:scrollview_folds_symbol =
+      \ get(g:, 'scrollview_folds_symbol', nr2char(0x25B6))
+
 " *** Location list signs ***
 let g:scrollview_loclist_priority = get(g:, 'scrollview_loclist_priority', 45)
 let g:scrollview_loclist_symbol = get(g:, 'scrollview_loclist_symbol', 'L')
@@ -149,6 +157,7 @@ let g:scrollview_spell_symbol = get(g:, 'scrollview_spell_symbol', '~')
 " *** Textwidth signs ***
 let g:scrollview_textwidth_priority =
       \ get(g:, 'scrollview_textwidth_priority', 20)
+" Default symbol: two adjacent small '>' symbols.
 let g:scrollview_textwidth_symbol =
       \ get(g:, 'scrollview_textwidth_symbol', nr2char(0xbb))
 
@@ -166,6 +175,7 @@ highlight default link ScrollViewDiagnosticsError WarningMsg
 highlight default link ScrollViewDiagnosticsHint Question
 highlight default link ScrollViewDiagnosticsInfo Identifier
 highlight default link ScrollViewDiagnosticsWarn LineNr
+highlight default link ScrollViewFolds Directory
 highlight default link ScrollViewLocList DiffDelete
 highlight default link ScrollViewMarks ColorColumn
 highlight default link ScrollViewQuickFix DiffAdd

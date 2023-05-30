@@ -15,6 +15,7 @@ function M.init(enable)
     group = group,
     highlight = 'ScrollViewCursor',
     priority = vim.g.scrollview_cursor_priority,
+    show_in_folds = true,
     symbol = vim.g.scrollview_cursor_symbol,
   })
   local name = registration.name

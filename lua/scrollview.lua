@@ -18,7 +18,8 @@ local to_bool = utils.to_bool
 -- ScrollViewToggle, <plug> mappings, etc., options that are only at global
 -- level or only considered at startup). Mention signs_autocmd_callback.
 -- Mention g:scrollview_signs_version. byte_limit, line_limit, restricted mode.
--- TODO: 'folds' signs, 'conflicts' signs
+-- scrollview_signs_show_in_folds (some sign groups override).
+-- TODO: 'conflicts' signs
 -- TODO: demo: trailing whitespace
 -- TODO: default cursor sign off
 -- TODO: test symbols across a variety of platforms.
@@ -987,11 +988,14 @@ local show_signs = function(winid, sign_winids)
       local lines_to_show = sorted(lines_as_given)
       local show_in_folds
         = to_bool(get_variable('scrollview_signs_show_in_folds', winnr))
+      if sign_spec.show_in_folds ~= nil then
+        show_in_folds = sign_spec.show_in_folds
+      end
       if not show_in_folds then
         lines_to_show = api.nvim_win_call(winid, function()
           local result = {}
           for _, line in ipairs(lines_to_show) do
-            if fn.foldclosedend(line) == -1 then
+            if fn.foldclosed(line) == -1 then
               table.insert(result, line)
             end
           end
@@ -2139,6 +2143,7 @@ local register_sign_spec = function(specification)
     group = 'other',
     highlight = 'Pmenu',
     priority = 50,
+    show_in_folds = nil,  -- when set, overrides 'scrollview_signs_show_in_folds'
     symbol = '',  -- effectively ' '
     type = 'b',
   }
@@ -2252,6 +2257,7 @@ return {
   -- Functions called by commands and mappings defined in
   -- plugin/scrollview.vim, and sign handlers.
   first = first,
+  fold_count_exceeds = fold_count_exceeds,
   get_sign_eligible_windows = get_sign_eligible_windows,
   handle_mouse = handle_mouse,
   last = last,
