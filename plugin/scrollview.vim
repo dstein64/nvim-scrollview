@@ -58,7 +58,9 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 let s:available_signs = [
       \   'cursor',
       \   'diagnostics',
+      \   'loclist',
       \   'marks',
+      \   'quickfix',
       \   'search',
       \   'spell',
       \   'textwidth',
@@ -107,6 +109,10 @@ let g:scrollview_diagnostics_warn_priority =
 let g:scrollview_diagnostics_warn_symbol =
       \ get(g:, 'scrollview_diagnostics_warn_symbol', 'W')
 
+" *** Location list signs ***
+let g:scrollview_loclist_priority = get(g:, 'scrollview_loclist_priority', 45)
+let g:scrollview_loclist_symbol = get(g:, 'scrollview_loclist_symbol', 'L')
+
 " *** Mark signs ***
 " Characters for which mark signs will be shown.
 if !has_key(g:, 'scrollview_marks_characters')
@@ -122,6 +128,10 @@ if !has_key(g:, 'scrollview_marks_characters')
   endfor
 endif
 let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
+
+" *** Quickfix signs ***
+let g:scrollview_quickfix_priority = get(g:, 'scrollview_quickfix_priority', 45)
+let g:scrollview_quickfix_symbol = get(g:, 'scrollview_quickfix_symbol', 'Q')
 
 " *** Search signs ***
 let g:scrollview_search_priority = get(g:, 'scrollview_search_priority', 70)
@@ -153,7 +163,9 @@ highlight default link ScrollViewDiagnosticsError WarningMsg
 highlight default link ScrollViewDiagnosticsHint Question
 highlight default link ScrollViewDiagnosticsInfo Identifier
 highlight default link ScrollViewDiagnosticsWarn LineNr
+highlight default link ScrollViewLocList DiffDelete
 highlight default link ScrollViewMarks ColorColumn
+highlight default link ScrollViewQuickFix DiffAdd
 highlight default link ScrollViewRestricted SpellLocal
 highlight default link ScrollViewSearch NonText
 highlight default link ScrollViewSpell Statement

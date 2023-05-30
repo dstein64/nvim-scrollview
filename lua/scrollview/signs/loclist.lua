@@ -1,0 +1,57 @@
+local api = vim.api
+local fn = vim.fn
+local scrollview = require('scrollview')
+
+local M = {}
+
+function M.init(enable)
+  if api.nvim_create_autocmd == nil then
+    return
+  end
+
+  local group = 'loclist'
+  local registration = scrollview.register_sign_spec({
+    group = group,
+    highlight = 'ScrollViewLocList',
+    priority = vim.g.scrollview_loclist_priority,
+    symbol = vim.g.scrollview_loclist_symbol,
+    type = 'w',
+  })
+  local name = registration.name
+  scrollview.set_sign_group_state(group, enable)
+
+  api.nvim_create_autocmd('User', {
+    pattern = 'ScrollViewRefresh',
+    callback = function()
+      if not scrollview.is_sign_group_active(group) then return end
+      local winlines = {}  -- maps winids to a list of loclist lines
+      local sign_winids = scrollview.get_sign_eligible_windows()
+      for _, winid in ipairs(sign_winids) do
+        vim.w[winid][name] = nil
+      end
+      -- TODO: If no loclist for window, return (make this configurable)
+      for _, winid in ipairs(sign_winids) do
+        for _, item in ipairs(fn.getloclist(winid)) do
+          if winlines[winid] == nil then
+            winlines[winid] = {}
+          end
+          table.insert(winlines[winid], item.lnum)
+        end
+      end
+      for winid, lines in pairs(winlines) do
+        vim.w[winid][name] = lines
+      end
+    end
+  })
+
+  -- WARN: QuickFixCmdPost won't fire for some cases where loclist can be
+  -- updated (e.g., setloclist).
+  api.nvim_create_autocmd('QuickFixCmdPost', {
+    callback = function(args)
+      if not scrollview.is_sign_group_active(group) then return end
+      scrollview.refresh()
+    end
+  })
+end
+
+return M
