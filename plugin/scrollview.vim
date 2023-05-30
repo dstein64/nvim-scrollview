@@ -56,6 +56,7 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 
 " Internal list of all builtin sign groups.
 let s:available_signs = [
+      \   'conflicts',
       \   'cursor',
       \   'diagnostics',
       \   'folds',
@@ -88,6 +89,20 @@ let g:scrollview_signs_on_startup =
 " Specifies the sign overflow direction ('left' or 'right').
 let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
 let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
+
+" *** Conflict signs ***
+let g:scrollview_conflicts_top_priority =
+      \ get(g:, 'scrollview_conflicts_top_priority', 70)
+let g:scrollview_conflicts_top_symbol =
+      \ get(g:, 'scrollview_conflicts_top_symbol', '<')
+let g:scrollview_conflicts_middle_priority =
+      \ get(g:, 'scrollview_conflicts_middle_priority', 70)
+let g:scrollview_conflicts_middle_symbol =
+      \ get(g:, 'scrollview_conflicts_middle_symbol', '=')
+let g:scrollview_conflicts_bottom_priority =
+      \ get(g:, 'scrollview_conflicts_bottom_priority', 70)
+let g:scrollview_conflicts_bottom_symbol =
+      \ get(g:, 'scrollview_conflicts_bottom_symbol', '>')
 
 " *** Cursor signs ***
 let g:scrollview_cursor_priority = get(g:, 'scrollview_cursor_priority', 100)
@@ -174,6 +189,9 @@ let g:scrollview_textwidth_symbol =
 " E.g., the following will use custom highlight colors.
 "   :highlight ScrollView ctermbg=159 guibg=LightCyan
 highlight default link ScrollView Visual
+highlight default link ScrollViewConflictsTop DiffAdd
+highlight default link ScrollViewConflictsMiddle DiffAdd
+highlight default link ScrollViewConflictsBottom DiffAdd
 highlight default link ScrollViewCursor Identifier
 highlight default link ScrollViewDiagnosticsError WarningMsg
 highlight default link ScrollViewDiagnosticsHint Question
