@@ -54,19 +54,10 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 
 " === Signs ===
 
-" Internal list of all builtin sign groups.
-let s:available_signs = [
-      \   'conflicts',
-      \   'cursor',
-      \   'diagnostics',
-      \   'folds',
-      \   'loclist',
-      \   'marks',
-      \   'quickfix',
-      \   'search',
-      \   'spell',
-      \   'textwidth',
-      \ ]
+" Internal list of all builtin sign groups, populated automatically.
+let s:available_signs = readdir(expand('<sfile>:p:h') .. '/../lua/scrollview/signs')
+let s:available_signs = filter(s:available_signs, 'v:val =~# "\\.lua$"')
+call map(s:available_signs, {_, val -> fnamemodify(val, ':r')})
 " Internal list of sign groups that are enabled on startup by default.
 let s:default_signs = ['all']
 
