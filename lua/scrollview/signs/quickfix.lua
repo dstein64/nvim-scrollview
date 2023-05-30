@@ -25,6 +25,7 @@ function M.init(enable)
       if not scrollview.is_sign_group_active(group) then return end
       for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
         local bufnr = api.nvim_win_get_buf(winid)
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
         vim.b[bufnr][name] = nil
       end
       local buflines = {}  -- maps buffers to a list of quickfix lines
@@ -35,6 +36,7 @@ function M.init(enable)
         table.insert(buflines[item.bufnr], item.lnum)
       end
       for bufnr, lines in pairs(buflines) do
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
         vim.b[bufnr][name] = lines
       end
     end
@@ -43,7 +45,7 @@ function M.init(enable)
   -- WARN: QuickFixCmdPost won't fire for some cases where the quickfix list
   -- can be updated (e.g., setqflist).
   api.nvim_create_autocmd('QuickFixCmdPost', {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
     end

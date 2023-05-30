@@ -27,6 +27,7 @@ function M.init(enable)
       local winlines = {}  -- maps winids to a list of loclist lines
       local sign_winids = scrollview.get_sign_eligible_windows()
       for _, winid in ipairs(sign_winids) do
+        -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
         vim.w[winid][name] = nil
       end
       for _, winid in ipairs(sign_winids) do
@@ -38,6 +39,7 @@ function M.init(enable)
         end
       end
       for winid, lines in pairs(winlines) do
+        -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
         vim.w[winid][name] = lines
       end
     end
@@ -46,7 +48,7 @@ function M.init(enable)
   -- WARN: QuickFixCmdPost won't fire for some cases where loclist can be
   -- updated (e.g., setloclist).
   api.nvim_create_autocmd('QuickFixCmdPost', {
-    callback = function(args)
+    callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
     end
