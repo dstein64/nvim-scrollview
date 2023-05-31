@@ -59,7 +59,7 @@ let s:available_signs = readdir(expand('<sfile>:p:h') .. '/../lua/scrollview/sig
 let s:available_signs = filter(s:available_signs, 'v:val =~# "\\.lua$"')
 call map(s:available_signs, {_, val -> fnamemodify(val, ':r')})
 " Internal list of sign groups that are enabled on startup by default.
-let s:default_signs = ['all']
+let s:default_signs = ['diagnostics', 'search']
 
 " *** General sign settings ***
 " Sign column is relative to the scrollbar. It specifies the initial column
