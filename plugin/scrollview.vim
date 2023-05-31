@@ -131,7 +131,7 @@ let g:scrollview_folds_symbol =
 let g:scrollview_loclist_priority = get(g:, 'scrollview_loclist_priority', 45)
 " Default symbol: a small circle
 let g:scrollview_loclist_symbol =
-      \ get(g:, 'scrollview_loclist_symbol', nr2char(0x2981))
+      \ get(g:, 'scrollview_loclist_symbol', nr2char(0x2022))
 
 " *** Mark signs ***
 " Characters for which mark signs will be shown.
@@ -153,7 +153,7 @@ let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
 let g:scrollview_quickfix_priority = get(g:, 'scrollview_quickfix_priority', 45)
 " Default symbol: a small circle
 let g:scrollview_quickfix_symbol =
-      \ get(g:, 'scrollview_quickfix_symbol', nr2char(0x2981))
+      \ get(g:, 'scrollview_quickfix_symbol', nr2char(0x2022))
 
 " *** Search signs ***
 let g:scrollview_search_priority = get(g:, 'scrollview_search_priority', 70)
