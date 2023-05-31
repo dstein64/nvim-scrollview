@@ -211,8 +211,8 @@ highlight default link ScrollViewTextWidth Question
 " Internal global state is represented with local variables in
 " autoload/scrollview.vim and lua/scrollview.lua.
 
-" A flag that gets set to 1 while scrollbars are being refreshed. #88
-let g:scrollview_refreshing = 0
+" A flag that gets set to true while scrollbars are being refreshed. #88
+let g:scrollview_refreshing = v:false
 
 " *************************************************
 " * Versioning
