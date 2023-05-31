@@ -10,8 +10,8 @@ Web: https://github.com/dstein64/nvim-scrollview
 4. Configuration                           |scrollview-configuration|
 5. Issues                                  |scrollview-issues|
 
-|nvim-scrollview| is a plugin that displays interactive vertical scrollbars.
-The plugin is customizable (see |scrollview-configuration|).
+|nvim-scrollview| is a plugin that displays interactive vertical scrollbars and
+signs. The plugin is customizable (see |scrollview-configuration|).
 
 ============================================================================
 1. Requirements                            *scrollview-requirements*
@@ -28,22 +28,35 @@ Use |packages| or one of the various package managers.
 ============================================================================
 3. Usage                                   *scrollview-usage*
 
-* |nvim-scrollview| works automatically, displaying interactive scrollbars.
+* |nvim-scrollview| works automatically, displaying interactive scrollbars and
+  signs.
 
                                            *scrollview-commands*
-* The *:ScrollViewDisable* command disables scrollbars.
-* The *:ScrollViewEnable* command enables scrollbars. This is only necessary
-  if scrollbars have previously been disabled.
-* The *:ScrollViewRefresh* command refreshes the scrollbars. This is relevant
-  when the scrollbars are out-of-sync, which can occur e.g., as a result of
-  some window arrangement actions (see |scrollview-issues|).
+* *:ScrollViewDisable* disables the plugin. When arguments are given, the
+  specified sign groups are disabled.
+* *:ScrollViewEnable* enables the plugin. This is only necessary if
+  nvim-scrollview has previously been disabled. When arguments are given, the
+  specified sign groups are enabled.
+* *:ScrollViewToggle* toggles the plugin. When arguments are given, the
+  specified sign groups are toggled.
+* *:ScrollViewRefresh* refreshes the scrollbars. This is relevant when the
+  scrollbars are out-of-sync, which can occur e.g., as a result of some
+  window arrangement actions (see |scrollview-issues|).
+* *:ScrollViewNext* *:ScrollViewPrev* *:ScrollViewFirst* and *:ScrollViewLast*
+  move the cursor to lines with signs. Arguments can specify which lines are
+  considered.
 
                                            *scrollview-mappings*
 The following |<Plug>| mappings are defined for convenience.
 
 * `<Plug>(ScrollViewDisable)`
 * `<Plug>(ScrollViewEnable)`
+* `<Plug>(ScrollViewFirst)`
+* `<Plug>(ScrollViewLast)`
+* `<Plug>(ScrollViewNext)`
+* `<Plug>(ScrollViewPrev)`
 * `<Plug>(ScrollViewRefresh)`
+* `<Plug>(ScrollViewToggle)`
 
 The following (experimental) |<Plug>| mappings are defined for customizing
 mouse functionality (see |scrollview-mouse-customization|).
@@ -81,6 +94,11 @@ scrollview_base        |String| specifying where the scrollbar is anchored.
                        Possible values are `'left'` or `'right'` for corresponding
                        window edges, or `'buffer'`. Defaults to `'right'`.
 
+                                           *scrollview_byte_limit*
+scrollview_byte_limit  |Number| specifying the buffer size threshold (in
+                       bytes) for entering restricted mode, to prevent slow
+                       operation. Defaults to `1,000,000`. Use `-1` for no limit.
+
                                            *scrollview_character*
 scrollview_character   |String| specifying a character to display on scrollbars.
                        Defaults to `''`. Considered only at global scope.
@@ -107,6 +125,11 @@ scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
                        becomes hidden (not shown) when it would otherwise
                        intersect with a floating window. Defaults to `0`.
 
+                                           *scrollview_line_limit*
+scrollview_line_limit  |Number| specifying the buffer size threshold (in
+                       lines) for entering restricted mode, to prevent slow
+                       operation. Defaults to `20,000`. Use `-1` for no limit.
+
                                            *scrollview_mode*
 scrollview_mode        |String| specifying what the scrollbar position and size
                        correspond to. See |scrollview-modes| for details on the
@@ -116,6 +139,12 @@ scrollview_mode        |String| specifying what the scrollbar position and size
 scrollview_on_startup  |Boolean| |Number| specifying whether scrollbars are
                        enabled on startup. Defaults to `1`. Considered only at
                        global scope, when the plugin is loaded.
+
+scrollview_out_of_bounds_adjust            *scrollview_out_of_bounds_adjust*
+                       |Boolean| |Number| specifying whether scrollbars and
+                       signs beyond the window boundary (out-of-bounds) are
+                       adjusted to be within the window (as opposed to not
+                       showing).
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
@@ -137,6 +166,8 @@ example.
     " Position the scrollbar at the 80th character of the buffer
     let g:scrollview_base = 'buffer'
     let g:scrollview_column = 80
+    " Enable all sign groups (defaults to ['diagnostics', 'search'])
+    let g:scrollview_signs_on_startup = ['all']
 
 Lua Setup ~
 
@@ -149,7 +180,8 @@ options (the 'scrollview_' prefix is omitted). For example:
       winblend = 75,
       -- Position the scrollbar at the 80th character of the buffer
       base = 'buffer',
-      column = 80
+      column = 80,
+      signs_on_startup = {'all'}
     })
 
 Scrollview Modes ~
