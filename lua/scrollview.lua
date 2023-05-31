@@ -1,11 +1,46 @@
 local api = vim.api
 local fn = vim.fn
 
+local utils = require('scrollview.utils')
+local binary_search = utils.binary_search
+local concat = utils.concat
+local copy = utils.copy
+local preceding = utils.preceding
+local remove_duplicates = utils.remove_duplicates
+local round = utils.round
+local sorted = utils.sorted
+local subsequent = utils.subsequent
+local t = utils.t
+local tbl_get = utils.tbl_get
+local to_bool = utils.to_bool
+
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
 -- WARN: Functionality that temporarily moves the cursor and restores it should
 -- use a window workspace to prevent unwanted side effects. More details are in
 -- the documentation for with_win_workspace.
+-- XXX: Some of the functionality is applicable to bars and signs, but is
+-- named as if it were only applicable to bars (since it was implemented prior
+-- to sign support).
+
+-- *************************************************
+-- * Memoization
+-- *************************************************
+
+local cache = {}
+local memoize = false
+
+local start_memoize = function()
+  memoize = true
+end
+
+local stop_memoize = function()
+  memoize = false
+end
+
+local reset_memoize = function()
+  cache = {}
+end
 
 -- *************************************************
 -- * Globals
@@ -21,6 +56,9 @@ local scrollview_enabled = false
 -- bar_bufnr has the bufnr of the buffer created for a position bar.
 local bar_bufnr = -1
 
+-- sign_bufnr has the bufnr of the buffer created for signs.
+local sign_bufnr = -1
+
 -- Keep count of pending async refreshes.
 local pending_async_refresh_count = 0
 
@@ -31,62 +69,31 @@ local pending_async_refresh_count = 0
 local win_var = 'scrollview_key'
 local win_val = 'scrollview_val'
 
+-- For win workspaces, a window variable is used to store the base window ID.
+local win_workspace_base_winid_var = 'scrollview_win_workspace_base_winid'
+
+-- A type field is used to indicate the type of scrollview windows.
+local bar_type = 0
+local sign_type = 1
+
 -- A key for saving scrollbar properties using a window variable.
 local props_var = 'scrollview_props'
 
 -- A key for flagging windows that are pending async removal.
 local pending_async_removal_var = 'scrollview_pending_async_removal'
 
--- *************************************************
--- * Utils
--- *************************************************
+-- Stores registered sign specifications.
+-- WARN: There is an assumption in the code that signs specs cannot be
+-- unregistered. For example, the ID is currently the position in this array.
+local sign_specs = {}
 
--- Round to the nearest integer.
--- WARN: .5 rounds to the right on the number line, including for negatives
--- (which would not result in rounding up in magnitude).
--- (e.g., round(3.5) == 3, round(-3.5) == -3 != -4)
-local round = function(x)
-  return math.floor(x + 0.5)
-end
+-- Maps sign groups to state (enabled or disabled).
+local sign_group_state = {}
 
-local reltime_to_microseconds = function(reltime)
-  local reltimestr = fn.reltimestr(reltime)
-  return tonumber(table.concat(vim.split(reltimestr, '%.'), ''))
-end
-
--- Replace termcodes.
-local t = function(str)
-  return api.nvim_replace_termcodes(str, true, true, true)
-end
-
--- Get value from a map-like table, using the specified default.
-local tbl_get = function(table, key, default)
-  local result = table[key]
-  if result == nil then
-    result = default
-  end
-  return result
-end
-
--- Returns true for boolean true and any non-zero number, otherwise returns
--- false.
-local to_bool = function(x)
-  if type(x) == 'boolean' then
-    return x
-  elseif type(x) == 'number' then
-    return x ~= 0
-  end
-  return false
-end
-
--- Create a shallow copy of a map-like table.
-local copy = function(table)
-  local result = {}
-  for key, val in pairs(table) do
-    result[key] = val
-  end
-  return result
-end
+-- A highlight namespace that is used for buffer highlighting and as part of a
+-- workaround for Neovim #22906.
+local hl_namespace = api.nvim_create_namespace('')
+api.nvim_set_hl(hl_namespace, 'Normal', {})
 
 -- *************************************************
 -- * Core
@@ -137,6 +144,20 @@ local with_win_options = function(winid, opts, fun)
   end)
 end
 
+-- Return the base window ID for the specified window. Assumes that windows
+-- have been properly marked with win_workspace_base_winid_var.
+local get_base_winid = function(winid)
+  local base_winid = winid
+  pcall(function()
+    -- Loop until reaching a window with no base winid specified.
+    while true do
+      base_winid = api.nvim_win_get_var(
+        base_winid, win_workspace_base_winid_var)
+    end
+  end)
+  return base_winid
+end
+
 -- Creates a temporary floating window that can be used for computations
 -- ---corresponding to the specified window---that require temporary cursor
 -- movements (e.g., counting virtual lines, where all lines in a closed fold
@@ -168,6 +189,7 @@ local with_win_workspace = function(winid, fun)
   -- can function properly.
   set_window_option(workspace_winid, 'scrollbind', false)
   set_window_option(workspace_winid, 'cursorbind', false)
+  api.nvim_win_set_var(workspace_winid, win_workspace_base_winid_var, winid)
   -- As a precautionary measure, make sure the floating window has no winbar,
   -- which is assumed above.
   if to_bool(fn.exists('+winbar')) then
@@ -177,12 +199,11 @@ local with_win_workspace = function(winid, fun)
   -- it could end the diff session (e.g., when there is one other window in the
   -- session). Issue #57.
   set_window_option(workspace_winid, 'diff', false)
-  local result
-  local success, err = pcall(function()
-    result = api.nvim_win_call(workspace_winid, fun)
+  local success, result = pcall(function()
+    return api.nvim_win_call(workspace_winid, fun)
   end)
   api.nvim_win_close(workspace_winid, true)
-  if not success then error(err) end
+  if not success then error(result) end
   return result
 end
 
@@ -255,20 +276,31 @@ end
 local get_variable = function(name, winnr, precedence, default)
   if precedence == nil then precedence = 'wtbg' end
   if default == nil then default = 0 end
+  local winid = fn.win_getid(winnr)
+  -- WARN: This function was originally using getbufvar(., ''),
+  -- getwinvar(., ''), and gettabvar(., ''). For example:
+  --   local bufvars = fn.getbufvar(bufnr, '')
+  --   if bufvars[name] ~= nil then return bufvars[name] end
+  -- However, this was slow when the dictionaries were large (e.g., many items
+  -- in the b: dictionary for some NERDTree buffers), which you noticed after
+  -- adding signs for marks (in such a case, getbufvar(., '') was called many
+  -- times, for each mark sign registration). Switching to vim.b (or
+  -- nvim_buf_get_var) resolves the issue.
   for idx = 1, #precedence do
     local c = precedence:sub(idx, idx)
     if c == 'w' then
-      local winvars = fn.getwinvar(winnr, '')
-      if winvars[name] ~= nil then return winvars[name] end
+      if vim.w[winid][name] ~= nil then return vim.w[winid][name] end
     elseif c == 't' then
-      local winid = fn.win_getid(winnr)
-      local tabnr = fn.getwininfo(winid)[1].tabnr
-      local tabvars = fn.gettabvar(tabnr, '')
-      if tabvars[name] ~= nil then return tabvars[name] end
+      -- The tab number can differ from the tab id (similar to winnr and
+      -- winid). For example, if you open Neovim, and create a new tab, it will
+      -- have number 2 and ID 2. If you then create another, it will have
+      -- number 3 and ID 3. But if you delete tab 2, there will then be a tab
+      -- with number 2 and ID 3.
+      local tabid = api.nvim_win_call(winid, api.nvim_get_current_tabpage)
+      if vim.t[tabid][name] ~= nil then return vim.t[tabid][name] end
     elseif c == 'b' then
       local bufnr = fn.winbufnr(winnr)
-      local bufvars = fn.getbufvar(bufnr, '')
-      if bufvars[name] ~= nil then return bufvars[name] end
+      if vim.b[bufnr][name] ~= nil then return vim.b[bufnr][name] end
     elseif c == 'g' then
       if vim.g[name] ~= nil then return vim.g[name] end
     else
@@ -278,10 +310,32 @@ local get_variable = function(name, winnr, precedence, default)
   return default
 end
 
+-- Returns a boolean indicating whether a restricted state should be used.
+-- The function signature matches s:GetVariable, without the 'name' argument.
+local is_restricted = function(winnr, precedence, default)
+  local winid = fn.win_getid(winnr)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local line_limit
+    = get_variable('scrollview_line_limit', winnr, precedence, default)
+  if line_limit ~= -1 and line_count > line_limit then
+    return true
+  end
+  local byte_count = api.nvim_win_call(winid, function()
+    return fn.line2byte(fn.line('$') + 1) - 1
+  end)
+  local byte_limit
+    = get_variable('scrollview_byte_limit', winnr, precedence, default)
+  if byte_limit ~= -1 and byte_count > byte_limit then
+    return true
+  end
+  return false
+end
+
 -- Returns the scrollview mode. The function signature matches s:GetVariable,
 -- without the 'name' argument.
 local scrollview_mode = function(winnr, precedence, default)
-  if to_bool(vim.g.scrollview_refresh_time_exceeded) then
+  if is_restricted(winnr, precedence, default) then
     return 'simple'
   end
   return get_variable('scrollview_mode', winnr, precedence, default)
@@ -346,7 +400,7 @@ end
 -- Returns a boolean indicating whether the count of folds (closed folds count
 -- as a single fold) between the specified start and end lines exceeds 'n', in
 -- the current window. The cursor may be moved.
-local fold_count_exceeds = function(start, _end, n)
+local fold_count_exceeds = function(start, end_, n)
   vim.cmd('keepjumps normal! ' .. start .. 'G')
   if fn.foldclosed(start) ~= -1 then
     n = n - 1
@@ -360,30 +414,30 @@ local fold_count_exceeds = function(start, _end, n)
   end
   local line1 = fn.line('.')
   -- The fold count exceeds n if there is another fold to navigate to on a line
-  -- less than _end.
+  -- less than end_.
   vim.cmd('keepjumps normal! zj')
   local line2 = fn.line('.')
-  return line2 > line1 and line2 <= _end
+  return line2 > line1 and line2 <= end_
 end
 
 -- Returns the count of virtual lines between the specified start and end lines
 -- (both inclusive), in the current window. A closed fold counts as one virtual
 -- line. The computation loops over virtual spans. The cursor may be moved.
-local virtual_line_count_spanwise = function(start, _end)
+local virtual_line_count_spanwise = function(start, end_)
   start = math.max(1, start)
-  _end = math.min(fn.line('$'), _end)
+  end_ = math.min(fn.line('$'), end_)
   local count = 0
-  if _end >= start then
+  if end_ >= start then
     vim.cmd('keepjumps normal! ' .. start .. 'G')
     while true do
       local range_start, range_end, fold = advance_virtual_span()
-      range_end = math.min(range_end, _end)
+      range_end = math.min(range_end, end_)
       local delta = 1
       if not fold then
         delta = range_end - range_start + 1
       end
       count = count + delta
-      if range_end == _end or fn.line('.') == 1 then
+      if range_end == end_ or fn.line('.') == 1 then
         break
       end
     end
@@ -394,10 +448,10 @@ end
 -- Returns the count of virtual lines between the specified start and end lines
 -- (both inclusive), in the current window. A closed fold counts as one virtual
 -- line. The computation loops over lines. The cursor is not moved.
-local virtual_line_count_linewise = function(start, _end)
+local virtual_line_count_linewise = function(start, end_)
   local count = 0
   local line = start
-  while line <= _end do
+  while line <= end_ do
     count = count + 1
     local foldclosedend = fn.foldclosedend(line)
     if foldclosedend ~= -1 then
@@ -412,11 +466,15 @@ end
 -- (both inclusive), in the specified window. A closed fold counts as one
 -- virtual line. The computation loops over either lines or virtual spans, so
 -- the cursor may be moved.
-local virtual_line_count = function(winid, start, _end)
+local virtual_line_count = function(winid, start, end_)
   local last_line = api.nvim_buf_line_count(api.nvim_win_get_buf(winid))
-  if type(_end) == 'string' and _end == '$' then
-    _end = last_line
+  if type(end_) == 'string' and end_ == '$' then
+    end_ = last_line
   end
+  local base_winid = get_base_winid(winid)
+  local memoize_key =
+    table.concat({'virtual_line_count', base_winid, start, end_}, ':')
+  if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count = with_win_workspace(winid, function()
     -- On an AMD Ryzen 7 2700X, linewise computation takes about 3e-7 seconds
     -- per line (this is an overestimate, as it assumes all folds are open, but
@@ -425,12 +483,13 @@ local virtual_line_count = function(winid, start, _end)
     -- folds count as a single fold). Therefore the linewise computation is
     -- worthwhile when the number of folds is greater than (3e-7 / 5e-5) * L =
     -- .006L, where L is the number of lines.
-    if fold_count_exceeds(start, _end, math.floor(last_line * .006)) then
-      return virtual_line_count_linewise(start, _end)
+    if fold_count_exceeds(start, end_, math.floor(last_line * .006)) then
+      return virtual_line_count_linewise(start, end_)
     else
-      return virtual_line_count_spanwise(start, _end)
+      return virtual_line_count_spanwise(start, end_)
     end
   end)
+  if memoize then cache[memoize_key] = count end
   return count
 end
 
@@ -447,7 +506,7 @@ local virtual_topline_lookup_spanwise = function()
     local virtual_line = 0
     local prop = 0.0
     local row = 1
-    local proportion = (row - 1) / (winheight - 1)
+    local proportion = (row - 1) / winheight
     vim.cmd('keepjumps normal! gg')
     while #result < winheight do
       local range_start, range_end, fold = advance_virtual_span()
@@ -471,7 +530,7 @@ local virtual_topline_lookup_spanwise = function()
         end
         table.insert(result, topline)
         row = row + 1
-        proportion = (row - 1) / (winheight - 1)
+        proportion = (row - 1) / winheight
       end
       -- A line number of 1 indicates that advance_virtual_span looped back to
       -- the beginning of the document.
@@ -516,7 +575,7 @@ local virtual_topline_lookup_linewise = function()
     local best_distance = math.huge
     local best_count = count
     for row = 1, winheight do
-      local proportion = (row - 1) / (winheight - 1)
+      local proportion = (row - 1) / winheight
       while line <= last_line do
         local current = (count - 1) / (total_vlines - 1)
         local distance = math.abs(current - proportion)
@@ -572,70 +631,42 @@ local virtual_topline_lookup = function(winid)
   return result
 end
 
+local simple_topline_lookup = function(winid)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local winheight = get_window_height(winid)
+  local topline_lookup = {}
+  for row = 1, winheight do
+    local proportion = (row - 1) / winheight
+    local topline = round(proportion * (line_count - 1)) + 1
+    table.insert(topline_lookup, topline)
+  end
+  return topline_lookup
+end
+
 -- Returns an array that maps window rows to the topline that corresponds to a
 -- scrollbar at that row.
 local topline_lookup = function(winid)
   local winnr = api.nvim_win_get_number(winid)
   local mode = scrollview_mode(winnr)
-  local topline_lookup = {}
+  local base_winid = get_base_winid(winid)
+  local memoize_key =
+    table.concat({'topline_lookup', base_winid, mode}, ':')
+  if memoize and cache[memoize_key] then return cache[memoize_key] end
+  local topline_lookup
   if mode ~= 'simple' then
     -- Handling for virtual mode or an unknown mode.
-    for _, x in ipairs(virtual_topline_lookup(winid)) do
-      table.insert(topline_lookup, x)
-    end
+    topline_lookup = virtual_topline_lookup(winid)
   else
-    local bufnr = api.nvim_win_get_buf(winid)
-    local line_count = api.nvim_buf_line_count(bufnr)
-    local winheight = get_window_height(winid)
-    for row = 1, winheight do
-      local proportion = (row - 1) / (winheight - 1)
-      local topline = round(proportion * (line_count - 1)) + 1
-      table.insert(topline_lookup, topline)
-    end
+    topline_lookup = simple_topline_lookup(winid)
   end
+  if memoize then cache[memoize_key] = topline_lookup end
   return topline_lookup
 end
 
--- Calculates the bar position for the specified window. Returns a dictionary
--- with a height, row, and col.
-local calculate_position = function(winnr)
+local calculate_scrollbar_column = function(winnr)
   local winid = fn.win_getid(winnr)
-  local bufnr = api.nvim_win_get_buf(winid)
-  local topline, botline = line_range(winid)
-  local line_count = api.nvim_buf_line_count(bufnr)
-  local effective_topline = topline
-  local effective_line_count = line_count
-  local mode = scrollview_mode(winnr)
-  if mode ~= 'simple' then
-    -- For virtual mode or an unknown mode, update effective_topline and
-    -- effective_line_count to correspond to virtual lines, which account for
-    -- closed folds.
-    effective_topline = virtual_line_count(winid, 1, topline - 1) + 1
-    effective_line_count = virtual_line_count(winid, 1, '$')
-  end
-  local winheight = get_window_height(winid)
   local winwidth = fn.winwidth(winnr)
-  -- top is the position for the top of the scrollbar, relative to the window,
-  -- and 0-indexed.
-  local top = 0
-  if effective_line_count > 1 then
-    top = (effective_topline - 1) / (effective_line_count - 1)
-    top = round((winheight - 1) * top)
-  end
-  local height = winheight
-  if effective_line_count > height then
-    height = winheight / effective_line_count
-    height = math.ceil(height * winheight)
-    height = math.max(1, height)
-  end
-  -- Make sure bar properly reflects bottom of document.
-  if botline == line_count then
-    top = winheight - height
-  end
-  -- Make sure bar never overlaps status line.
-  if top + height > winheight then
-    top = winheight - height
-  end
   -- left is the position for the left of the scrollbar, relative to the
   -- window, and 0-indexed.
   local left = 0
@@ -652,10 +683,50 @@ local calculate_position = function(winnr)
     -- For an unknown base, use the default position (right edge of window).
     left = left + winwidth - 1
   end
+  return left + 1
+end
+
+-- Calculates the bar position for the specified window. Returns a dictionary
+-- with a height, row, and col.
+local calculate_position = function(winnr)
+  local winid = fn.win_getid(winnr)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local topline, botline = line_range(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local the_topline_lookup = topline_lookup(winid)
+  -- top is the position for the top of the scrollbar, relative to the window.
+  local top = binary_search(the_topline_lookup, topline)
+  if top > #the_topline_lookup
+      or (top > 1 and the_topline_lookup[top] ~= topline) then
+    top = top - 1  -- use the preceding line from topline lookup.
+  end
+  top = top - 1  -- use 0-indexing (temporarily)
+  local winheight = get_window_height(winid)
+  local height = winheight
+  local effective_line_count = line_count
+  local mode = scrollview_mode(winnr)
+  if mode ~= 'simple' then
+    -- For virtual mode or an unknown mode, update effective_line_count to
+    -- correspond to virtual lines, which account for closed folds.
+    effective_line_count = virtual_line_count(winid, 1, '$')
+  end
+  if effective_line_count > height then
+    height = winheight / effective_line_count
+    height = math.ceil(height * winheight)
+    height = math.max(1, height)
+  end
+  -- Make sure bar properly reflects bottom of document.
+  if botline == line_count then
+    top = winheight - height
+  end
+  -- Make sure bar never overlaps status line.
+  if top + height > winheight then
+    top = winheight - height
+  end
   local result = {
     height = height,
     row = top + 1,
-    col = left + 1
+    col = calculate_scrollbar_column(winnr)
   }
   return result
 end
@@ -668,7 +739,7 @@ local is_scrollview_window = function(winid)
   end)
   if not has_attr then return false end
   local bufnr = api.nvim_win_get_buf(winid)
-  return bufnr == bar_bufnr
+  return bufnr == bar_bufnr or bufnr == sign_bufnr
 end
 
 -- Returns the position of window edges, with borders considered part of the
@@ -723,11 +794,9 @@ local get_float_overlaps = function(top, bottom, left, right)
   return result
 end
 
--- Show a scrollbar for the specified 'winid' window ID, using the specified
--- 'bar_winid' floating window ID (a new floating window will be created if
--- this is -1). Returns -1 if the bar is not shown, and the floating window ID
--- otherwise.
-local show_scrollbar = function(winid, bar_winid)
+-- Whether scrollbar and signs should be shown. This is the first check; it
+-- only checks for conditions that apply to both the position bar and signs.
+local should_show = function(winid)
   local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local buf_filetype = api.nvim_buf_get_option(bufnr, 'filetype')
@@ -737,40 +806,64 @@ local show_scrollbar = function(winid, bar_winid)
   -- Skip if the filetype is on the list of exclusions.
   local excluded_filetypes = get_variable('scrollview_excluded_filetypes', winnr)
   if vim.tbl_contains(excluded_filetypes, buf_filetype) then
-    return -1
+    return false
   end
   -- Don't show in terminal mode, since the bar won't be properly updated for
   -- insertions.
   if to_bool(wininfo.terminal) then
-    return -1
+    return false
   end
   if winheight == 0 or winwidth == 0 then
-    return -1
+    return false
   end
-  local line_count = api.nvim_buf_line_count(bufnr)
-  -- Don't show the position bar when all lines are on screen.
+  -- Don't show when all lines are on screen.
   local topline, botline = line_range(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
   if botline - topline + 1 == line_count then
-    return -1
+    return false
   end
-  local bar_position = calculate_position(winnr)
-  -- Height has to be positive for the call to nvim_open_win. When opening a
-  -- terminal, the topline and botline can be set such that height is negative
-  -- when you're using scrollview document mode.
-  if bar_position.height <= 0 then
-    return -1
-  end
-  -- Don't show scrollbar when its column is beyond what's valid.
+  return true
+end
+
+-- Indicates whether the column is valid for showing a scrollbar or signs.
+local is_valid_column = function(winid, col, width)
+  local winnr = api.nvim_win_get_number(winid)
+  local winwidth = fn.winwidth(winnr)
   local min_valid_col = 1
-  local max_valid_col = winwidth
+  local max_valid_col = winwidth - width + 1
   local base = get_variable('scrollview_base', winnr)
   if base == 'buffer' then
     min_valid_col = api.nvim_win_call(winid, buf_view_begins_col)
   end
-  if bar_position.col < min_valid_col then
+  if col < min_valid_col then
+    return false
+  end
+  if col > max_valid_col then
+    return false
+  end
+  return true
+end
+
+-- Show a scrollbar for the specified 'winid' window ID, using the specified
+-- 'bar_winid' floating window ID (a new floating window will be created if
+-- this is -1). Returns -1 if the bar is not shown, and the floating window ID
+-- otherwise.
+local show_scrollbar = function(winid, bar_winid)
+  local winnr = api.nvim_win_get_number(winid)
+  local wininfo = fn.getwininfo(winid)[1]
+  local bar_position = calculate_position(winnr)
+  if not to_bool(get_variable('scrollview_out_of_bounds', winnr)) then
+    local winwidth = fn.winwidth(winnr)
+    bar_position.col = math.max(1, math.min(winwidth, bar_position.col))
+  end
+  local bar_width = 1
+  if not is_valid_column(winid, bar_position.col, bar_width) then
     return -1
   end
-  if bar_position.col > max_valid_col then
+  -- Height has to be positive for the call to nvim_open_win. When opening a
+  -- terminal, the topline and botline can be set such that height is negative
+  -- when you're using scrollview document mode.
+  if bar_position.height <= 0 then
     return -1
   end
   if to_bool(get_variable('scrollview_hide_on_intersect', winnr)) then
@@ -782,8 +875,10 @@ local show_scrollbar = function(winid, bar_winid)
       wincol0 + bar_position.col,
       wincol0 + bar_position.col
     )
-    if not vim.tbl_isempty(float_overlaps) then
-      return -1
+    for _, float_winid in ipairs(float_overlaps) do
+      if not is_scrollview_window(float_winid) then
+        return -1
+      end
     end
   end
   if bar_bufnr == -1 or not to_bool(fn.bufexists(bar_bufnr)) then
@@ -815,7 +910,7 @@ local show_scrollbar = function(winid, bar_winid)
     focusable = false,
     style = 'minimal',
     height = bar_position.height,
-    width = 1,
+    width = bar_width,
     row = bar_position.row - 1,
     col = bar_position.col - 1,
     zindex = zindex
@@ -827,26 +922,237 @@ local show_scrollbar = function(winid, bar_winid)
   end
   -- Scroll to top so that the custom character spans full scrollbar height.
   vim.cmd('keepjumps call nvim_win_set_cursor(' .. bar_winid .. ', [1, 0])')
+  local group = 'ScrollView'
+  if is_restricted(winnr) then group = group .. 'Restricted' end
   -- It's not sufficient to just specify Normal highlighting. With just that, a
   -- color scheme's specification of EndOfBuffer would be used to color the
   -- bottom of the scrollbar.
-  local winhighlight = 'Normal:ScrollView,EndOfBuffer:ScrollView'
+  local winhighlight = string.format('Normal:%s,EndOfBuffer:%s', group, group)
   set_window_option(bar_winid, 'winhighlight', winhighlight)
   local winblend = get_variable('scrollview_winblend', winnr)
   set_window_option(bar_winid, 'winblend', winblend)
   set_window_option(bar_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
+  set_window_option(bar_winid, 'foldenable', false)
   set_window_option(bar_winid, 'wrap', false)
   api.nvim_win_set_var(bar_winid, win_var, win_val)
   api.nvim_win_set_var(bar_winid, pending_async_removal_var, false)
   local props = {
+    type = bar_type,
     parent_winid = winid,
     scrollview_winid = bar_winid,
     height = bar_position.height,
     row = bar_position.row,
-    col = bar_position.col
+    col = bar_position.col,
+    zindex = zindex,
   }
   api.nvim_win_set_var(bar_winid, props_var, props)
   return bar_winid
+end
+
+-- Show signs for the specified 'winid' window ID. A list of existing sign
+-- winids, 'sign_winids', is specified for possible reuse. Reused windows are
+-- removed from the list.
+local show_signs = function(winid, sign_winids)
+  local cur_winid = api.nvim_get_current_win()
+  local winnr = api.nvim_win_get_number(winid)
+  if is_restricted(winnr) then return end
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local the_topline_lookup = nil  -- only set when needed
+  local base_col = calculate_scrollbar_column(winnr)
+  base_col = base_col + get_variable('scrollview_signs_column', winnr)
+  -- lookup maps rows to a mapping of names to sign specifications (with lines).
+  local lookup = {}
+  for _, sign_spec in ipairs(sign_specs) do
+    local name = sign_spec.name
+    local lines = {}
+    local lines_as_given = {}
+    pcall(function()
+      if sign_spec.type == 'b' then
+        lines_as_given = api.nvim_buf_get_var(bufnr, name)
+      elseif sign_spec.type == 'w' then
+        lines_as_given = api.nvim_win_get_var(winid, name)
+      end
+    end)
+    local satisfied_current_only = true
+    if sign_spec.current_only then
+      satisfied_current_only = winid == cur_winid
+    end
+    local show = sign_group_state[sign_spec.group] and satisfied_current_only
+    if show then
+      local lines_to_show = sorted(lines_as_given)
+      local show_in_folds
+        = to_bool(get_variable('scrollview_signs_show_in_folds', winnr))
+      if sign_spec.show_in_folds ~= nil then
+        show_in_folds = sign_spec.show_in_folds
+      end
+      if not show_in_folds then
+        lines_to_show = api.nvim_win_call(winid, function()
+          local result = {}
+          for _, line in ipairs(lines_to_show) do
+            if fn.foldclosed(line) == -1 then
+              table.insert(result, line)
+            end
+          end
+          return result
+        end)
+      end
+      for _, line in ipairs(lines_to_show) do
+        if vim.tbl_isempty(lines) or lines[#lines] ~= line then
+          table.insert(lines, line)
+        end
+      end
+    end
+    if not vim.tbl_isempty(lines) and the_topline_lookup == nil then
+      the_topline_lookup = topline_lookup(winid)
+    end
+    for _, line in ipairs(lines) do
+      if line >= 1 and line <= line_count then
+        local row = binary_search(the_topline_lookup, line)
+        if row > #the_topline_lookup or
+            (row > 1 and the_topline_lookup[row] ~= line) then
+          row = row - 1  -- use the preceding line from topline lookup.
+        end
+        if lookup[row] == nil then
+          lookup[row] = {}
+        end
+        if lookup[row][name] == nil then
+          local properties = {
+            symbol = sign_spec.symbol,
+            highlight = sign_spec.highlight,
+            priority = sign_spec.priority,
+            sign_spec_id = sign_spec.id,
+          }
+          properties.name = name
+          properties.lines = {line}
+          lookup[row][name] = properties
+        else
+          table.insert(lookup[row][name].lines, line)
+        end
+      end
+    end
+  end
+  for row, props_lookup in pairs(lookup) do
+    local props_list = {}
+    for _, properties in pairs(props_lookup) do
+      for _, field in ipairs({'priority', 'symbol', 'highlight'}) do
+        if #properties.lines > #properties[field] then
+          properties[field] = properties[field][#properties[field]]
+        else
+          properties[field] = properties[field][#properties.lines]
+        end
+      end
+      table.insert(props_list, properties)
+    end
+    -- Sort descending by priority.
+    table.sort(props_list, function(a, b)
+      return a.priority > b.priority
+    end)
+    local max_signs_per_row = get_variable('scrollview_signs_max_per_row', winnr)
+    if max_signs_per_row >= 0 then
+      props_list = vim.list_slice(props_list, 1, max_signs_per_row)
+    end
+    -- A set of 'row,col' pairs to prevent creating multiple signs in the same
+    -- location.
+    local shown = {}
+    local total_width = 0  -- running sum of sign widths
+    for _, properties in ipairs(props_list) do
+      local symbol = properties.symbol
+      symbol = symbol:gsub('\n', '')
+      symbol = symbol:gsub('\r', '')
+      if #symbol < 1 then symbol = ' ' end
+      local sign_width = fn.strdisplaywidth(symbol)
+      local col = base_col
+      if get_variable('scrollview_signs_overflow', winnr) == 'left' then
+        col = col - total_width
+        col = col - sign_width + 1
+      else
+        col = col + total_width
+      end
+      total_width = total_width + sign_width
+      if to_bool(get_variable('scrollview_out_of_bounds_adjust', winnr)) then
+        local winwidth = fn.winwidth(winnr)
+        col = math.max(1, math.min(winwidth - sign_width + 1, col))
+      end
+      if is_valid_column(winid, col, sign_width)
+          and not shown[row .. ',' .. col] then
+        shown[row .. ',' .. col] = true
+        if sign_bufnr == -1 or not to_bool(fn.bufexists(sign_bufnr)) then
+          sign_bufnr = api.nvim_create_buf(false, true)
+          api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
+          api.nvim_buf_set_option(sign_bufnr, 'filetype', 'scrollview_sign')
+          api.nvim_buf_set_option(sign_bufnr, 'buftype', 'nofile')
+          api.nvim_buf_set_option(sign_bufnr, 'swapfile', false)
+          api.nvim_buf_set_option(sign_bufnr, 'bufhidden', 'hide')
+          api.nvim_buf_set_option(sign_bufnr, 'buflisted', false)
+        end
+        local sign_line_count = api.nvim_buf_line_count(sign_bufnr)
+        api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
+        api.nvim_buf_set_lines(
+          sign_bufnr,
+          sign_line_count - 1,
+          sign_line_count - 1,
+          false,
+          {symbol}
+        )
+        api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
+        local highlight = properties.highlight
+        if highlight ~= nil then
+          api.nvim_buf_add_highlight(
+            sign_bufnr, hl_namespace, highlight, sign_line_count - 1, 0, -1)
+        end
+        local sign_winid
+        local zindex = get_variable('scrollview_signs_zindex', winnr)
+        local config = {
+          win = winid,
+          relative = 'win',
+          focusable = false,
+          style = 'minimal',
+          height = 1,
+          width = sign_width,
+          row = row - 1,
+          col = col - 1,
+          zindex = zindex,
+        }
+        if vim.tbl_isempty(sign_winids) then
+          sign_winid = api.nvim_open_win(sign_bufnr, false, config)
+        else
+          sign_winid = table.remove(sign_winids)
+          api.nvim_win_set_config(sign_winid, config)
+        end
+        -- Scroll to the inserted line.
+        local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
+        vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
+        local winhighlight = 'Normal:Normal'
+        set_window_option(sign_winid, 'winhighlight', winhighlight)
+        local winblend = get_variable('scrollview_winblend', winnr)
+        set_window_option(sign_winid, 'winblend', winblend)
+        -- Normal highlighting is ignored for floating windows in Neovim 0.8
+        -- (Neovim #22906) and fixed for Neovim 0.9. There's a workaround.
+        if to_bool(fn.has('nvim-0.8')) and not to_bool(fn.has('nvim-0.9')) then
+          api.nvim_win_set_hl_ns(sign_winid, hl_namespace)
+        end
+        -- foldcolumn takes a string
+        set_window_option(sign_winid, 'foldcolumn', '0')
+        set_window_option(sign_winid, 'foldenable', false)
+        set_window_option(sign_winid, 'wrap', false)
+        api.nvim_win_set_var(sign_winid, win_var, win_val)
+        api.nvim_win_set_var(sign_winid, pending_async_removal_var, false)
+        local props = {
+          type = sign_type,
+          parent_winid = winid,
+          scrollview_winid = sign_winid,
+          row = row,
+          col = col,
+          width = sign_width,
+          lines = properties.lines,
+          zindex = zindex,
+          sign_spec_id = properties.sign_spec_id,
+        }
+        api.nvim_win_set_var(sign_winid, props_var, props)
+      end
+    end
+  end
 end
 
 -- Given a scrollbar properties dictionary and a target window row, the
@@ -1157,8 +1463,8 @@ local set_topline = function(winid, linenr)
       -- of the window.
       vim.cmd('keepjumps normal! Gzb')
     end
-    -- Position the cursor as if all scrolling was conducted with <ctrl-e> and/or
-    -- <ctrl-y>. H and L are used to get topline and botline instead of
+    -- Position the cursor as if all scrolling was conducted with <ctrl-e>
+    -- and/or <ctrl-y>. H and L are used to get topline and botline instead of
     -- getwininfo, to prevent jumping to a line that could result in a scroll if
     -- scrolloff>0.
     vim.cmd('keepjumps normal! H')
@@ -1178,23 +1484,36 @@ local set_topline = function(winid, linenr)
   end)
 end
 
--- Returns scrollview properties for the specified window. An empty dictionary
--- is returned if there is no corresponding scrollbar.
-local get_scrollview_props = function(winid)
+-- Returns scrollview bar properties for the specified window. An empty
+-- dictionary is returned if there is no corresponding scrollbar.
+local get_scrollview_bar_props = function(winid)
   for _, scrollview_winid in ipairs(get_scrollview_windows()) do
     local props = api.nvim_win_get_var(scrollview_winid, props_var)
-    if props.parent_winid == winid then
+    if props.type == bar_type and props.parent_winid == winid then
       return props
     end
   end
   return {}
 end
 
+-- Returns a list of scrollview sign properties for the specified scrollbar
+-- window. An empty list is returned if there are no signs.
+local get_scrollview_sign_props = function(winid)
+  local result = {}
+  for _, scrollview_winid in ipairs(get_scrollview_windows()) do
+    local props = api.nvim_win_get_var(scrollview_winid, props_var)
+    if props.type == sign_type and props.parent_winid == winid then
+      table.insert(result, props)
+    end
+  end
+  return result
+end
+
 -- With no argument, remove all bars. Otherwise, remove the specified list of
 -- bars. Global state is initialized and restored.
 local remove_bars = function(target_wins)
   if target_wins == nil then target_wins = get_scrollview_windows() end
-  if bar_bufnr == -1 then return end
+  if bar_bufnr == -1 and sign_bufnr == -1 then return end
   local state = init()
   pcall(function()
     for _, winid in ipairs(target_wins) do
@@ -1223,8 +1542,19 @@ local refresh_bars = function(async_removal)
   -- Use a pcall block, so that unanticipated errors don't interfere. The
   -- worst case scenario is that bars won't be shown properly, which was
   -- deemed preferable to an obscure error message that can be interrupting.
+  start_memoize()
   pcall(function()
     if in_command_line_window() then return end
+    -- Don't refresh when the current window shows a scrollview buffer. This
+    -- could cause a loop where TextChanged keeps firing.
+    for _, scrollview_bufnr in ipairs({sign_bufnr, bar_bufnr}) do
+      if scrollview_bufnr ~= -1 and to_bool(fn.bufexists(scrollview_bufnr)) then
+        local windows = fn.getbufinfo(scrollview_bufnr)[1].windows
+        if vim.tbl_contains(windows, fn.win_getid(fn.winnr())) then
+          return
+        end
+      end
+    end
     -- Remove any scrollbars that are pending asynchronous removal. This
     -- reduces the appearance of motion blur that results from the accumulation
     -- of windows for asynchronous removal (e.g., when CPU utilization is
@@ -1237,7 +1567,16 @@ local refresh_bars = function(async_removal)
     -- Existing windows are determined before adding new windows, but removed
     -- later (they have to be removed after adding to prevent flickering from
     -- the delay between removal and adding).
-    local existing_wins = get_scrollview_windows()
+    local existing_barids = {}
+    local existing_signids = {}
+    for _, winid in ipairs(get_scrollview_windows()) do
+      local props = api.nvim_win_get_var(winid, props_var)
+      if props.type == bar_type then
+        table.insert(existing_barids, winid)
+      elseif props.type == sign_type then
+        table.insert(existing_signids, winid)
+      end
+    end
     local target_wins = {}
     if to_bool(get_variable('scrollview_current_only', fn.winnr(), 'tg')) then
       table.insert(target_wins, api.nvim_get_current_win())
@@ -1246,32 +1585,45 @@ local refresh_bars = function(async_removal)
         table.insert(target_wins, winid)
       end
     end
-    local start_reltime = fn.reltime()
+    local eventignore = api.nvim_get_option('eventignore')
+    api.nvim_set_option('eventignore', state.eventignore)
+    vim.cmd('doautocmd <nomodeline> User ScrollViewRefresh')
+    api.nvim_set_option('eventignore', eventignore)
+    -- Delete all signs and highlights in the sign buffer.
+    if sign_bufnr ~= -1 and to_bool(fn.bufexists(sign_bufnr)) then
+      -- Clear existing highlights to prevent memory leak.
+      api.nvim_buf_clear_namespace(sign_bufnr, hl_namespace, 0, -1)
+      api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
+      -- Don't use fn.deletebufline to avoid the "--No lines in buffer--"
+      -- message that shows when the buffer is empty.
+      api.nvim_buf_set_lines(
+        sign_bufnr, 0, api.nvim_buf_line_count(sign_bufnr), true, {})
+      api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
+    end
     for _, winid in ipairs(target_wins) do
-      local existing_winid = -1
-      if not vim.tbl_isempty(existing_wins) then
-        -- Reuse an existing scrollbar floating window when available. This
-        -- prevents flickering when there are folds. This keeps the window IDs
-        -- smaller than they would be otherwise. The benefits of small window
-        -- IDs seems relatively less beneficial than small buffer numbers,
-        -- since they would ordinarily be used less as inputs to commands
-        -- (where smaller numbers are preferable for their fewer digits to
-        -- type).
-        existing_winid = existing_wins[#existing_wins]
-      end
-      local bar_winid = show_scrollbar(winid, existing_winid)
-      -- If an existing window was successfully reused, remove it from the
-      -- existing window list.
-      if bar_winid ~= -1 and existing_winid ~= -1 then
-        table.remove(existing_wins)
+      if should_show(winid) then
+        local existing_winid = -1
+        if not vim.tbl_isempty(existing_barids) then
+          -- Reuse an existing scrollbar floating window when available. This
+          -- prevents flickering when there are folds. This keeps the window IDs
+          -- smaller than they would be otherwise. The benefits of small window
+          -- IDs seems relatively less beneficial than small buffer numbers,
+          -- since they would ordinarily be used less as inputs to commands
+          -- (where smaller numbers are preferable for their fewer digits to
+          -- type).
+          existing_winid = existing_barids[#existing_barids]
+        end
+        local bar_winid = show_scrollbar(winid, existing_winid)
+        -- If an existing window was successfully reused, remove it from the
+        -- existing window list.
+        if bar_winid ~= -1 and existing_winid ~= -1 then
+          table.remove(existing_barids)
+        end
+        -- Repeat a similar process for signs.
+        show_signs(winid, existing_signids)
       end
     end
-    -- The elapsed microseconds for showing scrollbars.
-    local elapsed_micro = reltime_to_microseconds(fn.reltime(start_reltime))
-    if vim.g.scrollview_refresh_time > -1
-        and elapsed_micro > vim.g.scrollview_refresh_time * 1000 then
-      vim.g.scrollview_refresh_time_exceeded = 1
-    end
+    local existing_wins = concat(existing_barids, existing_signids)
     if vim.tbl_isempty(existing_wins) then  -- luacheck: ignore 542 (empty if)
       -- Do nothing. The following clauses are only applicable when there are
       -- existing windows. Skipping prevents the creation of an unnecessary
@@ -1298,6 +1650,8 @@ local refresh_bars = function(async_removal)
       end
     end
   end)
+  stop_memoize()
+  reset_memoize()
   restore(state)
 end
 
@@ -1309,7 +1663,7 @@ end
 -- e.g., echom works as expected.
 local refresh_bars_async = function()
   pending_async_refresh_count = pending_async_refresh_count + 1
-  -- Use defer_fn twice so that refreshing happens after other processing. Issue #59.
+  -- Use defer_fn twice so that refreshing happens after other processing. #59.
   vim.defer_fn(function()
     vim.defer_fn(function()
       pending_async_refresh_count = math.max(0, pending_async_refresh_count - 1)
@@ -1318,8 +1672,8 @@ local refresh_bars_async = function()
         -- don't execute this one.
         return
       end
-      -- ScrollView may have already been disabled by time this callback executes
-      -- asynchronously.
+      -- ScrollView may have already been disabled by time this callback
+      -- executes asynchronously.
       if scrollview_enabled then
         refresh_bars()
       end
@@ -1337,7 +1691,7 @@ end
 -- responsive and it permits redundant refreshes to be dropped (e.g., for mouse
 -- wheel scrolling).
 
-local scrollview_enable = function()
+local enable = function()
   scrollview_enabled = true
   vim.cmd([[
     augroup scrollview
@@ -1353,6 +1707,7 @@ local scrollview_enable = function()
       " this is triggered by the WinEnter event, just prior to the relevant
       " funcionality becoming unavailable.
       autocmd WinEnter * :lua require('scrollview').remove_if_command_line_window()
+
       " The following error can arise when the last window in a tab is going to
       " be closed, but there are still open floating windows, and at least one
       " other tab.
@@ -1371,29 +1726,47 @@ local scrollview_enable = function()
 
       " The following handles bar refreshing when changing the current window.
       autocmd WinEnter,TermEnter * :lua require('scrollview').refresh_bars_async()
+
       " The following restores bars after leaving the command-line window.
       " Refreshing must be asynchronous, since the command line window is still
       " in an intermediate state when the CmdwinLeave event is triggered.
       autocmd CmdwinLeave * :lua require('scrollview').refresh_bars_async()
+
       " The following handles scrolling events, which could arise from various
       " actions, including resizing windows, movements (e.g., j, k), or
       " scrolling (e.g., <ctrl-e>, zz).
       autocmd WinScrolled * :lua require('scrollview').refresh_bars_async()
+
+      " The following handles window resizes that don't trigger WinScrolled
+      " (e.g., leaving the command line window). This was added in Neovim 0.9,
+      " so its presence needs to be tested.
+      if exists('##WinResized')
+        autocmd WinResized * :lua require('scrollview').refresh_bars_async()
+      endif
+
       " The following handles the case where text is pasted. TextChangedI is not
       " necessary since WinScrolled will be triggered if there is corresponding
       " scrolling.
       autocmd TextChanged * :lua require('scrollview').refresh_bars_async()
+
       " The following handles when :e is used to load a file. The asynchronous
       " version handles a case where :e is used to reload an existing file, that
       " is already scrolled. This avoids a scenario where the scrollbar is
       " refreshed while the window is an intermediate state, resulting in the
       " scrollbar moving to the top of the window.
       autocmd BufWinEnter * :lua require('scrollview').refresh_bars_async()
+
       " The following is used so that bars are shown when cycling through tabs.
       autocmd TabEnter * :lua require('scrollview').refresh_bars_async()
+
       autocmd VimResized * :lua require('scrollview').refresh_bars_async()
+
       " Scrollbar positions can become stale after adding or removing winbars.
       autocmd OptionSet winbar :lua require('scrollview').refresh_bars_async()
+
+      " Scrollbars and signs can become out of sync.
+      " (:help scrollview-synchronization-issues)
+      autocmd CursorHold * :lua require('scrollview').refresh_bars_async()
     augroup END
   ]])
   -- The initial refresh is asynchronous, since :ScrollViewEnable can be used
@@ -1404,7 +1777,7 @@ local scrollview_enable = function()
   refresh_bars_async()
 end
 
-local scrollview_disable = function()
+local disable = function()
   local winid = api.nvim_get_current_win()
   local state = init()
   pcall(function()
@@ -1432,7 +1805,25 @@ local scrollview_disable = function()
   restore(state)
 end
 
-local scrollview_refresh = function()
+-- With no argument, toggles the current state. Otherwise, true enables and
+-- false disables.
+-- WARN: 'state' is enable/disable state. This differs from how "state" is used
+-- in other parts of the code (for saving and restoring environment).
+local set_state = function(state)
+  if state == vim.NIL then
+    state = nil
+  end
+  if state == nil then
+    state = not scrollview_enabled
+  end
+  if state then
+    enable()
+  else
+    disable()
+  end
+end
+
+local refresh = function()
   if scrollview_enabled then
     -- This refresh is asynchronous to keep interactions responsive (e.g.,
     -- mouse wheel scrolling, as redundant async refreshes are dropped). If
@@ -1442,6 +1833,70 @@ local scrollview_refresh = function()
     -- mapping, both utilizing whatever is implemented here).
     refresh_bars_async()
   end
+end
+
+-- Move the cursor to the specified line with a sign. Can take (1) an integer
+-- value, (2) '$' for the last line, (3) 'next' for the next line, or (4)
+-- 'prev' for the previous line. 'groups' specifies the sign groups that are
+-- considered; use nil for all.
+local move_to_sign_line = function(location, groups)
+  if groups ~= nil then
+    groups = utils.sorted(groups)
+  end
+  local lines = {}
+  local winid = api.nvim_get_current_win()
+  for _, sign_props in ipairs(get_scrollview_sign_props(winid)) do
+    local eligible = groups == nil
+    if not eligible then
+      local group = sign_specs[sign_props.sign_spec_id].group
+      local idx = utils.binary_search(groups, group)
+      eligible = idx <= #groups and groups[idx] == group
+    end
+    if eligible then
+      for _, line in ipairs(sign_props.lines) do
+        table.insert(lines, line)
+      end
+    end
+  end
+  if vim.tbl_isempty(lines) then
+    return
+  end
+  table.sort(lines)
+  lines = remove_duplicates(lines)
+  local current = fn.line('.')
+  local target = nil
+  if location == 'next' then
+    target = subsequent(lines, current, vim.o.wrapscan)
+  elseif location == 'prev' then
+    target = preceding(lines, current, vim.o.wrapscan)
+  elseif location == '$' then
+    target = lines[#lines]
+  elseif type(location) == 'number' then
+    target = lines[location]
+  end
+  if target ~= nil then
+    vim.cmd('normal!' .. target .. 'G')
+  end
+end
+
+-- Move the cursor to the next line that has a sign.
+local next = function(groups)  -- luacheck: ignore 431 (shadowing upvalue next)
+  move_to_sign_line('next', groups)
+end
+
+-- Move the cursor to the previous line that has a sign.
+local prev = function(groups)
+  move_to_sign_line('prev', groups)
+end
+
+-- Move the cursor to the first line with a sign.
+local first = function(groups)
+  move_to_sign_line(1, groups)
+end
+
+-- Move the cursor to the last line with a sign.
+local last = function(groups)
+  move_to_sign_line('$', groups)
 end
 
 -- 'button' can be 'left', 'middle', 'right', 'x1', or 'x2'.
@@ -1501,9 +1956,9 @@ local handle_mouse = function(button)
           break
         end
         if idx >= #char_props then break end
-        local next = chars_props[idx + 1]
-        if next.mouse_winid == 0
-            or vim.tbl_contains({mousedown, mouseup}, next.char) then
+        local next_char_props = chars_props[idx + 1]
+        if next_char_props.mouse_winid == 0
+            or vim.tbl_contains({mousedown, mouseup}, next_char_props.char) then
           break
         end
       end
@@ -1542,8 +1997,8 @@ local handle_mouse = function(button)
             -- already been processed. The current window (from prior to
             -- scrolling) is not changed.
             -- Refresh scrollbars to handle the scenario where
-            -- scrollview_hide_on_intersect is enabled and dragging resulted in a
-            -- scrollbar overlapping a floating window.
+            -- scrollview_hide_on_intersect is enabled and dragging resulted in
+            -- a scrollbar overlapping a floating window.
             refresh_bars(false)
           end
           return
@@ -1554,48 +2009,56 @@ local handle_mouse = function(button)
             fn.feedkeys(string.sub(string, str_idx), 'ni')
             return
           end
-          props = get_scrollview_props(mouse_winid)
-          if vim.tbl_isempty(props) then
-            -- There was no scrollbar in the window where a click occurred.
-            fn.feedkeys(string.sub(string, str_idx), 'ni')
-            return
+          props = get_scrollview_bar_props(mouse_winid)
+          local clicked_bar = false
+          if not vim.tbl_isempty(props) then
+            clicked_bar = mouse_row >= props.row
+              and mouse_row < props.row + props.height
+              and mouse_col >= props.col
+              and mouse_col <= props.col
           end
-          -- Add 1 cell horizontal padding for grabbing the scrollbar. Don't do
-          -- this when the padding would extend past the window, as it will
-          -- interfere with dragging the vertical separator to resize the window.
-          local lpad = 0
-          if props.col > 1 then
-            lpad = 1
+          -- First check for a click on a sign and handle accordingly.
+          for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
+            if mouse_row == sign_props.row
+              and mouse_col >= sign_props.col
+              and mouse_col <= sign_props.col + sign_props.width - 1
+              and (not clicked_bar or sign_props.zindex > props.zindex) then
+              restore_toplines = false
+              api.nvim_win_call(mouse_winid, function()
+                -- Go to the next sign_props line after the cursor.
+                local current = fn.line('.')
+                local target = subsequent(sign_props.lines, current, true)
+                vim.cmd('normal!' .. target .. 'G')
+              end)
+              refresh_bars(false)
+              return
+            end
           end
-          local rpad = 0
-          if props.col < api.nvim_win_get_width(mouse_winid) then
-            rpad = 1
-          end
-          if mouse_row < props.row
-              or mouse_row >= props.row + props.height
-              or mouse_col < props.col - lpad
-              or mouse_col > props.col + rpad then
-            -- The click was not on a scrollbar.
+          if not clicked_bar then
+            -- There was either no scrollbar in the window where a click
+            -- occurred or the click was not on a scrollbar.
             fn.feedkeys(string.sub(string, str_idx), 'ni')
             return
           end
           -- The click was on a scrollbar.
-          -- It's possible that the clicked scrollbar is out-of-sync. Refresh the
-          -- scrollbars and check if the mouse is still over a scrollbar. If not,
-          -- ignore all mouse events until a mouseup. This approach was deemed
-          -- preferable to refreshing scrollbars initially, as that could result
-          -- in unintended clicking/dragging where there is no scrollbar.
+          -- It's possible that the clicked scrollbar is out-of-sync. Refresh
+          -- the scrollbars and check if the mouse is still over a scrollbar. If
+          -- not, ignore all mouse events until a mouseup. This approach was
+          -- deemed preferable to refreshing scrollbars initially, as that could
+          -- result in unintended clicking/dragging where there is no scrollbar.
           refresh_bars(false)
           vim.cmd('redraw')
           -- Don't restore toplines whenever a scrollbar was clicked. This
           -- prevents the window where a scrollbar is dragged from having its
           -- topline restored to the pre-drag position. This also prevents
-          -- restoring windows that may have had their windows shifted during the
-          -- course of scrollbar clicking/dragging, to prevent jumpiness in the
-          -- display.
+          -- restoring windows that may have had their windows shifted during
+          -- the course of scrollbar clicking/dragging, to prevent jumpiness in
+          -- the display.
           restore_toplines = false
-          props = get_scrollview_props(mouse_winid)
-          if vim.tbl_isempty(props) or mouse_row < props.row
+          props = get_scrollview_bar_props(mouse_winid)
+          if vim.tbl_isempty(props)
+              or props.type ~= bar_type
+              or mouse_row < props.row
               or mouse_row >= props.row + props.height then
             while fn.getchar() ~= mouseup do end
             return
@@ -1628,19 +2091,19 @@ local handle_mouse = function(button)
             local topline = the_topline_lookup[row]
             topline = math.max(1, topline)
             if row == 1 then
-              -- If the scrollbar was dragged to the top of the window, always show
-              -- the first line.
+              -- If the scrollbar was dragged to the top of the window, always
+              -- show the first line.
               topline = 1
             elseif row + props.height - 1 >= winheight then
-              -- If the scrollbar was dragged to the bottom of the window, always
-              -- show the bottom line.
+              -- If the scrollbar was dragged to the bottom of the window,
+              -- always show the bottom line.
               topline = api.nvim_buf_line_count(bufnr)
             end
             set_topline(winid, topline)
             if api.nvim_win_get_option(winid, 'scrollbind')
                 or api.nvim_win_get_option(winid, 'cursorbind') then
               refresh_bars(false)
-              props = get_scrollview_props(winid)
+              props = get_scrollview_bar_props(winid)
             end
             props = move_scrollbar(props, row)
             vim.cmd('redraw')
@@ -1666,6 +2129,116 @@ local setup = function(opts)
   end
 end
 
+local register_sign_spec = function(specification)
+  local id = #sign_specs + 1
+  specification = copy(specification)
+  specification.id = id
+  local defaults = {
+    current_only = false,
+    group = 'other',
+    highlight = 'Pmenu',
+    priority = 50,
+    show_in_folds = nil,  -- when set, overrides 'scrollview_signs_show_in_folds'
+    symbol = '',  -- effectively ' '
+    type = 'b',
+  }
+  for key, val in pairs(defaults) do
+    if specification[key] == nil then
+      specification[key] = val
+    end
+  end
+  for _, group in ipairs({'all', 'defaults'}) do
+    if specification.group == group then
+      error('Invalid group: ' .. group)
+    end
+  end
+  -- Group names can be made up of letters, digits, and underscores, but cannot
+  -- start with a digit. This matches the rules for internal variables (:help
+  -- internal-variables), but is more restrictive than what is possible with
+  -- e.g., nvim_buf_set_var.
+  if string.match(specification.group, '^[a-zA-Z_][a-zA-Z0-9_]*$') == nil then
+    error('Invalid group: ' .. specification.group)
+  end
+  local name = 'scrollview_signs_' .. id .. '_' .. specification.group
+  specification.name = name
+  -- priority, symbol, and highlight can be arrays
+  for _, key in ipairs({'priority', 'highlight', 'symbol',}) do
+    if type(specification[key]) ~= 'table' then
+      specification[key] = {specification[key]}
+    else
+      specification[key] = copy(specification[key])
+    end
+  end
+  table.insert(sign_specs, specification)
+  if sign_group_state[specification.group] == nil then
+    sign_group_state[specification.group] = false
+  end
+  local registration = {
+    id = id,
+    name = name,
+  }
+  return registration
+end
+
+-- state can be true, false, or nil to toggle.
+-- WARN: 'state' is enable/disable state. This differs from how "state" is used
+-- in other parts of the code (for saving and restoring environment).
+local set_sign_group_state = function(group, state)
+  if sign_group_state[group] == nil then
+    error('Unknown group: ' .. group)
+  end
+  if state == vim.NIL then
+    state = nil
+  end
+  local prior_state = sign_group_state[group]
+  if state == nil then
+    sign_group_state[group] = not sign_group_state[group]
+  else
+    sign_group_state[group] = state
+  end
+  if prior_state ~= sign_group_state[group] then
+    refresh_bars_async()
+  end
+end
+
+local get_sign_group_state = function(group)
+  local result = sign_group_state[group]
+  if result == nil then
+    error('Unknown group: ' .. group)
+  end
+  return result
+end
+
+-- Indicates whether scrollview is enabled and the specified sign group is
+-- enabled. Using this is more convenient than having to call (1) a
+-- (hypothetical) get_state function to check if scrollview is enabled and (2)
+-- a get_sign_group_state function to check if the group is enabled.
+local is_sign_group_active = function(group)
+  return scrollview_enabled and get_sign_group_state(group)
+end
+
+local get_sign_groups = function()
+  local groups = {}
+  for group, _ in pairs(sign_group_state) do
+    table.insert(groups, group)
+  end
+  return groups
+end
+
+-- Returns a list of window IDs that could potentially have signs.
+local get_sign_eligible_windows = function()
+  local winids = {}
+  for _, winid in ipairs(get_ordinary_windows()) do
+    if should_show(winid) then
+      local winnr = api.nvim_win_get_number(winid)
+      if not is_restricted(winnr) then
+        table.insert(winids, winid)
+      end
+    end
+  end
+  return winids
+end
+
 -- *************************************************
 -- * API
 -- *************************************************
@@ -1677,17 +2250,30 @@ return {
   remove_if_command_line_window = remove_if_command_line_window,
 
   -- Functions called by commands and mappings defined in
-  -- plugin/scrollview.vim.
-  scrollview_enable = scrollview_enable,
-  scrollview_disable = scrollview_disable,
-  scrollview_refresh = scrollview_refresh,
+  -- plugin/scrollview.vim, and sign handlers.
+  first = first,
+  fold_count_exceeds = fold_count_exceeds,
+  get_sign_eligible_windows = get_sign_eligible_windows,
   handle_mouse = handle_mouse,
+  last = last,
+  next = next,
+  prev = prev,
+  refresh = refresh,
+  set_state = set_state,
+  with_win_workspace = with_win_workspace,
+
+  -- Sign registration/configuration
+  get_sign_groups = get_sign_groups,
+  is_sign_group_active = is_sign_group_active,
+  register_sign_spec = register_sign_spec,
+  set_sign_group_state = set_sign_group_state,
 
   -- Functions called by tests.
   virtual_line_count_spanwise = virtual_line_count_spanwise,
   virtual_line_count_linewise = virtual_line_count_linewise,
   virtual_topline_lookup_spanwise = virtual_topline_lookup_spanwise,
   virtual_topline_lookup_linewise = virtual_topline_lookup_linewise,
+  simple_topline_lookup = simple_topline_lookup,
 
   -- require('scrollview').setup()
   setup = setup,
