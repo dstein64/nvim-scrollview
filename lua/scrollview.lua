@@ -19,7 +19,7 @@ local to_bool = utils.to_bool
 -- level or only considered at startup). Mention signs_autocmd_callback.
 -- Mention g:scrollview_signs_version. byte_limit, line_limit, restricted mode.
 -- scrollview_signs_show_in_folds (some sign groups override).
--- TODO: demo: trailing whitespace
+-- TODO: demo
 -- TODO: default cursor sign off
 -- TODO: test symbols across a variety of platforms.
 

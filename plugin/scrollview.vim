@@ -171,6 +171,12 @@ let g:scrollview_textwidth_priority =
 let g:scrollview_textwidth_symbol =
       \ get(g:, 'scrollview_textwidth_symbol', nr2char(0xbb))
 
+" *** Trail signs ***
+let g:scrollview_trail_priority = get(g:, 'scrollview_trail_priority', 50)
+" Default symbol: an outlined square
+let g:scrollview_trail_symbol =
+      \ get(g:, 'scrollview_trail_symbol', nr2char(0x25a1))
+
 " === Highlights ===
 
 " The default highlight groups are specified below.
