@@ -3,7 +3,8 @@
 # nvim-scrollview
 
 `nvim-scrollview` is a Neovim plugin that displays interactive vertical
-scrollbars. The plugin is customizable (see `:help scrollview-configuration`).
+scrollbars and signs. The plugin is customizable (see `:help
+scrollview-configuration`).
 
 <details open><summary>Demo</summary><br>
 
@@ -16,12 +17,14 @@ scrollbars. The plugin is customizable (see `:help scrollview-configuration`).
 * Handling for folds
 * Scrollbars can be dragged with the mouse
 * Partially transparent scrollbars so that text is not covered
+* Signs
 
 ## Requirements
 
 * `nvim>=0.5`
 * Scrollbar mouse dragging requires mouse support (see `:help 'mouse'`) and
   `nvim>=0.6`
+* Signs require `nvim>=0.7`
 
 ## Installation
 
@@ -53,50 +56,27 @@ A package manager can be used to install `nvim-scrollview`.
 ## Usage
 
 * `nvim-scrollview` works automatically, displaying interactive scrollbars.
-* The `:ScrollViewDisable` command disables scrollbars.
-* The `:ScrollViewEnable` command enables scrollbars. This is only necessary
-  if scrollbars have previously been disabled.
-* The `:ScrollViewRefresh` command refreshes the scrollbars. This is relevant
-  when the scrollbars are out-of-sync, which can occur as a result of some
-  window arrangement actions.
-* The scrollbars can be dragged. This requires a corresponding mapping, which
-  is automatically configured when `scrollview_auto_mouse` is set (see
-  `:help scrollview-mouse-customization`).
+* `:ScrollViewDisable` disables the plugin. When arguments are given,
+  the specified sign groups are disabled.
+* `:ScrollViewEnable` enables the plugin. This is only necessary if
+  nvim-scrollview has previously been disabled. When arguments are given,
+  the specified sign groups are enabled.
+  `:ScrollViewToggle` toggles the plugin. When arguments are given, the
+  specified sign groups are toggled.
+* `:ScrollViewRefresh` refreshes the scrollbars. This is relevant when the
+  scrollbars are out-of-sync, which can occur as a result of some window
+  arrangement actions.
+* `:ScrollViewNext`, `:ScrollViewPrev`, `:ScrollViewFirst`, and
+  `ScrollViewLast` move the cursor to lines with signs. Arguments can specify
+  which sign groups are considered.
+* The scrollbars can be dragged and signs can be clicked. This requires a
+  corresponding mapping, which is automatically configured when
+  `scrollview_auto_mouse` is set (see `:help scrollview-mouse-customization`).
 
 ## Configuration
 
 There are various settings that can be configured. Please see the documentation
 for details.
-<details><summary>Settings</summary><br>
-
-* Whether scrollbars are enabled or disabled on startup
-  - `scrollview_on_startup`
-* File types for which scrollbars should not be displayed
-  - `scrollview_excluded_filetypes`
-* Scrollbar color and transparency level
-  - `ScrollView` highlight group
-  - `scrollview_winblend`
-* Whether scrollbars should be displayed in all windows, or just the current
-  window
-  - `scrollview_current_only`
-* What the scrollbar position and size correspond to (i.e., how folds are
-  accounted for)
-  - `scrollview_mode`
-* Scrollbar anchor column and offset
-  - `scrollview_base`
-  - `scrollview_column`
-* Whether a mapping is automatically created for mouse support
-  - `scrollview_auto_mouse`
-* Whether select workarounds are automatically applied for known issues
-  - `scrollview_auto_workarounds`
-* Refresh time limit that triggers setting `scrollview_mode` to `simple`
-  - `scrollview_refresh_time`
-* A character to display on scrollbars
-  - `scrollview_character`
-* Whether each scrollbar becomes hidden when intersecting a floating window
-  - `scrollview_hide_on_intersect`
-
-</details>
 
 #### VimScript Example
 
@@ -107,6 +87,8 @@ let g:scrollview_winblend = 75
 " Position the scrollbar at the 80th character of the buffer
 let g:scrollview_base = 'buffer'
 let g:scrollview_column = 80
+" Enable all sign groups (defaults to ['cursor', 'search'])
+let g:scrollview_signs_on_startup = ['all']
 ```
 
 #### Lua Setup Example
@@ -117,7 +99,8 @@ require('scrollview').setup({
   current_only = true,
   winblend = 75,
   base = 'buffer',
-  column = 80
+  column = 80,
+  signs_on_startup = {'all'}
 })
 ```
 
