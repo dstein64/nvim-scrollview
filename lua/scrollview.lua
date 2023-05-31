@@ -14,15 +14,6 @@ local t = utils.t
 local tbl_get = utils.tbl_get
 local to_bool = utils.to_bool
 
--- TODO: documentation for all new functionality (including User autocmd,
--- ScrollViewToggle, <plug> mappings, etc., options that are only at global
--- level or only considered at startup). Mention signs_autocmd_callback.
--- Mention g:scrollview_signs_version. byte_limit, line_limit, restricted mode.
--- scrollview_signs_show_in_folds (some sign groups override).
--- TODO: demo
--- TODO: default cursor sign off
--- TODO: test symbols across a variety of platforms.
-
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
 -- WARN: Functionality that temporarily moves the cursor and restores it should
