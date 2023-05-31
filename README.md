@@ -75,7 +75,7 @@ A package manager can be used to install `nvim-scrollview`.
 
 ## Signs
 
-There is builtin support for various types of signs (referred to as "sign
+There is built-in support for various types of signs (referred to as "sign
 groups"), listed below. The functionality is similar to the sign column, but
 with scrollbar positioning.
 
