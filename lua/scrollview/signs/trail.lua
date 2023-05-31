@@ -28,9 +28,7 @@ function M.init(enable)
         local winvars = vim.w[winid]
         -- Don't update when in insert mode. This way, pressing 'o' to start a
         -- new line won't trigger a new sign when there is indentation.
-        local mode = api.nvim_win_call(winid, function()
-          return fn.mode()
-        end)
+        local mode = api.nvim_win_call(winid, fn.mode)
         if mode ~= 'i' then
           local lines = {}
           local bufnr = api.nvim_win_get_buf(winid)
