@@ -17,7 +17,7 @@ scrollview-configuration`).
 * Handling for folds
 * Scrollbars can be dragged with the mouse
 * Partially transparent scrollbars so that text is not covered
-* Signs (diagnostics and search enabled by default)
+* Signs (`diagnostics` and `search` enabled by default)
 
 ## Requirements
 
@@ -72,6 +72,32 @@ A package manager can be used to install `nvim-scrollview`.
 * The scrollbars can be dragged and signs can be clicked. This requires a
   corresponding mapping, which is automatically configured when
   `scrollview_auto_mouse` is set (see `:help scrollview-mouse-customization`).
+
+## Signs
+
+There is builtin support for various types of signs (referred to as "sign
+groups"), listed below.
+
+* `conflicts`: git merge conflicts
+* `cursor`: cursor position
+* `diagnostics`: errors, warnings, info, and hints
+* `folds`: closed folds
+* `loclist`: items on the location list
+* `marks`
+* `quickfix`: items on the quickfix list
+* `search`
+* `spell`: spell check items when the `spell` option is enabled
+* `textwidth`: line lengths exceeding the value of the textwidth option, when
+  non-zero
+* `trail`: trailing whitespace, when the `list` option is enabled and the
+  `listchars` option includes "trail"
+
+`search` and `diagnostics` groups are enabled by default.
+
+The plugin was written so that it's possible to extend the sign functionality
+in a Neovim configuration file or with a plugin. See the documentation for
+details. An [example][gitsigns] was created to show how support for
+[gitsigns.nvim][gitsigns.nvim] could be implemented.
 
 ## Configuration
 
@@ -135,6 +161,8 @@ See [LICENSE](LICENSE).
 [badge_link]: https://github.com/dstein64/nvim-scrollview/actions/workflows/build.yml
 [badge_thumbnail]: https://github.com/dstein64/nvim-scrollview/actions/workflows/build.yml/badge.svg
 [dein]: https://github.com/Shougo/dein.vim
+[gitsigns.nvim]: https://github.com/lewis6991/gitsigns.nvim
+[gitsigns_example]: https://gist.github.com/dstein64/b5d9431ebeacae1fb963efc3f2c94cf4
 [neobundle]: https://github.com/Shougo/neobundle.vim
 [packer]: https://github.com/wbthomason/packer.nvim
 [pathogen]: https://github.com/tpope/vim-pathogen
