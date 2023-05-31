@@ -87,7 +87,7 @@ let g:scrollview_winblend = 75
 " Position the scrollbar at the 80th character of the buffer
 let g:scrollview_base = 'buffer'
 let g:scrollview_column = 80
-" Enable all sign groups (defaults to ['cursor', 'search'])
+" Enable all sign groups (defaults to ['diagnostics', 'search'])
 let g:scrollview_signs_on_startup = ['all']
 ```
 
