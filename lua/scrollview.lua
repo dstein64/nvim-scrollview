@@ -2124,9 +2124,6 @@ end
 local setup = function(opts)
   opts = opts or {}
   for key, val in pairs(opts) do
-    if type(val) == 'boolean' then
-      val = val and 1 or 0
-    end
     api.nvim_set_var('scrollview_' .. key, val)
   end
 end

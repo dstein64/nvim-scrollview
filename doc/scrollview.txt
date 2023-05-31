@@ -77,14 +77,14 @@ have the highest precedence, and global variables have the lowest).
 
 Configuration Variables ~
                                            *scrollview_auto_mouse*
-scrollview_auto_mouse  |Boolean| |Number| specifying whether a mapping is
-                       automatically created for mouse support (without
-                       clobbering). Defaults to `1`. Considered only at global
-                       scope, when the plugin is loaded.
+scrollview_auto_mouse  |Boolean| specifying whether a mapping is automatically
+                       created for mouse support (without clobbering).
+                       Defaults to `1`. Considered only at global scope, when
+                       the plugin is loaded.
 
 scrollview_auto_workarounds                *scrollview_auto_workarounds*
-                       |Boolean| |Number| specifying whether select workarounds
-                       are automatically applied for known |scrollview-issues|
+                       |Boolean| specifying whether select workarounds are
+                       automatically applied for known |scrollview-issues|
                        (without clobbering existing customizations). Defaults
                        to `1`. Considered only at global scope, when the plugin
                        is loaded.
@@ -111,8 +111,8 @@ scrollview_column      |Number| specifying the scrollbar column (relative to
                        greater than or equal to `1`.
 
 scrollview_current_only                    *scrollview_current_only*
-                       |Boolean| |Number| specifying whether scrollbars should
-                       only be displayed in the current window. Defaults to `0`.
+                       |Boolean| specifying whether scrollbars should only be
+                       displayed in the current window. Defaults to `0`.
                        Considered only at tab and global scopes.
 
 scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
@@ -121,9 +121,9 @@ scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
                        `[]`.
 
 scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
-                       |Boolean| |Number| specifying whether each scrollbar
-                       becomes hidden (not shown) when it would otherwise
-                       intersect with a floating window. Defaults to `0`.
+                       |Boolean| specifying whether each scrollbar becomes
+                       hidden (not shown) when it would otherwise intersect
+                       with a floating window. Defaults to `0`.
 
                                            *scrollview_line_limit*
 scrollview_line_limit  |Number| specifying the buffer size threshold (in
@@ -136,15 +136,14 @@ scrollview_mode        |String| specifying what the scrollbar position and size
                        available modes. Defaults to `'virtual'`.
 
                                            *scrollview_on_startup*
-scrollview_on_startup  |Boolean| |Number| specifying whether scrollbars are
-                       enabled on startup. Defaults to `1`. Considered only at
-                       global scope, when the plugin is loaded.
+scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
+                       startup. Defaults to `1`. Considered only at global
+                       scope, when the plugin is loaded.
 
 scrollview_out_of_bounds_adjust            *scrollview_out_of_bounds_adjust*
-                       |Boolean| |Number| specifying whether scrollbars and
-                       signs beyond the window boundary (out-of-bounds) are
-                       adjusted to be within the window (as opposed to not
-                       showing).
+                       |Boolean| specifying whether scrollbars and signs beyond
+                       the window boundary (out-of-bounds) are adjusted to be
+                       within the window (as opposed to not showing).
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
@@ -161,7 +160,7 @@ The variables can be customized in your |init.vim|, as shown in the following
 example.
  >
     let g:scrollview_excluded_filetypes = ['nerdtree']
-    let g:scrollview_current_only = 1
+    let g:scrollview_current_only = v:true
     let g:scrollview_winblend = 75
     " Position the scrollbar at the 80th character of the buffer
     let g:scrollview_base = 'buffer'
