@@ -96,7 +96,7 @@ groups"), listed below.
 
 The plugin was written so that it's possible to extend the sign functionality
 in a Neovim configuration file or with a plugin. See the documentation for
-details. An [example][gitsigns] was created to show how support for
+details. An [example][gitsigns_example] was created to show how support for
 [gitsigns.nvim][gitsigns.nvim] could be implemented.
 
 ## Configuration
