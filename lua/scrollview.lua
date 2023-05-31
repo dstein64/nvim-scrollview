@@ -300,8 +300,15 @@ local get_variable = function(name, winnr, precedence, default)
     if c == 'w' then
       if vim.w[winid][name] ~= nil then return vim.w[winid][name] end
     elseif c == 't' then
-      local tabnr = fn.getwininfo(winid)[1].tabnr
-      if vim.t[tabnr][name] ~= nil then return vim.t[tabnr][name] end
+      -- The tab number can differ from the tab id (similar to winnr and
+      -- winid). For example, if you open Neovim, and create a new tab, it will
+      -- have number 2 and ID 2. If you then create another, it will have
+      -- number 3 and ID 3. But if you delete tab 2, there will then be a tab
+      -- with number 2 and ID 3.
+      local tabid = api.nvim_win_call(winid, function()
+        return api.nvim_get_current_tabpage()
+      end)
+      if vim.t[tabid][name] ~= nil then return vim.t[tabid][name] end
     elseif c == 'b' then
       local bufnr = fn.winbufnr(winnr)
       if vim.b[bufnr][name] ~= nil then return vim.b[bufnr][name] end
