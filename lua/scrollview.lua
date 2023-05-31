@@ -1537,6 +1537,7 @@ end
 -- removing existing scrollbars is asynchronous (defaults to true). Global
 -- state is initialized and restored.
 local refresh_bars = function(async_removal)
+  vim.g.scrollview_refreshing = 1
   if async_removal == nil then async_removal = true end
   local state = init()
   -- Use a pcall block, so that unanticipated errors don't interfere. The
@@ -1653,6 +1654,7 @@ local refresh_bars = function(async_removal)
   stop_memoize()
   reset_memoize()
   restore(state)
+  vim.g.scrollview_refreshing = 0
 end
 
 -- This function refreshes the bars asynchronously. This works better than

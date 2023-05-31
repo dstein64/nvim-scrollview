@@ -204,6 +204,17 @@ highlight default link ScrollViewSpell Statement
 highlight default link ScrollViewTextWidth Question
 
 " *************************************************
+" * Global State
+" *************************************************
+
+" External global state is specified here.
+" Internal global state is represented with local variables in
+" autoload/scrollview.vim and lua/scrollview.lua.
+
+" A flag that gets set to 1 while scrollbars are being refreshed. #88
+let g:scrollview_refreshing = 0
+
+" *************************************************
 " * Versioning
 " *************************************************
 
