@@ -63,12 +63,16 @@ function M.init(enable)
                     table.insert(lines, line)
                   end
                 end
+                -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
                 winvars.scrollview_trail_changedtick_cached = changedtick
+                -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
                 winvars.scrollview_trail_bufnr_cached = bufnr
+                -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
                 winvars.scrollview_trail_cached = lines
               end
             end
           end
+          -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
           winvars[name] = lines
         end
       end
