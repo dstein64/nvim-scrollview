@@ -17,7 +17,7 @@ scrollview-configuration`).
 * Handling for folds
 * Scrollbars can be dragged with the mouse
 * Partially transparent scrollbars so that text is not covered
-* Signs
+* Signs (diagnostics and search enabled by default)
 
 ## Requirements
 
