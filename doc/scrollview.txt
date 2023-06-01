@@ -8,10 +8,13 @@ Web: https://github.com/dstein64/nvim-scrollview
 2. Installation                            |scrollview-installation|
 3. Usage                                   |scrollview-usage|
 4. Configuration                           |scrollview-configuration|
-5. Issues                                  |scrollview-issues|
+5. Sign Extensibility                      |scrollview-sign-extensibility|
+6. Issues                                  |scrollview-issues|
 
 |nvim-scrollview| is a plugin that displays interactive vertical scrollbars and
 signs. The plugin is customizable (see |scrollview-configuration|).
+
+                                    Type |gO| to see the table of contents.
 
 ============================================================================
 1. Requirements                            *scrollview-requirements*
@@ -19,6 +22,7 @@ signs. The plugin is customizable (see |scrollview-configuration|).
 * `nvim>=0.5`
 * Scrollbar mouse dragging requires mouse support (see |'mouse'|) and
   `nvim>=0.6`.
+* Signs require `nvim>=0.7`
 
 ============================================================================
 2. Installation                            *scrollview-installation*
@@ -42,9 +46,9 @@ Use |packages| or one of the various package managers.
 * *:ScrollViewRefresh* refreshes the scrollbars. This is relevant when the
   scrollbars are out-of-sync, which can occur e.g., as a result of some
   window arrangement actions (see |scrollview-issues|).
-* *:ScrollViewNext* *:ScrollViewPrev* *:ScrollViewFirst* and *:ScrollViewLast*
-  move the cursor to lines with signs. Arguments can specify which lines are
-  considered.
+* *:ScrollViewNext* *:ScrollViewPrev* *:ScrollViewFirst* *:ScrollViewLast*
+  These move the cursor to lines with signs. Arguments can specify which lines
+  are considered.
 
                                            *scrollview-mappings*
 The following |<Plug>| mappings are defined for convenience.
@@ -66,6 +70,39 @@ mouse functionality (see |scrollview-mouse-customization|).
 * `<Plug>(ScrollViewRightMouse)`
 * `<Plug>(ScrollViewX1Mouse)`
 * `<Plug>(ScrollViewX2Mouse)`
+
+                                           *scrollview-signs*
+|nvim-scrollview| signs are similar to Neovim's built-in |signs|, but with
+positioning logic matching that of the scrollbar. The plugin includes a set
+of built-in sign groups (e.g., `search` signs show where in the document there
+are search matches). For configuring signs generally, and the built-in groups
+specifically, see |scrollview-sign-configuration|. For extending sign
+functionality (e.g., in a Neovim configuration file or with a plugin), see
+|scrollview-sign-extensibility|.
+
+Built-in Sign Groups ~
+                                           *scrollview-signs-built-in*
+Group        Information
+-----        -----------
+`conflicts`    git merge conflicts
+`cursor`       cursor position
+`diagnostics`  errors, warnings, info, and hints via |vim.diagnostic|
+`folds`        closed folds
+`loclist`      items on the location list
+`marks`
+`quickfix`     items on the quickfix list
+`search`
+`spell`        spell check items when the |'spell'| option is enabled
+`textwidth`    line lengths exceeding the value of the |'textwidth'| option, when
+             non-zero
+`trail`        trailing whitespace, when the |'list'| option is enabled and the
+             |'listchars'| option includes "trail"
+
+                                           *scrollview-restricted*
+Under certain scenarios, the plugin enters a restricted mode to prevent a
+slowdown. Under restricted operation, the |scrollview-mode| is set to `simple`
+and signs are not displayed. |scrollview_byte_limit| and |scrollview_line_limit|
+can be set to control when restricted mode is entered.
 
 ============================================================================
 4. Configuration                           *scrollview-configuration*
@@ -153,6 +190,11 @@ scrollview_winblend    |Number| specifying the level of transparency for
 scrollview_zindex                          *scrollview_zindex*
                        |Number| specifying the scrollbar z-index. Defaults to
                        `40`.
+
+                                           *scrollview-sign-configuration*
+Sign Configuration Variables ~
+
+TODO
 
 Configuration Example ~
                                            *scrollview-configuration-example*
@@ -256,7 +298,12 @@ Mappings can be used to manually create mappings for mouse support.
     imap <x2mouse> <plug>(ScrollViewX2Mouse)
 
 ============================================================================
-5. Issues                                  *scrollview-issues*
+5. Sign Extensibility                      *scrollview-sign-extensibility*
+
+TODO
+
+============================================================================
+6. Issues                                  *scrollview-issues*
 
 Synchronization Issues ~
                                            *scrollview-synchronization-issues*
