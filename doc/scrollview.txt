@@ -8,7 +8,7 @@ Web: https://github.com/dstein64/nvim-scrollview
 2. Installation                            |scrollview-installation|
 3. Usage                                   |scrollview-usage|
 4. Configuration                           |scrollview-configuration|
-5. Sign Extensibility                      |scrollview-sign-extensibility|
+5. Sign Extensibility                      |scrollview-signs-extensibility|
 6. Issues                                  |scrollview-issues|
 
 |nvim-scrollview| is a plugin that displays interactive vertical scrollbars and
@@ -76,9 +76,9 @@ mouse functionality (see |scrollview-mouse-customization|).
 positioning logic matching that of the scrollbar. The plugin includes a set
 of built-in sign groups (e.g., `search` signs show where in the document there
 are search matches). For configuring signs generally, and the built-in groups
-specifically, see |scrollview-sign-configuration|. For extending sign
+specifically, see |scrollview-signs-configuration|. For extending sign
 functionality (e.g., in a Neovim configuration file or with a plugin), see
-|scrollview-sign-extensibility|.
+|scrollview-signs-extensibility|.
 
 Built-in Sign Groups ~
                                            *scrollview-signs-built-in*
@@ -191,7 +191,7 @@ scrollview_zindex                          *scrollview_zindex*
                        |Number| specifying the scrollbar z-index. Defaults to
                        `40`.
 
-                                           *scrollview-sign-configuration*
+                                           *scrollview-signs-configuration*
 Sign Configuration Variables ~
 
 TODO
@@ -251,9 +251,25 @@ Color Customization ~
 The following highlight group can be configured to change |nvim-scrollview|'s
 colors.
 
-Name         Default   Description
-----         -------   -----------
-`ScrollView`   `Visual`    Color for the scrollbar
+Name                        Default      Target
+----                        -------      -----------
+`ScrollView`                  `Visual`       scrollbar
+`ScrollViewConflictsTop`      `DiffAdd`      top conflict signs
+`ScrollViewConflictsMiddle`   `DiffAdd`      middle conflict signs
+`ScrollViewConflictsBottom`   `DiffAdd`      bottom conflict signs
+`ScrollViewCursor`            `Identifier`   cursor signs
+`ScrollViewDiagnosticsError`  `WarningMsg`   diagnostic error signs
+`ScrollViewDiagnosticsHint`   `Question`     diagnostic hint signs
+`ScrollViewDiagnosticsInfo`   `Identifier`   diagnostic info signs
+`ScrollViewDiagnosticsWarn`   `LineNr`       diagnostic warn signs
+`ScrollViewFolds`             `Directory`    fold signs
+`ScrollViewLocList`           `LineNr`       loclist signs
+`ScrollViewMarks`             `ColorColumn`  mark signs
+`ScrollViewQuickFix`          `Constant`     quickfix signs
+`ScrollViewRestricted`        `SpellLocal`   |scrollview-restricted| scrollbar
+`ScrollViewSearch`            `NonText`      search signs
+`ScrollViewSpell`             `Statement`    spell signs
+`ScrollViewTextWidth`         `Question`     textwidth signs
 
 The highlight groups can be customized in your |init.vim|, as shown in the
 following example.
@@ -298,7 +314,7 @@ Mappings can be used to manually create mappings for mouse support.
     imap <x2mouse> <plug>(ScrollViewX2Mouse)
 
 ============================================================================
-5. Sign Extensibility                      *scrollview-sign-extensibility*
+5. Sign Extensibility                      *scrollview-signs-extensibility*
 
 TODO
 

@@ -20,10 +20,10 @@ scrollview-mouse-customization	scrollview.txt	/*scrollview-mouse-customization*
 scrollview-other-issues	scrollview.txt	/*scrollview-other-issues*
 scrollview-requirements	scrollview.txt	/*scrollview-requirements*
 scrollview-restricted	scrollview.txt	/*scrollview-restricted*
-scrollview-sign-configuration	scrollview.txt	/*scrollview-sign-configuration*
-scrollview-sign-extensibility	scrollview.txt	/*scrollview-sign-extensibility*
 scrollview-signs	scrollview.txt	/*scrollview-signs*
 scrollview-signs-built-in	scrollview.txt	/*scrollview-signs-built-in*
+scrollview-signs-configuration	scrollview.txt	/*scrollview-signs-configuration*
+scrollview-signs-extensibility	scrollview.txt	/*scrollview-signs-extensibility*
 scrollview-synchronization-issues	scrollview.txt	/*scrollview-synchronization-issues*
 scrollview-usage	scrollview.txt	/*scrollview-usage*
 scrollview.txt	scrollview.txt	/*scrollview.txt*
