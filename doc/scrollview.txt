@@ -536,8 +536,8 @@ An example was created to show how support for `gitsigns.nvim` could be
 implemented.
 https://gist.github.com/dstein64/b5d9431ebeacae1fb963efc3f2c94cf4
 
-Plugin authors can tag their repos with `'scrollview-signs'` for
-discoverability at:
+Plugin authors can tag their repos with `'scrollview-signs'` for discoverability
+at:
 https://github.com/topics/scrollview-signs
 
 Functions ~
