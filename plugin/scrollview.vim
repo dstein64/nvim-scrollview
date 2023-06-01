@@ -66,9 +66,6 @@ let s:default_signs = ['diagnostics', 'search']
 " Sign column is relative to the scrollbar. It specifies the initial column
 " for showing signs.
 let g:scrollview_signs_column = get(g:, 'scrollview_signs_column', -1)
-" Whether signs in folds should be shown or hidden.
-let g:scrollview_signs_show_in_folds =
-      \ get(g:, 'scrollview_signs_show_in_folds', v:false)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =
@@ -80,21 +77,24 @@ let g:scrollview_signs_on_startup =
       \ get(g:, 'scrollview_signs_on_startup', s:default_signs)
 " Specifies the sign overflow direction ('left' or 'right').
 let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
+" Whether signs in folds should be shown or hidden.
+let g:scrollview_signs_show_in_folds =
+      \ get(g:, 'scrollview_signs_show_in_folds', v:false)
 let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
 
 " *** Conflict signs ***
-let g:scrollview_conflicts_top_priority =
-      \ get(g:, 'scrollview_conflicts_top_priority', 70)
-let g:scrollview_conflicts_top_symbol =
-      \ get(g:, 'scrollview_conflicts_top_symbol', '<')
-let g:scrollview_conflicts_middle_priority =
-      \ get(g:, 'scrollview_conflicts_middle_priority', 70)
-let g:scrollview_conflicts_middle_symbol =
-      \ get(g:, 'scrollview_conflicts_middle_symbol', '=')
 let g:scrollview_conflicts_bottom_priority =
       \ get(g:, 'scrollview_conflicts_bottom_priority', 70)
 let g:scrollview_conflicts_bottom_symbol =
       \ get(g:, 'scrollview_conflicts_bottom_symbol', '>')
+let g:scrollview_conflicts_middle_priority =
+      \ get(g:, 'scrollview_conflicts_middle_priority', 70)
+let g:scrollview_conflicts_middle_symbol =
+      \ get(g:, 'scrollview_conflicts_middle_symbol', '=')
+let g:scrollview_conflicts_top_priority =
+      \ get(g:, 'scrollview_conflicts_top_priority', 70)
+let g:scrollview_conflicts_top_symbol =
+      \ get(g:, 'scrollview_conflicts_top_symbol', '<')
 
 " *** Cursor signs ***
 let g:scrollview_cursor_priority = get(g:, 'scrollview_cursor_priority', 100)
