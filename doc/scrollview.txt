@@ -546,6 +546,22 @@ Lua code is necessary for adding sign groups to `nvim-scrollview`.
  >
   local scrollview = require('scrollview')
 
+get_sign_eligible_windows()                *scrollview.get_sign_eligible_windows*
+    Returns |window-ID|s that are eligible for signs to be shown.
+
+    Return: ~
+        (list) a list-like table with |window-ID|s.
+
+is_sign_group_active({group})              *scrollview.is_sign_group_active*
+    Checks whether a sign group is active. A group is considered active if
+    `nvim-scrollview` is enabled and the sign group is enabled.
+
+    Parameters: ~
+      * {group}   (string) Group name.
+
+    Return: ~
+        (boolean) `true` if active, else `false`.
+
 register_sign_spec({spec})                 *scrollview.register_sign_spec*
     Register a sign specification.
 
@@ -572,7 +588,14 @@ register_sign_spec({spec})                 *scrollview.register_sign_spec*
                   The variable should be saved to the buffer if the
                   registration specified type `'b'`, or to the window if the
                   registration specified type `'w'`.
-TODO: more
+
+set_sign_group_state({group}, {enable})    *scrollview.set_sign_group_state*
+    Enable, disable, or toggle a sign group.
+
+    Parameters: ~
+      * {group}   (string) Group name.
+      * {enable}  (boolean|nil) `true` to enable, `false` to disable, `nil` to
+                  toggle.
 
 Example ~
                                            *scrollview-signs-example*

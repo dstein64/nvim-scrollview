@@ -31,7 +31,10 @@ scrollview-signs-extensibility	scrollview.txt	/*scrollview-signs-extensibility*
 scrollview-signs-functions	scrollview.txt	/*scrollview-signs-functions*
 scrollview-synchronization-issues	scrollview.txt	/*scrollview-synchronization-issues*
 scrollview-usage	scrollview.txt	/*scrollview-usage*
+scrollview.get_sign_eligible_windows	scrollview.txt	/*scrollview.get_sign_eligible_windows*
+scrollview.is_sign_group_active	scrollview.txt	/*scrollview.is_sign_group_active*
 scrollview.register_sign_spec	scrollview.txt	/*scrollview.register_sign_spec*
+scrollview.set_sign_group_state	scrollview.txt	/*scrollview.set_sign_group_state*
 scrollview.txt	scrollview.txt	/*scrollview.txt*
 scrollview_auto_mouse	scrollview.txt	/*scrollview_auto_mouse*
 scrollview_auto_workarounds	scrollview.txt	/*scrollview_auto_workarounds*
