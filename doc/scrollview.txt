@@ -232,7 +232,7 @@ scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority
 
 scrollview_conflicts_bottom_symbol         *scrollview_conflicts_bottom_symbol*
                        |String| specifying the symbol for conflict bottom signs.
-                       Defaults to `>`. A |List| of |String|s can also be
+                       Defaults to `'>'`. A |List| of |String|s can also be
                        used; the symbol is selected using the index equal to
                        the number of lines corresponding to the sign, or the
                        last element when the retrieval would be out-of-bounds.
@@ -243,10 +243,10 @@ scrollview_conflicts_middle_priority       *scrollview_conflicts_middle_priority
 
 scrollview_conflicts_middle_symbol         *scrollview_conflicts_middle_symbol*
                        |String| specifying the symbol for conflict middle signs.
-                       Defaults to `=`. A |List| of |String|s can also be used; the
-                       symbol is selected using the index equal to the number
-                       of lines corresponding to the sign, or the last element
-                       when the retrieval would be out-of-bounds.
+                       Defaults to `'='`. A |List| of |String|s can also be used;
+                       the symbol is selected using the index equal to the
+                       number of lines corresponding to the sign, or the last
+                       element when the retrieval would be out-of-bounds.
 
 scrollview_conflicts_top_priority          *scrollview_conflicts_top_priority*
                        |Number| specifying the priority for conflict top signs.
@@ -254,10 +254,10 @@ scrollview_conflicts_top_priority          *scrollview_conflicts_top_priority*
 
 scrollview_conflicts_top_symbol            *scrollview_conflicts_top_symbol*
                        |String| specifying the symbol for conflict top signs.
-                       Defaults to `<`. A |List| of |String|s can also be used; the
-                       symbol is selected using the index equal to the number
-                       of lines corresponding to the sign, or the last element
-                       when the retrieval would be out-of-bounds.
+                       Defaults to `'<'`. A |List| of |String|s can also be used;
+                       the symbol is selected using the index equal to the
+                       number of lines corresponding to the sign, or the last
+                       element when the retrieval would be out-of-bounds.
 
 scrollview_cursor_priority                 *scrollview_cursor_priority*
                        |Number| specifying the priority for cursor signs.
@@ -271,7 +271,49 @@ scrollview_cursor_symbol                   *scrollview_cursor_symbol*
                        the sign, or the last element when the retrieval would
                        be out-of-bounds.
 
-TODO: diagnostics
+scrollview_diagnostics_error_priority      *scrollview_diagnostics_error_priority*
+                       |Number| specifying the priority for diagnostic error
+                       signs. Defaults to `60`.
+
+scrollview_diagnostics_error_symbol        *scrollview_diagnostics_error_symbol*
+                       |String| specifying the symbol for diagnostic error
+                       signs. Defaults to `'E'`. A |List| of |String|s can also be
+                       used; the symbol is selected using the index equal to
+                       the number of lines corresponding to the sign, or the
+                       last element when the retrieval would be out-of-bounds.
+
+scrollview_diagnostics_hint_priority       *scrollview_diagnostics_hint_priority*
+                       |Number| specifying the priority for diagnostic hint
+                       signs. Defaults to `30`.
+
+scrollview_diagnostics_hint_symbol         *scrollview_diagnostics_hint_symbol*
+                       |String| specifying the symbol for diagnostic hint signs.
+                       Defaults to `'H'`. A |List| of |String|s can also be used;
+                       the symbol is selected using the index equal to the
+                       number of lines corresponding to the sign, or the last
+                       element when the retrieval would be out-of-bounds.
+
+scrollview_diagnostics_info_priority       *scrollview_diagnostics_info_priority*
+                       |Number| specifying the priority for diagnostic info
+                       signs. Defaults to `40`.
+
+scrollview_diagnostics_info_symbol         *scrollview_diagnostics_info_symbol*
+                       |String| specifying the symbol for diagnostic info signs.
+                       Defaults to `'I'`. A |List| of |String|s can also be used;
+                       the symbol is selected using the index equal to the
+                       number of lines corresponding to the sign, or the last
+                       element when the retrieval would be out-of-bounds.
+
+scrollview_diagnostics_warn_priority       *scrollview_diagnostics_warn_priority*
+                       |Number| specifying the priority for diagnostic warn
+                       signs. Defaults to `50`.
+
+scrollview_diagnostics_warn_symbol         *scrollview_diagnostics_warn_symbol*
+                       |String| specifying the symbol for diagnostic warn signs.
+                       Defaults to `'W'`. A |List| of |String|s can also be used;
+                       the symbol is selected using the index equal to the
+                       number of lines corresponding to the sign, or the last
+                       element when the retrieval would be out-of-bounds.
 
 scrollview_folds_priority                  *scrollview_folds_priority*
                        |Number| specifying the priority for fold signs. Defaults
@@ -298,12 +340,13 @@ scrollview_loclist_symbol                  *scrollview_loclist_symbol*
                        out-of-bounds.
 
 scrollview_marks_characters                *scrollview_marks_characters*
-                       |List| specifying the priority for mark signs. Defaults
-                       to `50`.
+                       |List| of |String|s specifying characters for which mark
+                       signs will be shown. Defaults to characters `a-z` and
+                       `A-Z`.
 
 scrollview_marks_priority                  *scrollview_marks_priority*
-                       |List| of |String|s specifying characters for which mark
-                       signs will be shown.
+                       |List| specifying the priority for mark signs. Defaults
+                       to `50`.
 
 scrollview_quickfix_priority               *scrollview_quickfix_priority*
                        |Number| specifying the priority for quickfix signs.
@@ -334,10 +377,10 @@ scrollview_spell_priority                  *scrollview_spell_priority*
 
 scrollview_spell_symbol                    *scrollview_spell_symbol*
                        |String| specifying the symbol for spell signs. Defaults
-                       to `~`. A |List| of |String|s can also be used; the symbol is
-                       selected using the index equal to the number of lines
-                       corresponding to the sign, or the last element when the
-                       retrieval would be out-of-bounds.
+                       to `'~'`. A |List| of |String|s can also be used; the symbol
+                       is selected using the index equal to the number of
+                       lines corresponding to the sign, or the last element
+                       when the retrieval would be out-of-bounds.
 
 scrollview_textwidth_priority              *scrollview_textwidth_priority*
                        |Number| specifying the priority for textwidth signs.

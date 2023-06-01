@@ -43,6 +43,14 @@ scrollview_conflicts_top_symbol	scrollview.txt	/*scrollview_conflicts_top_symbol
 scrollview_current_only	scrollview.txt	/*scrollview_current_only*
 scrollview_cursor_priority	scrollview.txt	/*scrollview_cursor_priority*
 scrollview_cursor_symbol	scrollview.txt	/*scrollview_cursor_symbol*
+scrollview_diagnostics_error_priority	scrollview.txt	/*scrollview_diagnostics_error_priority*
+scrollview_diagnostics_error_symbol	scrollview.txt	/*scrollview_diagnostics_error_symbol*
+scrollview_diagnostics_hint_priority	scrollview.txt	/*scrollview_diagnostics_hint_priority*
+scrollview_diagnostics_hint_symbol	scrollview.txt	/*scrollview_diagnostics_hint_symbol*
+scrollview_diagnostics_info_priority	scrollview.txt	/*scrollview_diagnostics_info_priority*
+scrollview_diagnostics_info_symbol	scrollview.txt	/*scrollview_diagnostics_info_symbol*
+scrollview_diagnostics_warn_priority	scrollview.txt	/*scrollview_diagnostics_warn_priority*
+scrollview_diagnostics_warn_symbol	scrollview.txt	/*scrollview_diagnostics_warn_symbol*
 scrollview_excluded_filetypes	scrollview.txt	/*scrollview_excluded_filetypes*
 scrollview_folds_priority	scrollview.txt	/*scrollview_folds_priority*
 scrollview_folds_symbol	scrollview.txt	/*scrollview_folds_symbol*
