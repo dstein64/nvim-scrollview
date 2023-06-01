@@ -556,7 +556,7 @@ register_sign_spec({spec})                 *scrollview.register_sign_spec*
                   `false`.
                 - group (string): Defaults to `'other'`.
                 - highlight (string): Defaults to `'Pmenu'`.
-                - priority (integer): Defaults 50.
+                - priority (integer): Defaults to `50`.
                 - show_in_folds (boolean|nil): Include signs for lines in
                   closed folds. When non-`nil`, overrides the value of
                   |scrollview_signs_show_in_folds|. Defaults to `nil`.
