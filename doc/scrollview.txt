@@ -461,7 +461,7 @@ Mode       Description
 
 Color Customization ~
                                            *scrollview-color-customization*
-The following highlight group can be configured to change |nvim-scrollview|'s
+The following highlight groups can be configured to change |nvim-scrollview|'s
 colors.
 
 Name                        Default      Target
