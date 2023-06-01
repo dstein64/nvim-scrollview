@@ -542,7 +542,7 @@ https://github.com/topics/scrollview-signs
 
 Functions ~
                                            *scrollview-signs-functions*
-Lua code is necessary for adding sign groups to `nvim-scrollview`.
+Lua code is necessary for adding new sign functionality to `nvim-scrollview`.
  >
   local scrollview = require('scrollview')
 
