@@ -6,7 +6,7 @@
 scrollbars and signs. The plugin is customizable (see `:help
 scrollview-configuration`).
 
-<details open><summary>Demo</summary><br>
+<details open><summary>Example Usage</summary><br>
 
 <img src="https://github.com/dstein64/media/blob/main/nvim-scrollview/screencast.gif?raw=true" height="280" />
 <img src="https://github.com/dstein64/media/blob/main/nvim-scrollview/signs.svg?raw=true" height="280" />
