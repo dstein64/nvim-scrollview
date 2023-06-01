@@ -116,15 +116,15 @@ Configuration Variables ~
                                            *scrollview_auto_mouse*
 scrollview_auto_mouse  |Boolean| specifying whether a mapping is automatically
                        created for mouse support (without clobbering).
-                       Defaults to `1`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to |v:true|. Considered only at global scope,
+                       when the plugin is loaded.
 
 scrollview_auto_workarounds                *scrollview_auto_workarounds*
                        |Boolean| specifying whether select workarounds are
                        automatically applied for known |scrollview-issues|
                        (without clobbering existing customizations). Defaults
-                       to `1`. Considered only at global scope, when the plugin
-                       is loaded.
+                       to |v:true|. Considered only at global scope, when the
+                       plugin is loaded.
 
                                            *scrollview_base*
 scrollview_base        |String| specifying where the scrollbar is anchored.
@@ -149,7 +149,7 @@ scrollview_column      |Number| specifying the scrollbar column (relative to
 
 scrollview_current_only                    *scrollview_current_only*
                        |Boolean| specifying whether scrollbars should only be
-                       displayed in the current window. Defaults to `0`.
+                       displayed in the current window. Defaults to |v:false|.
                        Considered only at tab and global scopes.
 
 scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
@@ -160,7 +160,7 @@ scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
 scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
                        |Boolean| specifying whether each scrollbar becomes
                        hidden (not shown) when it would otherwise intersect
-                       with a floating window. Defaults to `0`.
+                       with a floating window. Defaults to |v:false|.
 
                                            *scrollview_line_limit*
 scrollview_line_limit  |Number| specifying the buffer size threshold (in
@@ -174,13 +174,14 @@ scrollview_mode        |String| specifying what the scrollbar position and size
 
                                            *scrollview_on_startup*
 scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
-                       startup. Defaults to `1`. Considered only at global
+                       startup. Defaults to |v:true|. Considered only at global
                        scope, when the plugin is loaded.
 
 scrollview_out_of_bounds_adjust            *scrollview_out_of_bounds_adjust*
                        |Boolean| specifying whether scrollbars and signs beyond
                        the window boundary (out-of-bounds) are adjusted to be
-                       within the window (as opposed to not showing).
+                       within the window (as opposed to not showing). Defaults
+                       to |v:true|.
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
@@ -193,6 +194,34 @@ scrollview_zindex                          *scrollview_zindex*
 
                                            *scrollview-signs-configuration*
 Sign Configuration Variables ~
+
+scrollview_signs_column                    *scrollview_signs_column*
+                       |Number| specifying the root column for signs, relative
+                       to the scrollbar. Defaults to `-1`.
+
+scrollview_signs_max_per_row               *scrollview_signs_max_per_row*
+                       |Number| specifying the maximum number of signs per row.
+                       Set to `-1` to have no limit. Defaults to `-1`.
+
+scrollview_signs_on_startup                *scrollview_signs_on_startup*
+                       |List| of |String|s specifying built-in sign groups to
+                       enable on startup. Considered only at global scope,
+                       when the plugin is loaded. Set to `[]` to disable all
+                       built-in sign groups on startup.
+                       `['search', 'diagnostics']` is the default.
+
+scrollview_signs_overflow                  *scrollview_signs_overflow*
+                       |String| specifying the sign overflow direction (when
+                       there are multiple signs on a screen row). Possible
+                       values are `'left'` or `'right'`. Defaults to `'left'`.
+
+scrollview_signs_show_in_folds             *scrollview_signs_show_in_folds*
+                       |Boolean| specifying whether signs on lines within hidden
+                       folds should be shown. Defaults to |v:false|.
+
+scrollview_signs_zindex                    *scrollview_signs_zindex*
+                       |Number| specifying the z-index for signs. Defaults to
+                       `45`.
 
 TODO
 
