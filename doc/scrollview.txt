@@ -71,6 +71,10 @@ mouse functionality (see |scrollview-mouse-customization|).
 * `<Plug>(ScrollViewX1Mouse)`
 * `<Plug>(ScrollViewX2Mouse)`
 
+                                           *scrollview-autocommands*
+The |User| *ScrollViewRefresh* |autocommand| fires prior to refreshing scrollbars
+and signs.
+
                                            *scrollview-signs*
 |nvim-scrollview| signs are similar to Neovim's built-in |signs|, but with
 positioning logic matching that of the scrollbar. The plugin includes a set
