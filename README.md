@@ -8,7 +8,8 @@ scrollview-configuration`).
 
 <details open><summary>Demo</summary><br>
 
-<img src="https://github.com/dstein64/media/blob/main/nvim-scrollview/screencast.gif?raw=true" width="643" />
+<img src="https://github.com/dstein64/media/blob/main/nvim-scrollview/signs.svg?raw=true" height="400" />
+<img src="https://github.com/dstein64/media/blob/main/nvim-scrollview/screencast.gif?raw=true" height="400" />
 
 </details>
 
