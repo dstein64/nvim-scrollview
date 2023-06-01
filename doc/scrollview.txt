@@ -223,6 +223,33 @@ scrollview_signs_zindex                    *scrollview_signs_zindex*
                        |Number| specifying the z-index for signs. Defaults to
                        `45`.
 
+                                           *scrollview-signs-built-in-config*
+Built-in Sign Group Configuration Variables ~
+
+scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority*
+                       |Number| specifying the priority for bottom conflict
+                       signs. Defaults to `70`.
+
+scrollview_conflicts_bottom_symbol         *scrollview_conflicts_bottom_symbol*
+                       |Number| specifying the symbol for bottom conflict signs.
+                       Defaults to `>`.
+
+scrollview_conflicts_middle_priority       *scrollview_conflicts_middle_priority*
+                       |Number| specifying the priority for middle conflict
+                       signs. Defaults to `70`.
+
+scrollview_conflicts_middle_symbol         *scrollview_conflicts_middle_symbol*
+                       |Number| specifying the symbol for middle conflict signs.
+                       Defaults to `=`.
+
+scrollview_conflicts_top_priority          *scrollview_conflicts_top_priority*
+                       |Number| specifying the priority for top conflict signs.
+                       Defaults to `70`.
+
+scrollview_conflicts_top_symbol            *scrollview_conflicts_top_symbol*
+                       |Number| specifying the symbol for top conflict signs.
+                       Defaults to `<`.
+
 TODO
 
 Configuration Example ~
