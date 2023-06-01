@@ -57,7 +57,7 @@ A package manager can be used to install `nvim-scrollview`.
 * `:ScrollViewEnable` enables the plugin. This is only necessary if
   nvim-scrollview has previously been disabled. When arguments are given,
   the specified sign groups are enabled.
-  `:ScrollViewToggle` toggles the plugin. When arguments are given, the
+* `:ScrollViewToggle` toggles the plugin. When arguments are given, the
   specified sign groups are toggled.
 * `:ScrollViewRefresh` refreshes the scrollbars. This is relevant when the
   scrollbars are out-of-sync, which can occur as a result of some window
