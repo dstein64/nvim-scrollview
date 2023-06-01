@@ -99,7 +99,8 @@ with the same positioning logic as the scrollbar.
 The plugin was written so that it's possible to extend the sign functionality
 in a Neovim configuration file or with a plugin. See the documentation for
 details. An [example][gitsigns_example] was created to show how support for
-[gitsigns.nvim][gitsigns.nvim] could be implemented.
+[gitsigns.nvim][gitsigns.nvim] could be implemented. Plugin authors can tag
+their repos with `scrollview-signs` for [discoverability][scrollview-signs].
 
 ## Configuration
 
@@ -168,6 +169,7 @@ See [LICENSE](LICENSE).
 [neobundle]: https://github.com/Shougo/neobundle.vim
 [packer]: https://github.com/wbthomason/packer.nvim
 [pathogen]: https://github.com/tpope/vim-pathogen
+[scrollview-signs]: https://github.com/topics/scrollview-signs
 [vim8pack]: http://vimhelp.appspot.com/repeat.txt.html#packages
 [vimplug]: https://github.com/junegunn/vim-plug
 [vundle]: https://github.com/gmarik/vundle
