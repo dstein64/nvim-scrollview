@@ -529,7 +529,54 @@ Mappings can be used to manually create mappings for mouse support.
 ============================================================================
 5. Sign Extensibility                      *scrollview-signs-extensibility*
 
-TODO
+The plugin was written so that it's possible to extend the sign functionality
+in a Neovim configuration file or with a plugin.
+
+An example was created to show how support for `gitsigns.nvim` could be
+implemented.
+https://gist.github.com/dstein64/b5d9431ebeacae1fb963efc3f2c94cf4
+
+Plugin authors can tag their repos with `'scrollview-signs'` for
+discoverability at:
+https://github.com/topics/scrollview-signs
+
+Functions ~
+                                           *scrollview-signs-functions*
+Lua code is necessary for adding sign groups to `nvim-scrollview`.
+ >
+  local scrollview = require('scrollview')
+
+register_sign_spec({spec})                 *scrollview.register_sign_spec*
+    Register a sign specification.
+
+    Parameters: ~
+      * {spec}  (table) Keyword arguments |kwargs|:
+                - current_only (boolean): Show only in an active window (the
+                  window with the cursor at the time of display). Defaults to
+                  `false`.
+                - group (string): Defaults to `'other'`.
+                - highlight (string): Defaults to `'Pmenu'`.
+                - priority (integer): Defaults 50.
+                - show_in_folds (boolean|nil): Include signs for lines in
+                  closed folds. When non-`nil`, overrides the value of
+                  |scrollview_signs_show_in_folds|. Defaults to `nil`.
+                - symbol (string): Defaults to `''`.
+                - type (string): `'b'` for buffer-local signs, `'w'` for
+                  window-local signs. Defaults to `'b'`.
+
+    Return: ~
+        (table) a table with the following key-value pairs.
+                - id (integer): A unique identifier.
+                - name (string): Variable name that should be used for saving
+                  a list-like table with line numbers corresponding to signs.
+                  The variable should be saved to the buffer if the
+                  registration specified type `'b'`, or to the window if the
+                  registration specified type `'w'`.
+TODO: more
+
+Example ~
+                                           *scrollview-signs-example*
+TODO: cursor signs
 
 ============================================================================
 6. Issues                                  *scrollview-issues*

@@ -26,9 +26,12 @@ scrollview-signs	scrollview.txt	/*scrollview-signs*
 scrollview-signs-built-in	scrollview.txt	/*scrollview-signs-built-in*
 scrollview-signs-built-in-config	scrollview.txt	/*scrollview-signs-built-in-config*
 scrollview-signs-configuration	scrollview.txt	/*scrollview-signs-configuration*
+scrollview-signs-example	scrollview.txt	/*scrollview-signs-example*
 scrollview-signs-extensibility	scrollview.txt	/*scrollview-signs-extensibility*
+scrollview-signs-functions	scrollview.txt	/*scrollview-signs-functions*
 scrollview-synchronization-issues	scrollview.txt	/*scrollview-synchronization-issues*
 scrollview-usage	scrollview.txt	/*scrollview-usage*
+scrollview.register_sign_spec	scrollview.txt	/*scrollview.register_sign_spec*
 scrollview.txt	scrollview.txt	/*scrollview.txt*
 scrollview_auto_mouse	scrollview.txt	/*scrollview_auto_mouse*
 scrollview_auto_workarounds	scrollview.txt	/*scrollview_auto_workarounds*
