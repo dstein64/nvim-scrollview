@@ -228,7 +228,7 @@ scrollview_signs_zindex                    *scrollview_signs_zindex*
                        `45`.
 
                                            *scrollview-signs-built-in-config*
-Built-in Sign Group Configuration Variables ~
+Configuration Variables for Built-in Sign Groups ~
 
 scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority*
                        |Number| specifying the priority for conflict bottom
