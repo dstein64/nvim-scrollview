@@ -59,9 +59,9 @@ A package manager can be used to install `nvim-scrollview`.
   the specified sign groups are enabled.
 * `:ScrollViewToggle` toggles the plugin. When arguments are given, the
   specified sign groups are toggled.
-* `:ScrollViewRefresh` refreshes the scrollbars. This is relevant when the
-  scrollbars are out-of-sync, which can occur as a result of some window
-  arrangement actions.
+* `:ScrollViewRefresh` refreshes the scrollbars and signs. This is relevant
+  when the scrollbars or signs are out-of-sync, which can occur as a result of
+  some window arrangement actions.
 * `:ScrollViewNext`, `:ScrollViewPrev`, `:ScrollViewFirst`, and
   `ScrollViewLast` move the cursor to lines with signs. Arguments can specify
   which sign groups are considered.
