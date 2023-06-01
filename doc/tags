@@ -6,7 +6,9 @@
 :ScrollViewPrev	scrollview.txt	/*:ScrollViewPrev*
 :ScrollViewRefresh	scrollview.txt	/*:ScrollViewRefresh*
 :ScrollViewToggle	scrollview.txt	/*:ScrollViewToggle*
+ScrollViewRefresh	scrollview.txt	/*ScrollViewRefresh*
 nvim-scrollview	scrollview.txt	/*nvim-scrollview*
+scrollview-autocommands	scrollview.txt	/*scrollview-autocommands*
 scrollview-color-customization	scrollview.txt	/*scrollview-color-customization*
 scrollview-commands	scrollview.txt	/*scrollview-commands*
 scrollview-configuration	scrollview.txt	/*scrollview-configuration*
