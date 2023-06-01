@@ -22,6 +22,7 @@ scrollview-requirements	scrollview.txt	/*scrollview-requirements*
 scrollview-restricted	scrollview.txt	/*scrollview-restricted*
 scrollview-signs	scrollview.txt	/*scrollview-signs*
 scrollview-signs-built-in	scrollview.txt	/*scrollview-signs-built-in*
+scrollview-signs-built-in-config	scrollview.txt	/*scrollview-signs-built-in-config*
 scrollview-signs-configuration	scrollview.txt	/*scrollview-signs-configuration*
 scrollview-signs-extensibility	scrollview.txt	/*scrollview-signs-extensibility*
 scrollview-synchronization-issues	scrollview.txt	/*scrollview-synchronization-issues*
@@ -33,6 +34,12 @@ scrollview_base	scrollview.txt	/*scrollview_base*
 scrollview_byte_limit	scrollview.txt	/*scrollview_byte_limit*
 scrollview_character	scrollview.txt	/*scrollview_character*
 scrollview_column	scrollview.txt	/*scrollview_column*
+scrollview_conflicts_bottom_priority	scrollview.txt	/*scrollview_conflicts_bottom_priority*
+scrollview_conflicts_bottom_symbol	scrollview.txt	/*scrollview_conflicts_bottom_symbol*
+scrollview_conflicts_middle_priority	scrollview.txt	/*scrollview_conflicts_middle_priority*
+scrollview_conflicts_middle_symbol	scrollview.txt	/*scrollview_conflicts_middle_symbol*
+scrollview_conflicts_top_priority	scrollview.txt	/*scrollview_conflicts_top_priority*
+scrollview_conflicts_top_symbol	scrollview.txt	/*scrollview_conflicts_top_symbol*
 scrollview_current_only	scrollview.txt	/*scrollview_current_only*
 scrollview_excluded_filetypes	scrollview.txt	/*scrollview_excluded_filetypes*
 scrollview_hide_on_intersect	scrollview.txt	/*scrollview_hide_on_intersect*
