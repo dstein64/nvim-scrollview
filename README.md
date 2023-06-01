@@ -8,7 +8,7 @@ scrollview-configuration`).
 
 <img src="https://github.com/dstein64/media/blob/main/nvim-scrollview/screenshot.svg?raw=true" width="600" />
 
-<sub>(scrollbars and signs can be seen near the right edge of the preceding image)</sub>
+<sub>(a scrollbar and signs can be seen near the right edge of the preceding image)</sub>
 
 ## Features
 
