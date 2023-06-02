@@ -414,6 +414,24 @@ if g:scrollview_auto_workarounds
   for s:seq in s:win_seqs
     call s:CreateRefreshMapping('nv', s:seq)
   endfor
+  augroup scrollview_wincmd
+    autocmd!
+    " Refresh after :wincmd.
+    "   :[count]winc[md]
+    "   :winc[md]!
+    " WARN: [count] is not handled.
+    " WARN: Only text at the beginning of the command is considered.
+    " WARN: CmdlineLeave is not executed for command mappings (<cmd>).
+    " WARN: CmdlineLeave is not executed for commands executed from Lua
+    autocmd CmdlineLeave *
+          \ : if !get(v:event, 'abort', v:false)
+          \ |   if expand('<afile>') ==# ':'
+          \ |     if getcmdline() =~# '^winc'
+          \ |       ScrollViewRefresh
+          \ |     endif
+          \ |   endif
+          \ | endif
+  augroup END
   " === Mouse wheel scrolling synchronization workarounds ===
   let s:wheel_seqs = ['<scrollwheelup>', '<scrollwheeldown>']
   for s:seq in s:wheel_seqs
