@@ -75,6 +75,19 @@ mouse functionality (see |scrollview-mouse-customization|).
 The |User| *ScrollViewRefresh* |autocommand| fires prior to refreshing scrollbars
 and signs.
 
+                                           *scrollview-refreshing-global*
+                                           *scrollview_refreshing*
+A global variable, `scrollview_refreshing`, is set to |v:true| while scrollbars
+are being refreshed, and |v:false| otherwise. It can be accessed from Lua
+(`vim.g.scrollview_refreshing`) or Vimscript (`g:scrollview_refreshing`).
+Because the plugin uses |normal!| commands, it may be useful to ignore its
+keys when using |vim.on_key()|.
+ >
+    vim.on_key(function(char)
+        if vim.g.scrollview_refreshing then return end
+        ...
+    end)
+<
                                            *scrollview-signs*
 |nvim-scrollview| signs are similar to Neovim's built-in |signs|, but with
 positioning logic matching that of the scrollbar. The plugin includes a set
@@ -591,6 +604,7 @@ Plugin authors can tag their repos with `'scrollview-signs'`, for
 discoverability at:
 https://github.com/topics/scrollview-signs
 
+                                           *scrollview-signs-version-global*
                                            *scrollview_signs_version*
 A global variable, `scrollview_signs_version`, has an integer representing the
 version of the sign exensibility functionality. This can be accessed from Lua
