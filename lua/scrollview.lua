@@ -284,12 +284,18 @@ local get_variable = function(name, winnr, precedence, default)
   -- However, this was slow when the dictionaries were large (e.g., many items
   -- in the b: dictionary for some NERDTree buffers), which you noticed after
   -- adding signs for marks (in such a case, getbufvar(., '') was called many
-  -- times, for each mark sign registration). Switching to vim.b (or
-  -- nvim_buf_get_var) resolves the issue.
+  -- times, for each mark sign registration). Switching to nvim_buf_get_var
+  -- resolves the issue.
+  -- WARN: vim.w, vim.b, and vim.t are avoided to support Neovim 0.5, where those
+  -- can only be used for the current window, buffer, and tab (i.e., can't
+  -- index with another ID).
   for idx = 1, #precedence do
     local c = precedence:sub(idx, idx)
     if c == 'w' then
-      if vim.w[winid][name] ~= nil then return vim.w[winid][name] end
+      local success, result = pcall(function()
+        return api.nvim_win_get_var(winid, name)
+      end)
+      if success then return result end
     elseif c == 't' then
       -- The tab number can differ from the tab id (similar to winnr and
       -- winid). For example, if you open Neovim, and create a new tab, it will
@@ -297,10 +303,16 @@ local get_variable = function(name, winnr, precedence, default)
       -- number 3 and ID 3. But if you delete tab 2, there will then be a tab
       -- with number 2 and ID 3.
       local tabid = api.nvim_win_call(winid, api.nvim_get_current_tabpage)
-      if vim.t[tabid][name] ~= nil then return vim.t[tabid][name] end
+      local success, result = pcall(function()
+        return api.nvim_tabpage_get_var(tabid, name)
+      end)
+      if success then return result end
     elseif c == 'b' then
       local bufnr = fn.winbufnr(winnr)
-      if vim.b[bufnr][name] ~= nil then return vim.b[bufnr][name] end
+      local success, result = pcall(function()
+        return api.nvim_buf_get_var(bufnr, name)
+      end)
+      if success then return result end
     elseif c == 'g' then
       if vim.g[name] ~= nil then return vim.g[name] end
     else
