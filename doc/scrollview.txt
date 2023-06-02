@@ -47,8 +47,8 @@ Use |packages| or one of the various package managers.
   scrollbars are out-of-sync, which can occur e.g., as a result of some
   window arrangement actions (see |scrollview-issues|).
 * *:ScrollViewNext* *:ScrollViewPrev* *:ScrollViewFirst* *:ScrollViewLast*
-  These move the cursor to lines with signs. Arguments can specify which lines
-  are considered.
+  These move the cursor to lines with signs. Arguments can specify which sign
+  groups are considered.
 
                                            *scrollview-mappings*
 The following |<Plug>| mappings are defined for convenience.
