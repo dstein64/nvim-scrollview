@@ -232,7 +232,7 @@ Configuration Variables for Built-in Sign Groups ~
 
 scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority*
                        |Number| specifying the priority for conflict bottom
-                       signs. Defaults to `70`.
+                       signs. Defaults to `80`.
 
 scrollview_conflicts_bottom_symbol         *scrollview_conflicts_bottom_symbol*
                        |String| specifying the symbol for conflict bottom signs.
@@ -243,7 +243,7 @@ scrollview_conflicts_bottom_symbol         *scrollview_conflicts_bottom_symbol*
 
 scrollview_conflicts_middle_priority       *scrollview_conflicts_middle_priority*
                        |Number| specifying the priority for conflict middle
-                       signs. Defaults to `70`.
+                       signs. Defaults to `75`.
 
 scrollview_conflicts_middle_symbol         *scrollview_conflicts_middle_symbol*
                        |String| specifying the symbol for conflict middle signs.

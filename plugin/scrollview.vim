@@ -84,11 +84,11 @@ let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
 
 " *** Conflict signs ***
 let g:scrollview_conflicts_bottom_priority =
-      \ get(g:, 'scrollview_conflicts_bottom_priority', 70)
+      \ get(g:, 'scrollview_conflicts_bottom_priority', 80)
 let g:scrollview_conflicts_bottom_symbol =
       \ get(g:, 'scrollview_conflicts_bottom_symbol', '>')
 let g:scrollview_conflicts_middle_priority =
-      \ get(g:, 'scrollview_conflicts_middle_priority', 70)
+      \ get(g:, 'scrollview_conflicts_middle_priority', 75)
 let g:scrollview_conflicts_middle_symbol =
       \ get(g:, 'scrollview_conflicts_middle_symbol', '=')
 let g:scrollview_conflicts_top_priority =
