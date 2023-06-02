@@ -641,6 +641,10 @@ already built in to `nvim-scrollview` (enable with `:ScrollViewEnable cursor`).
 
 Synchronization Issues ~
                                            *scrollview-synchronization-issues*
+Some of the issues listed here are resolved automatically by
+|scrollview_auto_workarounds|. To reproduce the issues, be sure to turn off
+automatic workarounds.
+
 * Scrollbars can become out-of-sync after window arrangement actions that are
   not followed by a scroll event. For example, this can be seen by starting
   `nvim`, issuing |:help|, then typing `<ctrl-w>J` to move the help window to
