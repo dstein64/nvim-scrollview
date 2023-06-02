@@ -46,7 +46,8 @@ function M.init(enable)
             if textwidth > 0 then
               api.nvim_win_call(winid, function()
                 for line = 1, line_count do
-                  local line_length = fn.strchars(fn.getline(line), 1)
+                  local string = fn.getbufline(bufnr, line)[1]
+                  local line_length = fn.strchars(string, 1)
                   if line_length > textwidth then
                     table.insert(lines, line)
                   end

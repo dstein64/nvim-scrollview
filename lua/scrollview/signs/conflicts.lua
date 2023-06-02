@@ -67,7 +67,7 @@ function M.init(enable)
               local line_count = api.nvim_buf_line_count(bufnr)
               for line = 1, line_count do
                 local match = false
-                local string = fn.getline(line)
+                local string = fn.getbufline(bufnr, line)[1]
                 if position == TOP then
                   match = vim.startswith(string, '<<<<<<< ')
                 elseif position == MIDDLE then
