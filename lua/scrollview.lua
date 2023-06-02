@@ -699,7 +699,7 @@ local calculate_scrollbar_column = function(winnr)
 end
 
 -- Calculates the bar position for the specified window. Returns a dictionary
--- with a height, row, and col.
+-- with a height, row, and col. Uses 1-indexing.
 local calculate_position = function(winnr)
   local winid = fn.win_getid(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
@@ -887,10 +887,8 @@ local show_scrollbar = function(winid, bar_winid)
       wincol0 + bar_position.col,
       wincol0 + bar_position.col
     )
-    for _, float_winid in ipairs(float_overlaps) do
-      if not is_scrollview_window(float_winid) then
-        return -1
-      end
+    if not vim.tbl_isempty(float_overlaps) then
+      return -1
     end
   end
   if bar_bufnr == -1 or not to_bool(fn.bufexists(bar_bufnr)) then
@@ -967,6 +965,7 @@ end
 local show_signs = function(winid, sign_winids)
   local cur_winid = api.nvim_get_current_win()
   local winnr = api.nvim_win_get_number(winid)
+  local wininfo = fn.getwininfo(winid)[1]
   if is_restricted(winnr) then return end
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
@@ -1086,8 +1085,21 @@ local show_signs = function(winid, sign_winids)
         local winwidth = fn.winwidth(winnr)
         col = math.max(1, math.min(winwidth - sign_width + 1, col))
       end
-      if is_valid_column(winid, col, sign_width)
-          and not shown[row .. ',' .. col] then
+      local show = is_valid_column(winid, col, sign_width)
+        and not shown[row .. ',' .. col]
+      if to_bool(get_variable('scrollview_hide_on_intersect', winnr))
+          and show then
+        local winrow0 = wininfo.winrow - 1
+        local wincol0 = wininfo.wincol - 1
+        local float_overlaps = get_float_overlaps(
+          winrow0 + row,
+          winrow0 + row,
+          wincol0 + col,
+          wincol0 + col + sign_width - 1
+        )
+        show = vim.tbl_isempty(float_overlaps)
+      end
+      if show then
         shown[row .. ',' .. col] = true
         if sign_bufnr == -1 or not to_bool(fn.bufexists(sign_bufnr)) then
           sign_bufnr = api.nvim_create_buf(false, true)

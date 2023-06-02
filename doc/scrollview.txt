@@ -162,9 +162,9 @@ scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
                        `[]`.
 
 scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
-                       |Boolean| specifying whether each scrollbar becomes
-                       hidden (not shown) when it would otherwise intersect
-                       with a floating window. Defaults to |v:false|.
+                       |Boolean| specifying whether each scrollbar or sign
+                       becomes hidden (not shown) when it would otherwise
+                       intersect with a floating window. Defaults to |v:false|.
 
                                            *scrollview_line_limit*
 scrollview_line_limit  |Number| specifying the buffer size threshold (in
