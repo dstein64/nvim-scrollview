@@ -591,6 +591,11 @@ Plugin authors can tag their repos with `'scrollview-signs'`, for
 discoverability at:
 https://github.com/topics/scrollview-signs
 
+                                           *scrollview_signs_version*
+A global variable, `scrollview_signs_version`, has an integer representing the
+version of the sign exensibility functionality. This can be accessed from Lua
+(`vim.g.scrollview_signs_version`) or Vimscript (`g:scrollview_signs_version`).
+
 Functions ~
                                            *scrollview-signs-functions*
 Lua code is necessary for adding new sign functionality to `nvim-scrollview`.
