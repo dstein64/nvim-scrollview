@@ -115,6 +115,12 @@ let g:scrollview_diagnostics_info_priority =
       \ get(g:, 'scrollview_diagnostics_info_priority', 40)
 let g:scrollview_diagnostics_info_symbol =
       \ get(g:, 'scrollview_diagnostics_info_symbol', 'I')
+let g:scrollview_diagnostics_severities = [
+      \   luaeval('vim.diagnostic.severity.ERROR'),
+      \   luaeval('vim.diagnostic.severity.HINT'),
+      \   luaeval('vim.diagnostic.severity.INFO'),
+      \   luaeval('vim.diagnostic.severity.WARN'),
+      \ ]
 let g:scrollview_diagnostics_warn_priority =
       \ get(g:, 'scrollview_diagnostics_warn_priority', 50)
 let g:scrollview_diagnostics_warn_symbol =

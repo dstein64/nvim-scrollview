@@ -308,6 +308,12 @@ scrollview_diagnostics_info_symbol         *scrollview_diagnostics_info_symbol*
                        number of lines corresponding to the sign, or the last
                        element when the retrieval would be out-of-bounds.
 
+scrollview_diagnostics_severities          *scrollview_diagnostics_severities*
+                       |List| of |Number|s specifying the diagnostic severities
+                       for which signs will be shown. The default includes
+                       |vim.diagnostic.severity.ERROR|, |vim.diagnostic.severity.HINT|,
+                       |vim.diagnostic.severity.INFO|, and |vim.diagnostic.severity.WARN|.
+
 scrollview_diagnostics_warn_priority       *scrollview_diagnostics_warn_priority*
                        |Number| specifying the priority for diagnostic warn
                        signs. Defaults to `50`.

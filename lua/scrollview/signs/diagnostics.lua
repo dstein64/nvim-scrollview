@@ -10,28 +10,39 @@ function M.init(enable)
   end
 
   local group = 'diagnostics'
-  local spec_data = {
-    [vim.diagnostic.severity.ERROR] = {
-      vim.g.scrollview_diagnostics_error_priority,
-      vim.g.scrollview_diagnostics_error_symbol,
-      'ScrollViewDiagnosticsError'
-    },
-    [vim.diagnostic.severity.HINT] = {
-      vim.g.scrollview_diagnostics_hint_priority,
-      vim.g.scrollview_diagnostics_hint_symbol,
-      'ScrollViewDiagnosticsHint'
-    },
-    [vim.diagnostic.severity.INFO] = {
-      vim.g.scrollview_diagnostics_info_priority,
-      vim.g.scrollview_diagnostics_info_symbol,
-      'ScrollViewDiagnosticsInfo'
-    },
-    [vim.diagnostic.severity.WARN] = {
-      vim.g.scrollview_diagnostics_warn_priority,
-      vim.g.scrollview_diagnostics_warn_symbol,
-      'ScrollViewDiagnosticsWarn'
-    },
-  }
+  local spec_data = {}
+  for _, severity in ipairs(vim.g.scrollview_diagnostics_severities) do
+    local value
+    if severity == vim.diagnostic.severity.ERROR then
+      value = {
+        vim.g.scrollview_diagnostics_error_priority,
+        vim.g.scrollview_diagnostics_error_symbol,
+        'ScrollViewDiagnosticsError'
+      }
+    elseif severity == vim.diagnostic.severity.HINT then
+      value = {
+        vim.g.scrollview_diagnostics_hint_priority,
+        vim.g.scrollview_diagnostics_hint_symbol,
+        'ScrollViewDiagnosticsHint'
+      }
+    elseif severity == vim.diagnostic.severity.INFO then
+      value = {
+        vim.g.scrollview_diagnostics_info_priority,
+        vim.g.scrollview_diagnostics_info_symbol,
+        'ScrollViewDiagnosticsInfo'
+      }
+    elseif severity == vim.diagnostic.severity.WARN then
+      value = {
+        vim.g.scrollview_diagnostics_warn_priority,
+        vim.g.scrollview_diagnostics_warn_symbol,
+        'ScrollViewDiagnosticsWarn'
+      }
+    end
+    if value ~= nil then
+      spec_data[severity] = value
+    end
+  end
+  if vim.tbl_isempty(spec_data) then return end
   local names = {}  -- maps severity to registration name
   for severity, item in pairs(spec_data) do
     local priority, symbol, highlight = unpack(item)

@@ -113,8 +113,12 @@ let g:scrollview_winblend = 75
 " Position the scrollbar at the 80th character of the buffer
 let g:scrollview_base = 'buffer'
 let g:scrollview_column = 80
-" Enable all sign groups (defaults to ['diagnostics', 'search'])
+" Enable all sign groups (defaults to ['diagnostics', 'search']).
+" Set to the empty list to disable all sign groups.
 let g:scrollview_signs_on_startup = ['all']
+" Show diagnostic signs only for errors.
+let g:scrollview_diagnostics_severities =
+      \ [luaeval('vim.diagnostic.severity.ERROR')]
 ```
 
 #### Lua Setup Example
@@ -126,7 +130,8 @@ require('scrollview').setup({
   winblend = 75,
   base = 'buffer',
   column = 80,
-  signs_on_startup = {'all'}
+  signs_on_startup = {'all'},
+  diagnostics_severities = {vim.diagnostic.severity.ERROR}
 })
 ```
 
