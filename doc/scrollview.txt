@@ -618,7 +618,7 @@ register_sign_spec({spec})                 *scrollview.register_sign_spec*
 
     Parameters: ~
       * {spec}  (table) Keyword arguments |kwargs|:
-                - current_only (boolean): Show only in an active window (the
+                - current_only (boolean): Show only in an current window (the
                   window with the cursor at the time of display). Defaults to
                   `false`.
                 - group (string): Defaults to `'other'`.
