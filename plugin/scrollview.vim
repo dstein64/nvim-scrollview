@@ -414,7 +414,7 @@ if g:scrollview_auto_workarounds
   for s:seq in s:win_seqs
     call s:CreateRefreshMapping('nv', s:seq)
   endfor
-  augroup scrollview_wincmd
+  augroup scrollview_wincmd_workaround
     autocmd!
     " Refresh after :wincmd.
     "   :[count]winc[md]
