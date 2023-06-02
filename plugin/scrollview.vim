@@ -34,7 +34,7 @@ let g:scrollview_byte_limit = get(g:, 'scrollview_byte_limit', 1000000)
 let g:scrollview_character = get(g:, 'scrollview_character', '')
 let g:scrollview_column = get(g:, 'scrollview_column', 2)
 let g:scrollview_current_only = get(g:, 'scrollview_current_only', v:false)
-let g:scrollview_excluded_filetypes = 
+let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', v:false)
