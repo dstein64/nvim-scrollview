@@ -20,6 +20,7 @@ scrollview-mappings	scrollview.txt	/*scrollview-mappings*
 scrollview-modes	scrollview.txt	/*scrollview-modes*
 scrollview-mouse-customization	scrollview.txt	/*scrollview-mouse-customization*
 scrollview-other-issues	scrollview.txt	/*scrollview-other-issues*
+scrollview-refreshing-global	scrollview.txt	/*scrollview-refreshing-global*
 scrollview-requirements	scrollview.txt	/*scrollview-requirements*
 scrollview-restricted	scrollview.txt	/*scrollview-restricted*
 scrollview-signs	scrollview.txt	/*scrollview-signs*
@@ -29,6 +30,7 @@ scrollview-signs-configuration	scrollview.txt	/*scrollview-signs-configuration*
 scrollview-signs-example	scrollview.txt	/*scrollview-signs-example*
 scrollview-signs-extensibility	scrollview.txt	/*scrollview-signs-extensibility*
 scrollview-signs-functions	scrollview.txt	/*scrollview-signs-functions*
+scrollview-signs-version-global	scrollview.txt	/*scrollview-signs-version-global*
 scrollview-synchronization-issues	scrollview.txt	/*scrollview-synchronization-issues*
 scrollview-usage	scrollview.txt	/*scrollview-usage*
 scrollview.get_sign_eligible_windows	scrollview.txt	/*scrollview.get_sign_eligible_windows*
@@ -74,6 +76,7 @@ scrollview_on_startup	scrollview.txt	/*scrollview_on_startup*
 scrollview_out_of_bounds_adjust	scrollview.txt	/*scrollview_out_of_bounds_adjust*
 scrollview_quickfix_priority	scrollview.txt	/*scrollview_quickfix_priority*
 scrollview_quickfix_symbol	scrollview.txt	/*scrollview_quickfix_symbol*
+scrollview_refreshing	scrollview.txt	/*scrollview_refreshing*
 scrollview_search_priority	scrollview.txt	/*scrollview_search_priority*
 scrollview_search_symbol	scrollview.txt	/*scrollview_search_symbol*
 scrollview_signs_column	scrollview.txt	/*scrollview_signs_column*
