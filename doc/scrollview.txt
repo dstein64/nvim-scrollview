@@ -221,7 +221,9 @@ scrollview_signs_overflow                  *scrollview_signs_overflow*
 
 scrollview_signs_show_in_folds             *scrollview_signs_show_in_folds*
                        |Boolean| specifying whether signs on lines within hidden
-                       folds should be shown. Defaults to |v:false|.
+                       folds should be shown. Sign groups can override this
+                       setting (e.g., the built-in cursor sign group does).
+                       Defaults to |v:false|.
 
 scrollview_signs_zindex                    *scrollview_signs_zindex*
                        |Number| specifying the z-index for signs. Defaults to
