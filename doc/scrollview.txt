@@ -80,8 +80,10 @@ and signs.
 A global variable, `scrollview_refreshing`, is set to |v:true| while scrollbars
 are being refreshed, and |v:false| otherwise. It can be accessed from Lua
 (`vim.g.scrollview_refreshing`) or Vimscript (`g:scrollview_refreshing`).
-Because the plugin uses |normal!| commands, it may be useful to ignore its
-keys when using |vim.on_key()|.
+
+The plugin executes commands with `:normal!`, which are treated as if they are
+typed. `scrollview_refreshing` may be useful for ignoring the corresponding keys
+when using |vim.on_key()|.
  >
     vim.on_key(function(char)
         if vim.g.scrollview_refreshing then return end
