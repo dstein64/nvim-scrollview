@@ -28,6 +28,7 @@ function M.init(enable)
     })
     names[char] = registration.name
   end
+  if vim.tbl_isempty(names) then return end
   scrollview.set_sign_group_state(group, enable)
 
   -- Create mappings to refresh scrollbars after adding marks.
