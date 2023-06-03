@@ -286,9 +286,9 @@ local get_variable = function(name, winnr, precedence, default)
   -- adding signs for marks (in such a case, getbufvar(., '') was called many
   -- times, for each mark sign registration). Switching to nvim_buf_get_var
   -- resolves the issue.
-  -- WARN: vim.w, vim.b, and vim.t are avoided to support Neovim 0.5, where those
-  -- can only be used for the current window, buffer, and tab (i.e., can't
-  -- index with another ID).
+  -- WARN: vim.w, vim.b, and vim.t are avoided to support Neovim 0.5, where
+  -- those can only be used for the current window, buffer, and tab (i.e.,
+  -- can't index with another ID).
   for idx = 1, #precedence do
     local c = precedence:sub(idx, idx)
     if c == 'w' then
