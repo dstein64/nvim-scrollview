@@ -703,7 +703,7 @@ already built in to `nvim-scrollview` (enable with `:ScrollViewEnable cursor`).
         if not scrollview.is_sign_group_active(group) then return end
         local lines = vim.b[name]
         if lines == nil or lines[1] ~= vim.fn.line('.') then
-          vim.cmd('ScrollViewRefresh')
+          vim.cmd('silent! ScrollViewRefresh')
         end
       end
     })
