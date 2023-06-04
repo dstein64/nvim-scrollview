@@ -37,7 +37,7 @@ local copy = function(table)
 end
 
 function M.setup(config)
-  local config = config or {}
+  config = config or {}
   config = copy(config)  -- create a copy, since this is modified
 
   local defaults = {
