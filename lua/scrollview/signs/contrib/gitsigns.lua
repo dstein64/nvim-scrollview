@@ -154,8 +154,11 @@ function M.setup(config)
             table.insert(lines_delete, hunk.added.start)
           end
         end
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
         vim.b[bufnr][add] = lines_add
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
         vim.b[bufnr][change] = lines_change
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
         vim.b[bufnr][delete] = lines_delete
       end
       vim.cmd('silent! ScrollViewRefresh')
