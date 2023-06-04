@@ -28,7 +28,7 @@ local scrollview = require('scrollview')
 local M = {}
 
 -- Create a shallow copy of a map-like table.
-function copy(table)
+local copy = function(table)
   local result = {}
   for key, val in pairs(table) do
     result[key] = val
