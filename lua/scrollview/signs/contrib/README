@@ -1,0 +1,4 @@
+This directory contains sign group implementations that are not built-in, but
+may be useful to some users. The code here does not receive the same level of
+support as the main source tree. It may be less stable and should be used at
+your own risk.
