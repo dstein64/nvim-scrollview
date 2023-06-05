@@ -123,12 +123,19 @@ let g:scrollview_diagnostics_hint_priority =
       \ get(g:, 'scrollview_diagnostics_hint_priority', 30)
 let g:scrollview_diagnostics_info_priority =
       \ get(g:, 'scrollview_diagnostics_info_priority', 40)
-let g:scrollview_diagnostics_severities = [
-      \   luaeval('vim.diagnostic.severity.ERROR'),
-      \   luaeval('vim.diagnostic.severity.HINT'),
-      \   luaeval('vim.diagnostic.severity.INFO'),
-      \   luaeval('vim.diagnostic.severity.WARN'),
-      \ ]
+if !has_key(g:, 'scrollview_diagnostics_severities')
+  try
+    let g:scrollview_diagnostics_severities = [
+          \   luaeval('vim.diagnostic.severity.ERROR'),
+          \   luaeval('vim.diagnostic.severity.HINT'),
+          \   luaeval('vim.diagnostic.severity.INFO'),
+          \   luaeval('vim.diagnostic.severity.WARN'),
+          \ ]
+  catch
+    " vim.diagnostic is not available on earlier versions of Neovim.
+    let g:scrollview_diagnostics_severities = []
+  endtry
+endif
 let g:scrollview_diagnostics_warn_priority =
       \ get(g:, 'scrollview_diagnostics_warn_priority', 50)
 " Set the diagnostic symbol to the corresponding Neovim sign text if defined,
