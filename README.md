@@ -95,9 +95,8 @@ with the same positioning logic as the scrollbar.
 
 The plugin was written so that it's possible to extend the sign functionality
 in a Neovim configuration file or with a plugin. See the documentation for
-details. An [example][gitsigns_example] was created to show how support for
-[gitsigns.nvim][gitsigns.nvim] could be implemented. Plugin authors can tag
-their repos with `scrollview-signs` for [discoverability][scrollview-signs].
+details. Plugin authors can tag their repos with `scrollview-signs` for
+[discoverability][scrollview-signs].
 
 ## Configuration
 
