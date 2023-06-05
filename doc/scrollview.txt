@@ -310,12 +310,13 @@ scrollview_diagnostics_error_priority      *scrollview_diagnostics_error_priorit
 
 scrollview_diagnostics_error_symbol        *scrollview_diagnostics_error_symbol*
                        |String| specifying the symbol for diagnostic error
-                       signs. Defaults to `'E'`. A |List| of |String|s can also be
-                       used; the symbol is selected using the index equal to
-                       the number of lines corresponding to the sign, or the
-                       last element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       signs. Defaults to the trimmed sign text for
+                       DiagnosticSignError if defined, or `'E'` otherwise. A
+                       |List| of |String|s can also be used; the symbol is
+                       selected using the index equal to the number of lines
+                       corresponding to the sign, or the last element when the
+                       retrieval would be out-of-bounds. Considered only at
+                       global scope, when the plugin is loaded.
 
 scrollview_diagnostics_hint_priority       *scrollview_diagnostics_hint_priority*
                        |Number| specifying the priority for diagnostic hint
@@ -324,12 +325,13 @@ scrollview_diagnostics_hint_priority       *scrollview_diagnostics_hint_priority
 
 scrollview_diagnostics_hint_symbol         *scrollview_diagnostics_hint_symbol*
                        |String| specifying the symbol for diagnostic hint signs.
-                       Defaults to `'H'`. A |List| of |String|s can also be used;
-                       the symbol is selected using the index equal to the
-                       number of lines corresponding to the sign, or the last
-                       element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Defaults to the trimmed sign text for DiagnosticSignHint
+                       if defined, or `'H'` otherwise. A |List| of |String|s can
+                       also be used; the symbol is selected using the index
+                       equal to the number of lines corresponding to the sign,
+                       or the last element when the retrieval would be
+                       out-of-bounds. Considered only at global scope, when
+                       the plugin is loaded.
 
 scrollview_diagnostics_info_priority       *scrollview_diagnostics_info_priority*
                        |Number| specifying the priority for diagnostic info
@@ -338,12 +340,13 @@ scrollview_diagnostics_info_priority       *scrollview_diagnostics_info_priority
 
 scrollview_diagnostics_info_symbol         *scrollview_diagnostics_info_symbol*
                        |String| specifying the symbol for diagnostic info signs.
-                       Defaults to `'I'`. A |List| of |String|s can also be used;
-                       the symbol is selected using the index equal to the
-                       number of lines corresponding to the sign, or the last
-                       element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Defaults to the trimmed sign text for DiagnosticSignInfo
+                       if defined, or `'I'` otherwise. A |List| of |String|s can
+                       also be used; the symbol is selected using the index
+                       equal to the number of lines corresponding to the sign,
+                       or the last element when the retrieval would be
+                       out-of-bounds. Considered only at global scope, when
+                       the plugin is loaded.
 
 scrollview_diagnostics_severities          *scrollview_diagnostics_severities*
                        |List| of |Number|s specifying the diagnostic severities
@@ -360,12 +363,13 @@ scrollview_diagnostics_warn_priority       *scrollview_diagnostics_warn_priority
 
 scrollview_diagnostics_warn_symbol         *scrollview_diagnostics_warn_symbol*
                        |String| specifying the symbol for diagnostic warn signs.
-                       Defaults to `'W'`. A |List| of |String|s can also be used;
-                       the symbol is selected using the index equal to the
-                       number of lines corresponding to the sign, or the last
-                       element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Defaults to the trimmed sign text for DiagnosticSignWarn
+                       if defined, or `'W'` otherwise. A |List| of |String|s can
+                       also be used; the symbol is selected using the index
+                       equal to the number of lines corresponding to the sign,
+                       or the last element when the retrieval would be
+                       out-of-bounds. Considered only at global scope, when
+                       the plugin is loaded.
 
 scrollview_folds_priority                  *scrollview_folds_priority*
                        |Number| specifying the priority for fold signs. Defaults
@@ -539,25 +543,55 @@ Color Customization ~
 The following highlight groups can be configured to change |nvim-scrollview|'s
 colors.
 
-Name                        Default      Target
-----                        -------      -----------
-`ScrollView`                  `Visual`       scrollbar
-`ScrollViewConflictsTop`      `DiffAdd`      top conflict signs
-`ScrollViewConflictsMiddle`   `DiffAdd`      middle conflict signs
-`ScrollViewConflictsBottom`   `DiffAdd`      bottom conflict signs
-`ScrollViewCursor`            `Identifier`   cursor signs
-`ScrollViewDiagnosticsError`  `WarningMsg`   diagnostic error signs
-`ScrollViewDiagnosticsHint`   `Question`     diagnostic hint signs
-`ScrollViewDiagnosticsInfo`   `Identifier`   diagnostic info signs
-`ScrollViewDiagnosticsWarn`   `LineNr`       diagnostic warn signs
-`ScrollViewFolds`             `Directory`    fold signs
-`ScrollViewLocList`           `LineNr`       loclist signs
-`ScrollViewMarks`             `ColorColumn`  mark signs
-`ScrollViewQuickFix`          `Constant`     quickfix signs
-`ScrollViewRestricted`        `SpellLocal`   |scrollview-restricted| scrollbar
-`ScrollViewSearch`            `NonText`      search signs
-`ScrollViewSpell`             `Statement`    spell signs
-`ScrollViewTextWidth`         `Question`     textwidth signs
+`Name`
+  Default                     Target
+----                          ------
+`ScrollView`                    scrollbar
+  Visual
+`ScrollViewConflictsTop`        top conflict signs
+  DiffAdd
+`ScrollViewConflictsMiddle`     middle conflict signs
+  DiffAdd
+`ScrollViewConflictsBottom`     bottom conflict signs
+  DiffAdd
+`ScrollViewCursor`              cursor signs
+  Identifier
+`ScrollViewDiagnosticsError`    diagnostic error signs
+  The sign text highlight
+  for DiagnosticSignError
+  if defined, or DiagnosticError
+  otherwise
+`ScrollViewDiagnosticsHint`     diagnostic hint signs
+  The sign text highlight
+  for DiagnosticSignHint
+  if defined, or DiagnosticHint
+  otherwise
+`ScrollViewDiagnosticsInfo`     diagnostic info signs
+  The sign text highlight
+  for DiagnosticSignInfo
+  if defined, or DiagnosticInfo
+  otherwise
+`ScrollViewDiagnosticsWarn`     diagnostic warn signs
+  The sign text highlight
+  for DiagnosticSignWarn
+  if defined, or DiagnosticWarn
+  otherwise
+`ScrollViewFolds`               fold signs
+  Directory
+`ScrollViewLocList`             loclist signs
+  LineNr
+`ScrollViewMarks`               mark signs
+  ColorColumn
+`ScrollViewQuickFix`            quickfix signs
+  Constant
+`ScrollViewRestricted`          |scrollview-restricted| scrollbar
+  SpellLocal
+`ScrollViewSearch`              search signs
+  NonText
+`ScrollViewSpell`               spell signs
+  Statement
+`ScrollViewTextWidth`           textwidth signs
+  Question
 
 The highlight groups can be customized in your |init.vim|, as shown in the
 following example.

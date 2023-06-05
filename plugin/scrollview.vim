@@ -118,16 +118,10 @@ let g:scrollview_cursor_symbol =
 " *** Diagnostics signs ***
 let g:scrollview_diagnostics_error_priority =
       \ get(g:, 'scrollview_diagnostics_error_priority', 60)
-let g:scrollview_diagnostics_error_symbol =
-      \ get(g:, 'scrollview_diagnostics_error_symbol', 'E')
 let g:scrollview_diagnostics_hint_priority =
       \ get(g:, 'scrollview_diagnostics_hint_priority', 30)
-let g:scrollview_diagnostics_hint_symbol =
-      \ get(g:, 'scrollview_diagnostics_hint_symbol', 'H')
 let g:scrollview_diagnostics_info_priority =
       \ get(g:, 'scrollview_diagnostics_info_priority', 40)
-let g:scrollview_diagnostics_info_symbol =
-      \ get(g:, 'scrollview_diagnostics_info_symbol', 'I')
 let g:scrollview_diagnostics_severities = [
       \   luaeval('vim.diagnostic.severity.ERROR'),
       \   luaeval('vim.diagnostic.severity.HINT'),
@@ -136,8 +130,21 @@ let g:scrollview_diagnostics_severities = [
       \ ]
 let g:scrollview_diagnostics_warn_priority =
       \ get(g:, 'scrollview_diagnostics_warn_priority', 50)
-let g:scrollview_diagnostics_warn_symbol =
-      \ get(g:, 'scrollview_diagnostics_warn_symbol', 'W')
+let s:diagnostics_symbol_data = [
+      \   ['scrollview_diagnostics_error_symbol', 'E', 'DiagnosticSignError'],
+      \   ['scrollview_diagnostics_hint_symbol', 'H', 'DiagnosticSignHint'],
+      \   ['scrollview_diagnostics_info_symbol', 'I', 'DiagnosticSignInfo'],
+      \   ['scrollview_diagnostics_warn_symbol', 'W', 'DiagnosticSignWarn'],
+      \ ]
+for [s:key, s:fallback, s:sign] in s:diagnostics_symbol_data
+  if !has_key(g:, s:key)
+    try
+      let g:[s:key] = trim(sign_getdefined(s:sign)[0].text)
+    catch
+      let g:[s:key] = s:fallback
+    endtry
+  endif
+endfor
 
 " *** Fold signs ***
 let g:scrollview_folds_priority = get(g:, 'scrollview_folds_priority', 30)
@@ -214,10 +221,25 @@ highlight default link ScrollViewConflictsTop DiffAdd
 highlight default link ScrollViewConflictsMiddle DiffAdd
 highlight default link ScrollViewConflictsBottom DiffAdd
 highlight default link ScrollViewCursor Identifier
-highlight default link ScrollViewDiagnosticsError WarningMsg
-highlight default link ScrollViewDiagnosticsHint Question
-highlight default link ScrollViewDiagnosticsInfo Identifier
-highlight default link ScrollViewDiagnosticsWarn LineNr
+" Set the diagnostic highlights to the text highlight for the corresponding
+" sign if defined, or the default otherwise.
+let s:diagnostics_highlight_data = [
+  \   ['ScrollViewDiagnosticsError', 'DiagnosticError', 'DiagnosticSignError'],
+  \   ['ScrollViewDiagnosticsHint', 'DiagnosticHint', 'DiagnosticSignHint'],
+  \   ['ScrollViewDiagnosticsInfo', 'DiagnosticInfo', 'DiagnosticSignInfo'],
+  \   ['ScrollViewDiagnosticsWarn', 'DiagnosticWarn', 'DiagnosticSignWarn'],
+  \ ]
+for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
+  try
+    let s:highlight = sign_getdefined(s:sign)[0].texthl
+  catch
+    let s:highlight = s:fallback
+  endtry
+  execute 'highlight default link ' .. s:key .. ' ' .. s:highlight
+endfor
+highlight default link ScrollViewDiagnosticsHint DiagnosticHint
+highlight default link ScrollViewDiagnosticsInfo DiagnosticInfo
+highlight default link ScrollViewDiagnosticsWarn DiagnosticWarn
 highlight default link ScrollViewFolds Directory
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks ColorColumn
