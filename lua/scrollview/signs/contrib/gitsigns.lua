@@ -3,6 +3,8 @@
 -- Usage:
 --   require('scrollview.signs.contrib.gitsigns').setup([{config}])
 --     {config} is an optional table with the following attributes:
+--       - enabled (boolean): Whether signs are enabled immediately. If false,
+--         use ':ScrollViewEnable gitsigns' to enable later. Defaults to true.
 --       - hide_full_add (boolean): Whether to hide signs for a hunk if the
 --         hunk lines cover the entire buffer. Defaults to true.
 --       - highlight_add (string): Defaults to a value from gitsigns config
@@ -41,6 +43,7 @@ function M.setup(config)
   config = copy(config)  -- create a copy, since this is modified
 
   local defaults = {
+    enabled = true,
     hide_full_add = true,
     only_first_line = false,
   }
@@ -76,6 +79,9 @@ function M.setup(config)
   defaults.symbol_delete = defaults.symbol_delete or fn.nr2char(0x2581)
 
   -- Set missing config values with defaults.
+  if config.enabled == nil then
+    config.enabled = defaults.enabled
+  end
   if config.hide_full_add == nil then
     config.hide_full_add = defaults.hide_full_add
   end
@@ -109,12 +115,11 @@ function M.setup(config)
     symbol = config.symbol_delete,
   }).name
 
-  scrollview.set_sign_group_state(group, true)
+  scrollview.set_sign_group_state(group, config.enabled)
 
   api.nvim_create_autocmd('User', {
     pattern = 'GitSignsUpdate',
     callback = function()
-      if not scrollview.is_sign_group_active(group) then return end
       -- WARN: Ordinarily, the code that follows would be handled in a
       -- ScrollViewRefresh User autocommand callback, and code here would just
       -- be a call to ScrollViewRefresh. That approach is avoided for better
@@ -161,6 +166,11 @@ function M.setup(config)
         -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
         vim.b[bufnr][delete] = lines_delete
       end
+      -- Checking whether the sign group is active is deferred to here so that
+      -- the proper gitsigns state is maintained even when the sign group is
+      -- inactive. This way, signs will be properly set when the sign group is
+      -- enabled.
+      if not scrollview.is_sign_group_active(group) then return end
       vim.cmd('silent! ScrollViewRefresh')
     end
   })
