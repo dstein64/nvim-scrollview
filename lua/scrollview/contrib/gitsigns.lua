@@ -1,7 +1,7 @@
 -- Requirements:
 --  - gitsigns.nvim (https://github.com/lewis6991/gitsigns.nvim)
 -- Usage:
---   require('scrollview.contrib.gitsigns').setup([{config}])
+--   require('scrollview.signs.contrib.gitsigns').setup([{config}])
 --     {config} is an optional table with the following attributes:
 --       - add_highlight (string): Defaults to a value from gitsigns config
 --         when available, otherwise 'DiffAdd'.
