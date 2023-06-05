@@ -10,5 +10,5 @@ read_globals = {
   }
 }
 include_files = {'lua/', '*.lua'}
-exclude_files = {'lua/scrollview/signs/contrib/README'}
+exclude_files = {'lua/scrollview/contrib/README'}
 std = 'luajit'
