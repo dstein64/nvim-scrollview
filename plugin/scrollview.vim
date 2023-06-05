@@ -221,8 +221,8 @@ highlight default link ScrollViewConflictsTop DiffAdd
 highlight default link ScrollViewConflictsMiddle DiffAdd
 highlight default link ScrollViewConflictsBottom DiffAdd
 highlight default link ScrollViewCursor Identifier
-" Set the diagnostic highlights to the text highlight for the corresponding
-" sign if defined, or the default otherwise.
+" Set the diagnostic highlights to the corresponding sign text highlight if
+" defined, or the default otherwise.
 let s:diagnostics_highlight_data = [
   \   ['ScrollViewDiagnosticsError', 'DiagnosticError', 'DiagnosticSignError'],
   \   ['ScrollViewDiagnosticsHint', 'DiagnosticHint', 'DiagnosticSignHint'],
