@@ -38,6 +38,7 @@ scrollview.is_sign_group_active	scrollview.txt	/*scrollview.is_sign_group_active
 scrollview.register_sign_spec	scrollview.txt	/*scrollview.register_sign_spec*
 scrollview.set_sign_group_state	scrollview.txt	/*scrollview.set_sign_group_state*
 scrollview.txt	scrollview.txt	/*scrollview.txt*
+scrollview_always_show	scrollview.txt	/*scrollview_always_show*
 scrollview_auto_mouse	scrollview.txt	/*scrollview_auto_mouse*
 scrollview_auto_workarounds	scrollview.txt	/*scrollview_auto_workarounds*
 scrollview_base	scrollview.txt	/*scrollview_base*

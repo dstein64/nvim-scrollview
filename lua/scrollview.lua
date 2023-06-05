@@ -828,11 +828,14 @@ local should_show = function(winid)
   if winheight == 0 or winwidth == 0 then
     return false
   end
-  -- Don't show when all lines are on screen.
-  local topline, botline = line_range(winid)
-  local line_count = api.nvim_buf_line_count(bufnr)
-  if botline - topline + 1 == line_count then
-    return false
+  local always_show = to_bool(get_variable('scrollview_always_show', winnr))
+  if not always_show then
+    -- Don't show when all lines are on screen.
+    local topline, botline = line_range(winid)
+    local line_count = api.nvim_buf_line_count(bufnr)
+    if botline - topline + 1 == line_count then
+      return false
+    end
   end
   return true
 end
@@ -1016,6 +1019,11 @@ local show_signs = function(winid, sign_winids)
     end
     if not vim.tbl_isempty(lines) and the_topline_lookup == nil then
       the_topline_lookup = topline_lookup(winid)
+      -- Remove duplicates for better handling when scrollview_always_show is
+      -- on. This way, sign positions match the lines they correspond to. This
+      -- is only relevant in that scenario, as there won't be duplicates when
+      -- there are more lines than window rows.
+      the_topline_lookup = remove_duplicates(the_topline_lookup)
     end
     for _, line in ipairs(lines) do
       if line >= 1 and line <= line_count then

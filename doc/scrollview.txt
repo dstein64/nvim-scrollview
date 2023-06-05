@@ -132,6 +132,10 @@ and/or 4) global scope, with that order of precedence (i.e., window variables
 have the highest precedence, and global variables have the lowest).
 
 Configuration Variables ~
+                                           *scrollview_always_show*
+scrollview_always_show |Boolean| specifying whether scrollbars and signs are
+                       shown when all lines are visible. Defaults to |v:false|.
+
                                            *scrollview_auto_mouse*
 scrollview_auto_mouse  |Boolean| specifying whether a mapping is automatically
                        created for mouse support (without clobbering).
