@@ -130,6 +130,8 @@ let g:scrollview_diagnostics_severities = [
       \ ]
 let g:scrollview_diagnostics_warn_priority =
       \ get(g:, 'scrollview_diagnostics_warn_priority', 50)
+" Set the diagnostic symbol to the corresponding Neovim sign (not scrollview
+" sign) text if defined, or the default otherwise.
 let s:diagnostics_symbol_data = [
       \   ['scrollview_diagnostics_error_symbol', 'E', 'DiagnosticSignError'],
       \   ['scrollview_diagnostics_hint_symbol', 'H', 'DiagnosticSignHint'],
@@ -221,8 +223,8 @@ highlight default link ScrollViewConflictsTop DiffAdd
 highlight default link ScrollViewConflictsMiddle DiffAdd
 highlight default link ScrollViewConflictsBottom DiffAdd
 highlight default link ScrollViewCursor Identifier
-" Set the diagnostic highlights to the corresponding sign text highlight if
-" defined, or the default otherwise.
+" Set the diagnostic highlights to the corresponding Neovim sign (not
+" scrollview sign) text highlight if defined, or the default otherwise.
 let s:diagnostics_highlight_data = [
   \   ['ScrollViewDiagnosticsError', 'DiagnosticError', 'DiagnosticSignError'],
   \   ['ScrollViewDiagnosticsHint', 'DiagnosticHint', 'DiagnosticSignHint'],
