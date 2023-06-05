@@ -3,24 +3,24 @@
 -- Usage:
 --   require('scrollview.signs.contrib.gitsigns').setup([{config}])
 --     {config} is an optional table with the following attributes:
+--       - add_highlight (string): Defaults to a value from gitsigns config
+--         when available, otherwise 'DiffAdd'.
+--       - add_symbol (string): Defaults to a value from gitsigns config when
+--         available, otherwise box drawing heavy vertical.
+--       - change_highlight (string): Defaults to a value from gitsigns config
+--         when available, otherwise 'DiffChange'.
+--       - change_symbol (string): Defaults to a value from gitsigns config
+--         when available, otherwise box drawing heavy vertical.
+--       - delete_highlight (string): Defaults to a value from gitsigns config
+--         when available, otherwise 'DiffDelete'.
+--       - delete_symbol (string): Defaults to a value from gitsigns config
+--         when available, otherwise lower one-eigth block.
 --       - enabled (boolean): Whether signs are enabled immediately. If false,
 --         use ':ScrollViewEnable gitsigns' to enable later. Defaults to true.
 --       - hide_full_add (boolean): Whether to hide signs for a hunk if the
 --         hunk lines cover the entire buffer. Defaults to true.
---       - highlight_add (string): Defaults to a value from gitsigns config
---         when available, otherwise 'DiffAdd'.
---       - highlight_change (string): Defaults to a value from gitsigns config
---         when available, otherwise 'DiffChange'.
---       - highlight_delete (string): Defaults to a value from gitsigns config
---         when available, otherwise 'DiffDelete'.
 --       - only_first_line: Whether a sign is shown only for the first line of
 --         each hunk. Defaults to false.
---       - symbol_add (string): Defaults to a value from gitsigns config when
---         available, otherwise box drawing heavy vertical.
---       - symbol_change (string): Defaults to a value from gitsigns config
---         when available, otherwise box drawing heavy vertical.
---       - symbol_delete (string): Defaults to a value from gitsigns config
---         when available, otherwise lower one-eigth block.
 --     The setup() function should be called after gitsigns.setup().
 
 local api = vim.api
@@ -51,32 +51,32 @@ function M.setup(config)
   -- Try setting highlight and symbol defaults from gitsigns config.
   pcall(function()
     local signs = require('gitsigns.config').config.signs
-    defaults.highlight_add = signs.add.hl
-    defaults.highlight_change = signs.change.hl
-    defaults.highlight_delete = signs.delete.hl
-    defaults.symbol_add = signs.add.text
-    defaults.symbol_change = signs.change.text
-    defaults.symbol_delete = signs.delete.text
+    defaults.add_highlight = signs.add.hl
+    defaults.change_highlight = signs.change.hl
+    defaults.delete_highlight = signs.delete.hl
+    defaults.add_symbol = signs.add.text
+    defaults.change_symbol = signs.change.text
+    defaults.delete_symbol = signs.delete.text
   end)
 
   -- Try setting highlight and symbol defaults from gitsigns defaults.
   pcall(function()
     local default = require('gitsigns.config').schema.signs.default
-    defaults.highlight_add = defaults.highlight_add or default.add.hl
-    defaults.highlight_change = defaults.highlight_change or default.change.hl
-    defaults.highlight_delete = defaults.highlight_delete or default.delete.hl
-    defaults.symbol_add = defaults.symbol_add or default.add.text
-    defaults.symbol_change = defaults.symbol_change or default.change.text
-    defaults.symbol_delete = defaults.symbol_delete or default.delete.text
+    defaults.add_highlight = defaults.add_highlight or default.add.hl
+    defaults.change_highlight = defaults.change_highlight or default.change.hl
+    defaults.delete_highlight = defaults.delete_highlight or default.delete.hl
+    defaults.add_symbol = defaults.add_symbol or default.add.text
+    defaults.change_symbol = defaults.change_symbol or default.change.text
+    defaults.delete_symbol = defaults.delete_symbol or default.delete.text
   end)
 
   -- Try setting highlight and symbol defaults from fixed values.
-  defaults.highlight_add = defaults.highlight_add or 'DiffAdd'
-  defaults.highlight_change = defaults.highlight_change or 'DiffChange'
-  defaults.highlight_delete = defaults.highlight_delete or 'DiffDelete'
-  defaults.symbol_add = defaults.symbol_add or fn.nr2char(0x2503)
-  defaults.symbol_change = defaults.symbol_change or fn.nr2char(0x2503)
-  defaults.symbol_delete = defaults.symbol_delete or fn.nr2char(0x2581)
+  defaults.add_highlight = defaults.add_highlight or 'DiffAdd'
+  defaults.change_highlight = defaults.change_highlight or 'DiffChange'
+  defaults.delete_highlight = defaults.delete_highlight or 'DiffDelete'
+  defaults.add_symbol = defaults.add_symbol or fn.nr2char(0x2503)
+  defaults.change_symbol = defaults.change_symbol or fn.nr2char(0x2503)
+  defaults.delete_symbol = defaults.delete_symbol or fn.nr2char(0x2581)
 
   -- Set missing config values with defaults.
   if config.enabled == nil then
@@ -85,34 +85,34 @@ function M.setup(config)
   if config.hide_full_add == nil then
     config.hide_full_add = defaults.hide_full_add
   end
-  config.highlight_add = config.highlight_add or defaults.highlight_add
-  config.highlight_change = config.highlight_change or defaults.highlight_change
-  config.highlight_delete = config.highlight_delete or defaults.highlight_delete
+  config.add_highlight = config.add_highlight or defaults.add_highlight
+  config.change_highlight = config.change_highlight or defaults.change_highlight
+  config.delete_highlight = config.delete_highlight or defaults.delete_highlight
   if config.only_first_line == nil then
     config.only_first_line = defaults.only_first_line
   end
-  config.symbol_add = config.symbol_add or defaults.symbol_add
-  config.symbol_change = config.symbol_change or defaults.symbol_change
-  config.symbol_delete = config.symbol_delete or defaults.symbol_delete
+  config.add_symbol = config.add_symbol or defaults.add_symbol
+  config.change_symbol = config.change_symbol or defaults.change_symbol
+  config.delete_symbol = config.delete_symbol or defaults.delete_symbol
 
   local group = 'gitsigns'
 
   local add = scrollview.register_sign_spec({
     group = group,
-    highlight = config.highlight_add,
-    symbol = config.symbol_add,
+    highlight = config.add_highlight,
+    symbol = config.add_symbol,
   }).name
 
   local change = scrollview.register_sign_spec({
     group = group,
-    highlight = config.highlight_change,
-    symbol = config.symbol_change,
+    highlight = config.change_highlight,
+    symbol = config.change_symbol,
   }).name
 
   local delete = scrollview.register_sign_spec({
     group = group,
-    highlight = config.highlight_delete,
-    symbol = config.symbol_delete,
+    highlight = config.delete_highlight,
+    symbol = config.delete_symbol,
   }).name
 
   scrollview.set_sign_group_state(group, config.enabled)
