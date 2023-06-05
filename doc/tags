@@ -70,6 +70,7 @@ scrollview_line_limit	scrollview.txt	/*scrollview_line_limit*
 scrollview_loclist_priority	scrollview.txt	/*scrollview_loclist_priority*
 scrollview_loclist_symbol	scrollview.txt	/*scrollview_loclist_symbol*
 scrollview_marks_characters	scrollview.txt	/*scrollview_marks_characters*
+scrollview_marks_create_mappings	scrollview.txt	/*scrollview_marks_create_mappings*
 scrollview_marks_priority	scrollview.txt	/*scrollview_marks_priority*
 scrollview_mode	scrollview.txt	/*scrollview_mode*
 scrollview_on_startup	scrollview.txt	/*scrollview_on_startup*

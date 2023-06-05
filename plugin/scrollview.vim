@@ -19,6 +19,19 @@ if !has('nvim-0.5') || !exists('##WinScrolled')
 endif
 
 " *************************************************
+" * Utils
+" *************************************************
+
+" Converts 1 and 0 to v:true and v:false.
+function! s:ToBool(x)
+  if a:x
+    return v:true
+  else
+    return v:false
+  endif
+endfunction
+
+" *************************************************
 " * User Configuration
 " *************************************************
 
@@ -152,6 +165,10 @@ if !has_key(g:, 'scrollview_marks_characters')
   for s:code in s:codes
     call add(g:scrollview_marks_characters, nr2char(s:code))
   endfor
+endif
+if !has_key(g:, 'scrollview_marks_create_mappings')
+  let s:has_m_mapping = maparg('m', 'n') !=# '' || maparg('m', 'x') !=# ''
+  let g:scrollview_marks_create_mappings = s:ToBool(!s:has_m_mapping)
 endif
 let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
 

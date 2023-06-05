@@ -31,15 +31,17 @@ function M.init(enable)
   if vim.tbl_isempty(names) then return end
   scrollview.set_sign_group_state(group, enable)
 
-  -- Create mappings to refresh scrollbars after adding marks.
-  for _, char in ipairs(vim.g.scrollview_marks_characters) do
-    local seq = 'm' .. char
-    if fn.maparg(seq) == '' then
-      local rhs = seq .. '<cmd>ScrollViewRefresh<cr>'
-      vim.keymap.set({'n', 'x'}, seq, rhs, {
-        noremap = true,
-        unique = true,
-      })
+  if to_bool(vim.g.scrollview_marks_create_mappings) then
+    -- Create mappings to refresh scrollbars after adding marks.
+    for _, char in ipairs(vim.g.scrollview_marks_characters) do
+      local seq = 'm' .. char
+      if fn.maparg(seq) == '' then
+        local rhs = seq .. '<cmd>ScrollViewRefresh<cr>'
+        vim.keymap.set({'n', 'x'}, seq, rhs, {
+          noremap = true,
+          unique = true,
+        })
+      end
     end
   end
 
