@@ -509,10 +509,11 @@ if g:scrollview_auto_workarounds
 endif
 
 " *************************************************
-" * Sign Initialization
+" * Initialization
 " *************************************************
 
-function! s:InitializeSigns() abort
+function! s:Initialize() abort
+  " === Initialize built-in sign groups ===
   let s:lookup = {}  " maps sign groups to state (enabled/disabled)
   for s:group in s:available_signs
     let s:lookup[s:group] = v:false
@@ -535,21 +536,21 @@ function! s:InitializeSigns() abort
     let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
     call s:module.init(s:lookup[s:group])
   endfor
+  " === Enable nvim-scrollview if scrollview_on_startup is true ===
+  if g:scrollview_on_startup
+    lua require('scrollview').set_state(true)
+  endif
 endfunction
 
-call timer_start(0, {-> execute('call s:InitializeSigns()', '')})
-
-" *************************************************
-" * Core
-" *************************************************
-
-if g:scrollview_on_startup
-  " Enable scrollview asynchronously. This avoids an issue that prevents diff
-  " mode from functioning properly when it's launched at startup (i.e., with
-  " nvim -d). The issue was reported on Jan 8, 2021, in Neovim Issue #13720.
-  " As of Neovim 0.9.0, the issue is resolved (Neovim PR #21829, Jan 16,
-  " 2023).
-  lua vim.defer_fn(function() require('scrollview').set_state(true) end, 0)
+if has('nvim-0.9')
+  call s:Initialize()
+else
+  " Initialize scrollview asynchronously. This avoids an issue that prevents
+  " diff mode from functioning properly when it's launched at startup (i.e.,
+  " with nvim -d). The issue was reported on Jan 8, 2021, in Neovim Issue
+  " #13720. As of Neovim 0.9.0, the issue is resolved (Neovim PR #21829, Jan
+  " 16, 2023).
+  call timer_start(0, {-> execute('call s:Initialize()', '')})
 endif
 
 " *************************************************
