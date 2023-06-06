@@ -1019,11 +1019,6 @@ local show_signs = function(winid, sign_winids)
     end
     if not vim.tbl_isempty(lines) and the_topline_lookup == nil then
       the_topline_lookup = topline_lookup(winid)
-      -- Remove duplicates for better handling when scrollview_always_show is
-      -- on. This way, sign positions match the lines they correspond to. This
-      -- is only relevant in that scenario, as there won't be duplicates when
-      -- there are more lines than window rows.
-      the_topline_lookup = remove_duplicates(the_topline_lookup)
     end
     for _, line in ipairs(lines) do
       if line >= 1 and line <= line_count then
