@@ -830,10 +830,14 @@ local should_show = function(winid)
   end
   local always_show = to_bool(get_variable('scrollview_always_show', winnr))
   if not always_show then
-    -- Don't show when all lines are on screen.
-    local topline, botline = line_range(winid)
-    local line_count = api.nvim_buf_line_count(bufnr)
-    if botline - topline + 1 == line_count then
+    -- Don't show when all lines can fit on screen.
+    local all_lines_fit = with_win_workspace(winid, function()
+      vim.cmd('keepjumps normal! gg')
+      local topline, botline = line_range(api.nvim_get_current_win())
+      local line_count = api.nvim_buf_line_count(api.nvim_get_current_buf())
+      return botline - topline + 1 == line_count
+    end)
+    if all_lines_fit then
       return false
     end
   end
