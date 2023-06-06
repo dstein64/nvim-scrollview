@@ -542,7 +542,7 @@ function! s:Initialize() abort
   endif
 endfunction
 
-if has('nvim-0.9')
+if has('nvim-0.9') || !getwinvar(winnr(), '&diff')
   call s:Initialize()
 else
   " Initialize scrollview asynchronously. This avoids an issue that prevents
