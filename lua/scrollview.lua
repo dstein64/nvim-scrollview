@@ -832,7 +832,8 @@ local should_show = function(winid)
   if not always_show then
     -- Don't show when all lines can fit on screen.
     local all_lines_fit = with_win_workspace(winid, function()
-      vim.cmd('keepjumps normal! gg')
+      -- Use nvim_win_set_cursor to avoid 'normal! gg'. #96
+      vim.cmd('keepjumps call nvim_win_set_cursor(0, [1, 0])')
       local topline, botline = line_range(api.nvim_get_current_win())
       local line_count = api.nvim_buf_line_count(api.nvim_get_current_buf())
       return botline - topline + 1 == line_count
