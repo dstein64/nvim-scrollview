@@ -730,9 +730,7 @@ end
 -- with a height, row, and col. Uses 1-indexing.
 local calculate_position = function(winnr)
   local winid = fn.win_getid(winnr)
-  local bufnr = api.nvim_win_get_buf(winid)
-  local topline, botline = line_range(winid)
-  local line_count = api.nvim_buf_line_count(bufnr)
+  local topline, _ = line_range(winid)
   local the_topline_lookup = topline_lookup(winid)
   -- top is the position for the top of the scrollbar, relative to the window.
   local top = binary_search(the_topline_lookup, topline)
