@@ -8,7 +8,11 @@ function M.binary_search(l, x)
   while lo <= hi do
     local mid = math.floor((hi - lo) / 2 + lo)
     if l[mid] == x then
-      return mid
+      if mid == 1 or l[mid - 1] ~= x then
+        return mid
+      end
+      -- Keep searching for the leftmost match.
+      hi = mid - 1
     elseif l[mid] < x then
       lo = lo + 1
     else

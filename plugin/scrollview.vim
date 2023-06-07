@@ -37,7 +37,7 @@ endfunction
 
 " === General ===
 
-let g:scrollview_always_show = get(g:, 'scrollview_always_show', v:false)
+let g:scrollview_always_show = get(g:, 'scrollview_always_show', v:true)
 let g:scrollview_auto_mouse = get(g:, 'scrollview_auto_mouse', v:true)
 let g:scrollview_auto_workarounds =
       \ get(g:, 'scrollview_auto_workarounds', v:true)
