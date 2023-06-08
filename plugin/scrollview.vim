@@ -52,6 +52,8 @@ let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', v:false)
+let g:scrollview_include_end_region =
+      \ get(g:, 'scrollview_include_end_region', v:false)
 " The plugin enters a restricted state when the number of buffer lines exceeds
 " the limit. Use -1 for no limit.
 let g:scrollview_line_limit = get(g:, 'scrollview_line_limit', 20000)
