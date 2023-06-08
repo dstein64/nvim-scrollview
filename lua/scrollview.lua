@@ -1980,7 +1980,6 @@ local handle_mouse = function(button)
     end
     local count = 0
     local winid  -- The target window ID for a mouse scroll.
-    local bufnr  -- The target buffer number.
     local scrollbar_offset
     local previous_row
     local idx = 1
@@ -2123,7 +2122,6 @@ local handle_mouse = function(button)
             vim.cmd('normal! ' .. t'<esc>')
           end
           winid = mouse_winid
-          bufnr = api.nvim_win_get_buf(winid)
           scrollbar_offset = props.row - mouse_row
           previous_row = props.row
         end
