@@ -741,13 +741,25 @@ end
 -- with a height, row, and col. Uses 1-indexing.
 local calculate_position = function(winnr)
   local winid = fn.win_getid(winnr)
+  local bufnr = api.nvim_win_get_buf(winid)
   local topline, _ = line_range(winid)
   local the_topline_lookup = topline_lookup(winid)
   -- top is the position for the top of the scrollbar, relative to the window.
   local top = binary_search(the_topline_lookup, topline)
   top = math.min(top, #the_topline_lookup)
+  if top > 1 and the_topline_lookup[top] > topline then
+    top = top - 1  -- use the preceding line from topline lookup.
+  end
   local winheight = get_window_height(winid)
   local height = calculate_scrollbar_height(winnr)
+  if not to_bool(vim.g.scrollview_include_end_region) then
+    -- Make sure bar properly reflects bottom of document.
+    local _, botline = line_range(winid)
+    local line_count = api.nvim_buf_line_count(bufnr)
+    if botline == line_count then
+      top = math.max(top, winheight - height + 1)
+    end
+  end
   local result = {
     height = height,
     row = top,
@@ -1040,6 +1052,9 @@ local show_signs = function(winid, sign_winids)
       if line >= 1 and line <= line_count then
         local row = binary_search(the_topline_lookup, line)
         row = math.min(row, #the_topline_lookup)
+        if row > 1 and the_topline_lookup[row] > line then
+          row = row - 1  -- use the preceding line from topline lookup.
+        end
         if lookup[row] == nil then
           lookup[row] = {}
         end
