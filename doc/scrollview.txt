@@ -188,8 +188,8 @@ scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
 scrollview_include_end_region              *scrollview_include_end_region*
                        |Boolean| specifying whether the region beyond the last
                        line is considered for scrollbar height and
-                       positioning. Defaults to |v:false|. See Issue #58 for
-                       details. (`experimental`)
+                       positioning. Defaults to |v:false|. Considered only at
+                       global scope. See Issue #58 for details. (`experimental`)
 
                                            *scrollview_line_limit*
 scrollview_line_limit  |Number| specifying the buffer size threshold (in
