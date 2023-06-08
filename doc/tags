@@ -67,6 +67,7 @@ scrollview_excluded_filetypes	scrollview.txt	/*scrollview_excluded_filetypes*
 scrollview_folds_priority	scrollview.txt	/*scrollview_folds_priority*
 scrollview_folds_symbol	scrollview.txt	/*scrollview_folds_symbol*
 scrollview_hide_on_intersect	scrollview.txt	/*scrollview_hide_on_intersect*
+scrollview_include_end_region	scrollview.txt	/*scrollview_include_end_region*
 scrollview_line_limit	scrollview.txt	/*scrollview_line_limit*
 scrollview_loclist_priority	scrollview.txt	/*scrollview_loclist_priority*
 scrollview_loclist_symbol	scrollview.txt	/*scrollview_loclist_symbol*
