@@ -531,9 +531,9 @@ end
 -- The computation loops over virtual spans. The cursor may be moved.
 local virtual_topline_lookup_spanwise = function()
   local winnr = fn.winnr()
-  local scrollbar_height = calculate_scrollbar_height(winnr)
   local target_topline_count = get_window_height(0)
   if to_bool(vim.g.scrollview_include_end_region) then
+    local scrollbar_height = calculate_scrollbar_height(winnr)
     target_topline_count = target_topline_count - scrollbar_height + 1
   end
   local result = {}  -- A list of line numbers
@@ -602,9 +602,9 @@ end
 -- as part of calling 'virtual_line_count', so the cursor may be moved.
 local virtual_topline_lookup_linewise = function()
   local winnr = fn.winnr()
-  local scrollbar_height = calculate_scrollbar_height(winnr)
   local target_topline_count = get_window_height(0)
   if to_bool(vim.g.scrollview_include_end_region) then
+    local scrollbar_height = calculate_scrollbar_height(winnr)
     target_topline_count = target_topline_count - scrollbar_height + 1
   end
   local last_line = fn.line('$')
@@ -681,9 +681,9 @@ local simple_topline_lookup = function(winid)
   local winnr = fn.winnr()
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  local scrollbar_height = calculate_scrollbar_height(winnr)
   local target_topline_count = get_window_height(0)
   if to_bool(vim.g.scrollview_include_end_region) then
+    local scrollbar_height = calculate_scrollbar_height(winnr)
     target_topline_count = target_topline_count - scrollbar_height + 1
   end
   local topline_lookup = {}
