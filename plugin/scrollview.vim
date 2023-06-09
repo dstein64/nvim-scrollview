@@ -63,6 +63,8 @@ let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', v:true)
 " adjusted to be within the window.
 let g:scrollview_out_of_bounds_adjust =
       \ get(g:, 'scrollview_out_of_bounds_adjust', v:true)
+let g:scrollview_refresh_mapping_desc =
+      \ get(g:, 'scrollview_refresh_mapping_desc', v:null)
 " Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
 let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 " The default zindex for floating windows is 50. A smaller value is used here
@@ -436,9 +438,15 @@ function s:CreateRefreshMapping(modes, seq) abort
     let l:mode = strcharpart(a:modes, l:idx, 1)
     " A <plug> mapping is avoided since it doesn't work properly in
     " terminal-job mode.
-    execute printf(
-          \ 'silent! %snoremap <unique> %s %s<cmd>ScrollViewRefresh<cr>',
-          \ l:mode, a:seq, a:seq)
+    let l:rhs = a:seq .. '<cmd>ScrollViewRefresh<cr>'
+    let l:opts = {
+          \   'noremap': v:true,
+          \   'unique': v:true,
+          \ }
+    if g:scrollview_refresh_mapping_desc !=# v:null
+      let l:opts.desc = g:scrollview_refresh_mapping_desc
+    endif
+    silent! call nvim_set_keymap(l:mode, a:seq, l:rhs, l:opts)
   endfor
 endfunction
 

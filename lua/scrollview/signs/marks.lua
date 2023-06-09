@@ -37,10 +37,15 @@ function M.init(enable)
       local seq = 'm' .. char
       if fn.maparg(seq) == '' then
         local rhs = seq .. '<cmd>ScrollViewRefresh<cr>'
-        vim.keymap.set({'n', 'x'}, seq, rhs, {
+        local opts = {
           noremap = true,
           unique = true,
-        })
+        }
+        if vim.g.scrollview_refresh_mapping_desc ~= nil
+            and vim.g.scrollview_refresh_mapping_desc ~= vim.NIL then
+          opts.desc = vim.g.scrollview_refresh_mapping_desc
+        end
+        vim.keymap.set({'n', 'x'}, seq, rhs, opts)
       end
     end
   end
