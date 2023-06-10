@@ -392,7 +392,8 @@ for [s:plug_name, s:button] in s:mouse_plug_pairs
   execute 'inoremap' s:lhs s:rhs
 endfor
 
-if g:scrollview_auto_mouse
+" Defer mouse mapping creation until s:Initialize(). #99
+function! s:CreateMouseMappings() abort
   " Create a <leftmouse> mapping only if one does not already exist.
   " For example, a mapping may already exist if the user uses swapped buttons
   " from $VIMRUNTIME/pack/dist/opt/swapmouse/plugin/swapmouse.vim. Handling
@@ -401,7 +402,7 @@ if g:scrollview_auto_mouse
   silent! nmap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
   silent! vmap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
   silent! imap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
-endif
+endfunction
 
 " Additional <plug> mappings are defined for convenience of creating
 " user-defined mappings that call nvim-scrollview functionality. However,
@@ -427,6 +428,10 @@ noremap  <silent> <plug>(ScrollViewRefresh) <cmd>ScrollViewRefresh<cr>
 inoremap <silent> <plug>(ScrollViewRefresh) <cmd>ScrollViewRefresh<cr>
 noremap  <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 inoremap <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
+
+" *************************************************
+" * Workarounds
+" *************************************************
 
 " Creates a mapping where the left-hand-side key sequence is repeated on the
 " right-hand-side, followed by a scrollview refresh. 'modes' is a string with
@@ -467,7 +472,8 @@ function! s:ZfOperator(type) abort
   ScrollViewRefresh
 endfunction
 
-if g:scrollview_auto_workarounds
+" Defer automatic workarounds until s:Initialize(). #99
+function! s:ApplyWorkarounds() abort
   " === Window arrangement synchronization workarounds ===
   let s:win_seqs = [
         \   '<c-w>H', '<c-w>J', '<c-w>K', '<c-w>L',
@@ -516,13 +522,21 @@ if g:scrollview_auto_workarounds
   " re-enabled, and 2) avoid flickering (possibly by only disabling/enabling
   " when there is a single ordinary window in the tab, as the workaround would
   " not be needed otherwise).
-endif
+endfunction
 
 " *************************************************
 " * Initialization
 " *************************************************
 
 function! s:Initialize() abort
+  " === Mouse mappings ===
+  if g:scrollview_auto_mouse
+    call s:CreateMouseMappings()
+  endif
+  " === Automatic workarounds ===
+  if g:scrollview_auto_workarounds
+    call s:ApplyWorkarounds()
+  endif
   " === Initialize built-in sign groups ===
   let s:lookup = {}  " maps sign groups to state (enabled/disabled)
   for s:group in s:available_signs
