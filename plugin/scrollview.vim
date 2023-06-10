@@ -552,16 +552,14 @@ function! s:Initialize() abort
   endif
 endfunction
 
-if has('nvim-0.9') || !getwinvar(winnr(), '&diff')
-  call s:Initialize()
-else
-  " Initialize scrollview asynchronously. This avoids an issue that prevents
-  " diff mode from functioning properly when it's launched at startup (i.e.,
-  " with nvim -d). The issue was reported on Jan 8, 2021, in Neovim Issue
-  " #13720. As of Neovim 0.9.0, the issue is resolved (Neovim PR #21829, Jan
-  " 16, 2023).
-  call timer_start(0, {-> execute('call s:Initialize()', '')})
-endif
+" Initialize scrollview asynchronously. This was originally used to avoid an
+" issue that prevents diff mode from functioning properly when it's launched
+" at startup (i.e., with nvim -d). The issue was reported on Jan 8, 2021, in
+" Neovim Issue #13720. As of Neovim 0.9.0, the issue is resolved (Neovim PR
+" #21829, Jan 16, 2023). It's now used to prevent issues when the setting of
+" configuration variables is deferred (#98).
+" WARN: scrollview events are omitted from the output of --startuptime.
+call timer_start(0, {-> execute('call s:Initialize()', '')})
 
 " *************************************************
 " * Postamble
