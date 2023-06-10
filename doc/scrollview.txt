@@ -519,7 +519,7 @@ example.
     " Enable all sign groups (defaults to ['diagnostics', 'search'])
     let g:scrollview_signs_on_startup = ['all']
 
-Lua Setup ~
+Lua Configuration ~
 
 A Lua `setup()` function is provided for convenience, to set globally scoped
 options (the 'scrollview_' prefix is omitted). For example:
@@ -533,6 +533,16 @@ options (the 'scrollview_' prefix is omitted). For example:
       column = 80,
       signs_on_startup = {'all'}
     })
+
+Alternatively, configuration variables can be set without calling `setup()`.
+ >
+    vim.g.excluded_filetypes = {'nerdtree'},
+    vim.g.current_only = true,
+    vim.g.winblend = 75,
+    -- Position the scrollbar at the 80th character of the buffer
+    vim.g.base = 'buffer',
+    vim.g.column = 80,
+    vim.g.signs_on_startup = {'all'}
 
 Scrollview Modes ~
                                            *scrollview-modes*

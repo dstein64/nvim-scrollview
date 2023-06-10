@@ -126,8 +126,8 @@ let g:scrollview_diagnostics_severities =
 
 #### Lua Example
 
-A `setup()` function is provided for convenience. It can be used to set
-`scrollview` configuration variables.
+A Lua `setup()` function is provided for convenience, to set globally scoped
+options (the 'scrollview_' prefix is omitted).
 
 ```lua
 require('scrollview').setup({
