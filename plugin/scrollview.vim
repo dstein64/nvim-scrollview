@@ -1,3 +1,11 @@
+" The additional check for ##WinScrolled may be redundant, but was added in
+" case early versions of nvim 0.5 didn't have that event.
+if !has('nvim-0.5') || !exists('##WinScrolled')
+  " Logging error with echomsg or echoerr interrupts Neovim's startup by
+  " blocking. Fail silently.
+  finish
+endif
+
 " Initialize scrollview asynchronously. Asynchronous initialization is used to
 " prevent issues when setting configuration variables is deferred (#99). This
 " was originally used to avoid an issue that prevents diff mode from
