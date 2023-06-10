@@ -528,7 +528,7 @@ endfunction
 " * Initialization
 " *************************************************
 
-function! s:Initialize() abort
+function! scrollview#Initialize() abort
   " === Mouse mappings ===
   if g:scrollview_auto_mouse
     call s:CreateMouseMappings()
@@ -565,15 +565,6 @@ function! s:Initialize() abort
     lua require('scrollview').set_state(true)
   endif
 endfunction
-
-" Initialize scrollview asynchronously. This was originally used to avoid an
-" issue that prevents diff mode from functioning properly when it's launched
-" at startup (i.e., with nvim -d). The issue was reported on Jan 8, 2021, in
-" Neovim Issue #13720. As of Neovim 0.9.0, the issue is resolved (Neovim PR
-" #21829, Jan 16, 2023). Asynchronous initialization is now used to prevent
-" issues when setting configuration variables is deferred (#99).
-" WARN: some scrollview events are omitted from the output of --startuptime.
-call timer_start(0, {-> execute('call s:Initialize()', '')})
 
 " *************************************************
 " * Postamble
