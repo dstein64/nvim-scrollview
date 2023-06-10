@@ -558,7 +558,7 @@ endfunction
 " Neovim Issue #13720. As of Neovim 0.9.0, the issue is resolved (Neovim PR
 " #21829, Jan 16, 2023). Asynchronous initialization is now used to prevent
 " issues when setting configuration variables is deferred (#99).
-" WARN: scrollview events are omitted from the output of --startuptime.
+" WARN: some scrollview events are omitted from the output of --startuptime.
 call timer_start(0, {-> execute('call s:Initialize()', '')})
 
 " *************************************************
