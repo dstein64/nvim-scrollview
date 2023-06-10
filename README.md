@@ -107,7 +107,7 @@ details. Plugin authors can tag their repos with `scrollview-signs` for
 There are various settings that can be configured. Please see the documentation
 for details.
 
-#### VimScript Example
+#### Vimscript Example
 
 ```vim
 let g:scrollview_excluded_filetypes = ['nerdtree']
@@ -124,7 +124,10 @@ let g:scrollview_diagnostics_severities =
       \ [luaeval('vim.diagnostic.severity.ERROR')]
 ```
 
-#### Lua Setup Example
+#### Lua Example
+
+A `setup()` function is provided for convenience. It can be used to set
+`scrollview` configuration variables.
 
 ```lua
 require('scrollview').setup({
@@ -138,6 +141,17 @@ require('scrollview').setup({
 })
 ```
 
+Alternatively, configuration variables can be set without calling `setup()`.
+
+```lua
+vim.g.excluded_filetypes = {'nerdtree'},
+vim.g.current_only = true,
+vim.g.winblend = 75,
+vim.g.base = 'buffer',
+vim.g.column = 80,
+vim.g.signs_on_startup = {'all'},
+vim.g.diagnostics_severities = {vim.diagnostic.severity.ERROR}
+```
 ## Documentation
 
 Documentation can be accessed with:
