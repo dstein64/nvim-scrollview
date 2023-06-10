@@ -2,14 +2,6 @@
 " * Preamble
 " *************************************************
 
-if get(g:, 'loaded_scrollview', 0)
-  finish
-endif
-let g:loaded_scrollview = 1
-
-let s:save_cpo = &cpo
-set cpo&vim
-
 " The additional check for ##WinScrolled may be redundant, but was added in
 " case early versions of nvim 0.5 didn't have that event.
 if !has('nvim-0.5') || !exists('##WinScrolled')
@@ -392,8 +384,7 @@ for [s:plug_name, s:button] in s:mouse_plug_pairs
   execute 'inoremap' s:lhs s:rhs
 endfor
 
-" Defer mouse mapping creation until s:Initialize(). #99
-function! s:CreateMouseMappings() abort
+if g:scrollview_auto_mouse
   " Create a <leftmouse> mapping only if one does not already exist.
   " For example, a mapping may already exist if the user uses swapped buttons
   " from $VIMRUNTIME/pack/dist/opt/swapmouse/plugin/swapmouse.vim. Handling
@@ -402,7 +393,7 @@ function! s:CreateMouseMappings() abort
   silent! nmap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
   silent! vmap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
   silent! imap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
-endfunction
+endif
 
 " Additional <plug> mappings are defined for convenience of creating
 " user-defined mappings that call nvim-scrollview functionality. However,
@@ -472,8 +463,7 @@ function! s:ZfOperator(type) abort
   ScrollViewRefresh
 endfunction
 
-" Defer automatic workarounds until s:Initialize(). #99
-function! s:ApplyWorkarounds() abort
+if g:scrollview_auto_workarounds
   " === Window arrangement synchronization workarounds ===
   let s:win_seqs = [
         \   '<c-w>H', '<c-w>J', '<c-w>K', '<c-w>L',
@@ -522,53 +512,49 @@ function! s:ApplyWorkarounds() abort
   " re-enabled, and 2) avoid flickering (possibly by only disabling/enabling
   " when there is a single ordinary window in the tab, as the workaround would
   " not be needed otherwise).
-endfunction
+endif
+
+" *************************************************
+" * Sign Group Initialization
+" *************************************************
+
+" === Initialize built-in sign groups ===
+let s:lookup = {}  " maps sign groups to state (enabled/disabled)
+for s:group in s:available_signs
+  let s:lookup[s:group] = v:false
+endfor
+for s:group in g:scrollview_signs_on_startup
+  if s:group ==# 'all'
+    for s:group2 in s:available_signs
+      let s:lookup[s:group2] = v:true
+    endfor
+    break
+  elseif s:group ==# 'defaults'
+    for s:group2 in s:default_signs
+      let s:lookup[s:group2] = v:true
+    endfor
+  else
+    let s:lookup[s:group] = v:true
+  endif
+endfor
+for s:group in s:available_signs
+  let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
+  call s:module.init(s:lookup[s:group])
+endfor
+
+" *************************************************
+" * Enable/Disable scrollview
+" *************************************************
+
+" Enable nvim-scrollview if scrollview_on_startup is true.
+if g:scrollview_on_startup
+  lua require('scrollview').set_state(true)
+endif
 
 " *************************************************
 " * Initialization
 " *************************************************
 
 function! scrollview#Initialize() abort
-  " === Mouse mappings ===
-  if g:scrollview_auto_mouse
-    call s:CreateMouseMappings()
-  endif
-  " === Automatic workarounds ===
-  if g:scrollview_auto_workarounds
-    call s:ApplyWorkarounds()
-  endif
-  " === Initialize built-in sign groups ===
-  let s:lookup = {}  " maps sign groups to state (enabled/disabled)
-  for s:group in s:available_signs
-    let s:lookup[s:group] = v:false
-  endfor
-  for s:group in g:scrollview_signs_on_startup
-    if s:group ==# 'all'
-      for s:group2 in s:available_signs
-        let s:lookup[s:group2] = v:true
-      endfor
-      break
-    elseif s:group ==# 'defaults'
-      for s:group2 in s:default_signs
-        let s:lookup[s:group2] = v:true
-      endfor
-    else
-      let s:lookup[s:group] = v:true
-    endif
-  endfor
-  for s:group in s:available_signs
-    let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
-    call s:module.init(s:lookup[s:group])
-  endfor
-  " === Enable nvim-scrollview if scrollview_on_startup is true ===
-  if g:scrollview_on_startup
-    lua require('scrollview').set_state(true)
-  endif
+  " The first call to this function will result in executing this file's code.
 endfunction
-
-" *************************************************
-" * Postamble
-" *************************************************
-
-let &cpo = s:save_cpo
-unlet s:save_cpo
