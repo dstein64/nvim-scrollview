@@ -465,14 +465,13 @@ if g:scrollview_auto_workarounds
     " Refresh after :wincmd.
     "   :[count]winc[md]
     "   :winc[md]!
-    " WARN: [count] is not handled.
     " WARN: Only text at the beginning of the command is considered.
     " WARN: CmdlineLeave is not executed for command mappings (<cmd>).
     " WARN: CmdlineLeave is not executed for commands executed from Lua
     autocmd CmdlineLeave *
           \ : if !get(v:event, 'abort', v:false)
           \ |   if expand('<afile>') ==# ':'
-          \ |     if getcmdline() =~# '^winc'
+          \ |     if getcmdline() =~# '^\d*winc'
           \ |       ScrollViewRefresh
           \ |     endif
           \ |   endif
