@@ -16,6 +16,9 @@ local to_bool = utils.to_bool
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
+-- WARN: Don't move the cursor or change the current window. It can have
+-- unwanted side effects (e.g., #18, #23, #43, window sizes changing to satisfy
+-- winheight/winwidth, etc.).
 -- WARN: Functionality that temporarily moves the cursor and restores it should
 -- use a window workspace to prevent unwanted side effects. More details are in
 -- the documentation for with_win_workspace.
@@ -124,24 +127,6 @@ local set_window_option = function(winid, key, value)
   -- is set in addition to the window-local option, when using Neovim's API or
   -- Lua interface.
   fn.setwinvar(winid, '&' .. key, value)
-end
-
--- Executes a function in a window with the specified options temporarily set.
-local with_win_options = function(winid, opts, fun)
-  api.nvim_win_call(winid, function()
-    local restore = {}
-    for key, val in pairs(opts) do
-      local cur = api.nvim_win_get_option(winid, key)
-      if cur ~= val then
-        restore[key] = cur
-        set_window_option(winid, key, val)
-      end
-    end
-    fun()
-    for key, val in pairs(restore) do
-      set_window_option(winid, key, val)
-    end
-  end)
 end
 
 -- Return the base window ID for the specified window. Assumes that windows
@@ -1257,70 +1242,20 @@ local close_scrollview_window = function(winid)
   vim.cmd('silent! noautocmd call nvim_win_close(' .. winid .. ', 1)')
 end
 
--- Returns a dictionary mapping winid to topline for the ordinary windows in
--- the current tab.
-local get_toplines = function()
-  local result = {}
-  local tabnr = fn.tabpagenr()
-  for _, info in ipairs(fn.getwininfo()) do
-    local winid = info.winid
-    if info.tabnr == tabnr and is_ordinary_window(winid) then
-      result[winid] = info.topline
-    end
-  end
-  return result
-end
-
--- Like the built-in winrestcmd, but ignores floating/external windows.
-local winrestcmd2 = function()
-  local cmds = fn.split(fn.winrestcmd(), '|')
-  local filtered = {}
-  for _, cmd in ipairs(cmds) do
-    local winnr = string.match(cmd, '%d+')
-    if winnr ~= nil and is_ordinary_window(fn.win_getid(winnr)) then
-      table.insert(filtered, cmd)
-    end
-  end
-  return fn.join(filtered, '|')
-end
-
 -- Sets global state that is assumed by the core functionality and returns a
 -- state that can be used for restoration.
 local init = function()
   local eventignore = api.nvim_get_option('eventignore')
   api.nvim_set_option('eventignore', 'all')
-  -- It's possible that window views can change as a result of moving the
-  -- cursor across windows throughout nvim-scrollview processing (Issue #43).
-  -- Toplines are saved so that the views can be restored in s:Restore.
-  -- winsaveview/winrestview would be insufficient to restore views (vim Issue
-  -- #8654).
-  -- XXX: Because window views can change, scrollbars could be positioned
-  -- slightly incorrectly when that happens since they would correspond to the
-  -- (temporarily) shifted view. A possible workaround could be to 1)
-  -- temporarily set scrolloff to 0 (both global and local scrolloff options)
-  -- for the duration of processing, or 2) update nvim-scrollview so that it
-  -- uses win_execute for all functionality and never has to change windows,
-  -- preventing the shifted views from occurring.
   local state = {
-    previous_winid = fn.win_getid(fn.winnr('#')),
     initial_winid = fn.win_getid(fn.winnr()),
     belloff = api.nvim_get_option('belloff'),
     eventignore = eventignore,
-    winwidth = api.nvim_get_option('winwidth'),
-    winheight = api.nvim_get_option('winheight'),
-    winrestcmd = winrestcmd2(),
     mode = fn.mode(),
-    toplines = get_toplines()
   }
   -- Disable the bell (e.g., for invalid cursor movements, trying to navigate
   -- to a next fold, when no fold exists).
   api.nvim_set_option('belloff', 'all')
-  -- Minimize winwidth and winheight so that changing the current window
-  -- doesn't unexpectedly cause window resizing.
-  api.nvim_set_option(
-    'winwidth', math.max(1, api.nvim_get_option('winminwidth')))
-  api.nvim_set_option(
-    'winheight', math.max(1, api.nvim_get_option('winminheight')))
   if is_select_mode(state.mode) then
     -- Temporarily switch from select-mode to visual-mode, so that 'normal!'
     -- commands can be executed properly.
@@ -1329,28 +1264,8 @@ local init = function()
   return state
 end
 
-local restore = function(state, restore_toplines)
-  -- Restore the previous window so that <c-w>p and winnr('#') function as
-  -- expected, and so that plugins that utilize previous windows (e.g., CtrlP)
-  -- function properly. If the current window is the same as the initial
-  -- window, set the same previous window. If the current window differs from
-  -- the initial window, use the initial window for setting the previous
-  -- window.
-  -- WARN: Since the current window is changed, 'eventignore' should not be
-  -- restored until after.
-  if restore_toplines == nil then restore_toplines = true end
+local restore = function(state)
   local current_winid = fn.win_getid(fn.winnr())
-  pcall(function()
-    local previous_winid = state.previous_winid
-    if current_winid ~= state.initial_winid then
-      previous_winid = state.initial_winid
-    end
-    local previous_winnr = api.nvim_win_get_number(previous_winid)
-    if fn.winnr('#') ~= previous_winnr then
-      api.nvim_set_current_win(previous_winid)
-      api.nvim_set_current_win(current_winid)
-    end
-  end)
   -- Switch back to select mode where applicable.
   if current_winid == state.initial_winid then
     if is_select_mode(state.mode) then
@@ -1358,44 +1273,6 @@ local restore = function(state, restore_toplines)
         vim.cmd('normal! ' .. t'<c-g>')
       else  -- luacheck: ignore 542 (an empty if branch)
         -- WARN: this scenario should not arise, and is not handled.
-      end
-    end
-  end
-  -- Restore options.
-  api.nvim_set_option('winwidth', state.winwidth)
-  api.nvim_set_option('winheight', state.winheight)
-  -- After restoring winwidth and winheight, restore window sizes (#76). This
-  -- is intentionally done before restoring toplines, else it's possible for a
-  -- non-current window to scroll. To replicate such scrolling (which requires
-  -- moving the following line later):
-  --   :vert split
-  --   :set winwidth=130
-  --   :vert resize -30
-  --   :execute "normal! \<c-d>"
-  if winrestcmd2() ~= state.winrestcmd then
-    -- Only restore if winrestcmd changed. #79
-    api.nvim_command(state.winrestcmd)
-  end
-  if restore_toplines then
-    -- Scroll windows back to their original positions.
-    -- Temporarily disable cursorbind/scrollbind to prevent unintended
-    -- scrolling (Issue #68).
-    local opts = {
-      cursorbind = false,
-      scrollbind = false,
-    }
-    for winid, topline in pairs(state.toplines) do
-      -- The number of scrolls is limited as a precaution against entering an
-      -- infinite loop.
-      local countdown = topline - fn.getwininfo(winid)[1].topline
-      while countdown > 0 and fn.getwininfo(winid)[1].topline < topline do
-        -- Can't use set_topline, since that function changes the current
-        -- window, and would result in the same problem that is intended to be
-        -- solved here.
-        with_win_options(winid, opts, function()
-          vim.cmd('keepjumps normal! ' .. t'<c-e>')
-        end)
-        countdown = countdown - 1
       end
     end
   end
@@ -1967,7 +1844,6 @@ local handle_mouse = function(button)
     return
   end
   local state = init()
-  local restore_toplines = true
   pcall(function()
     -- Re-send the click, so its position can be obtained through
     -- read_input_stream().
@@ -2076,7 +1952,6 @@ local handle_mouse = function(button)
               and mouse_col >= sign_props.col
               and mouse_col <= sign_props.col + sign_props.width - 1
               and (not clicked_bar or sign_props.zindex > props.zindex) then
-              restore_toplines = false
               api.nvim_win_call(mouse_winid, function()
                 -- Go to the next sign_props line after the cursor.
                 local current = fn.line('.')
@@ -2101,13 +1976,6 @@ local handle_mouse = function(button)
           -- result in unintended clicking/dragging where there is no scrollbar.
           refresh_bars(false)
           vim.cmd('redraw')
-          -- Don't restore toplines whenever a scrollbar was clicked. This
-          -- prevents the window where a scrollbar is dragged from having its
-          -- topline restored to the pre-drag position. This also prevents
-          -- restoring windows that may have had their windows shifted during
-          -- the course of scrollbar clicking/dragging, to prevent jumpiness in
-          -- the display.
-          restore_toplines = false
           props = get_scrollview_bar_props(mouse_winid)
           if vim.tbl_isempty(props)
               or props.type ~= bar_type
@@ -2166,7 +2034,7 @@ local handle_mouse = function(button)
       end  -- end if
     end  -- end while
   end)  -- end pcall
-  restore(state, restore_toplines)
+  restore(state)
 end
 
 -- A convenience function for setting global options with
