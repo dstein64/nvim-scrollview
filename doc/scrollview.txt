@@ -520,7 +520,7 @@ example.
     let g:scrollview_signs_on_startup = ['all']
 
 Lua Configuration ~
-
+                                           *scrollview.setup()*
 A Lua `setup()` function is provided for convenience, to set globally scoped
 options (the 'scrollview_' prefix is omitted). For example:
  >
@@ -684,13 +684,13 @@ Lua code is necessary for adding new sign functionality to `nvim-scrollview`.
  >
   local scrollview = require('scrollview')
 
-get_sign_eligible_windows()                *scrollview.get_sign_eligible_windows*
+get_sign_eligible_windows()                *scrollview.get_sign_eligible_windows()*
     Returns |window-ID|s that are eligible for signs to be shown.
 
     Return: ~
         (list) a list-like table with |window-ID|s.
 
-is_sign_group_active({group})              *scrollview.is_sign_group_active*
+is_sign_group_active({group})              *scrollview.is_sign_group_active()*
     Checks whether a sign group is active. A group is considered active if
     `nvim-scrollview` is enabled and the sign group is enabled.
 
@@ -700,7 +700,7 @@ is_sign_group_active({group})              *scrollview.is_sign_group_active*
     Return: ~
         (boolean) `true` if active, else `false`.
 
-register_sign_spec({spec})                 *scrollview.register_sign_spec*
+register_sign_spec({spec})                 *scrollview.register_sign_spec()*
     Register a sign specification.
 
     Parameters: ~
@@ -727,7 +727,7 @@ register_sign_spec({spec})                 *scrollview.register_sign_spec*
                   registration specified type `'b'`, or to the window if the
                   registration specified type `'w'`.
 
-set_sign_group_state({group}, {enable})    *scrollview.set_sign_group_state*
+set_sign_group_state({group}, {enable})    *scrollview.set_sign_group_state()*
     Enable, disable, or toggle a sign group.
 
     Parameters: ~
