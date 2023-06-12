@@ -144,13 +144,13 @@ require('scrollview').setup({
 Alternatively, configuration variables can be set without calling `setup()`.
 
 ```lua
-vim.g.excluded_filetypes = {'nerdtree'},
-vim.g.current_only = true,
-vim.g.winblend = 75,
-vim.g.base = 'buffer',
-vim.g.column = 80,
-vim.g.signs_on_startup = {'all'},
-vim.g.diagnostics_severities = {vim.diagnostic.severity.ERROR}
+vim.g.scrollview_excluded_filetypes = {'nerdtree'},
+vim.g.scrollview_current_only = true,
+vim.g.scrollview_winblend = 75,
+vim.g.scrollview_base = 'buffer',
+vim.g.scrollview_column = 80,
+vim.g.scrollview_signs_on_startup = {'all'},
+vim.g.scrollview_diagnostics_severities = {vim.diagnostic.severity.ERROR}
 ```
 ## Documentation
 
