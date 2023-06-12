@@ -105,7 +105,7 @@ details. Plugin authors can tag their repos with `scrollview-signs` for
 ## Configuration
 
 There are various settings that can be configured. Please see the documentation
-for details.
+for details. The code below only shows a few of the possible settings.
 
 #### Vimscript Example
 
