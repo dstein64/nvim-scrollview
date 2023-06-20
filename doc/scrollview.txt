@@ -20,9 +20,8 @@ signs. The plugin is customizable (see |scrollview-configuration|).
 1. Requirements                            *scrollview-requirements*
 
 * `nvim>=0.5`
-* Scrollbar mouse dragging requires mouse support (see |'mouse'|) and
-  `nvim>=0.6`.
-* Signs require `nvim>=0.7`
+* Scrollbar mouse dragging requires mouse support (see |'mouse'|) and `nvim>=0.6`.
+* Signs require `nvim>=0.9`
 
 ============================================================================
 2. Installation                            *scrollview-installation*
@@ -184,6 +183,12 @@ scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
                        |Boolean| specifying whether each scrollbar or sign
                        becomes hidden (not shown) when it would otherwise
                        intersect with a floating window. Defaults to |v:false|.
+
+scrollview_hover                           *scrollview_hover*
+                       |Boolean| specifying whether the highlighting of
+                       scrollbars and signs should change when hovering with
+                       the mouse. Requires mouse support (see |'mouse'|) with
+                       |'mousemoveevent'| set. Defaults to |v:true|.
 
 scrollview_include_end_region              *scrollview_include_end_region*
 (experimental)         |Boolean| specifying whether the region beyond the last
@@ -605,6 +610,8 @@ colors.
   otherwise
 `ScrollViewFolds`               fold signs
   Directory
+`ScrollViewHover`               scrollbar and signs on hover
+  Conceal
 `ScrollViewLocList`             loclist signs
   LineNr
 `ScrollViewMarks`               mark signs

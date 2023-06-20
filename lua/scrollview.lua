@@ -93,14 +93,23 @@ local sign_specs = {}
 -- Maps sign groups to state (enabled or disabled).
 local sign_group_state = {}
 
--- A highlight namespace that is used for buffer highlighting and as part of a
--- workaround for Neovim #22906.
-local hl_namespace = api.nvim_create_namespace('')
-api.nvim_set_hl(hl_namespace, 'Normal', {})
+local mousemove = t('<mousemove>')
 
 -- *************************************************
 -- * Core
 -- *************************************************
+
+local is_mouse_over_win = function(winid)
+  -- WARN: This doesn't consider that there could be other floating windows
+  -- with higher z-index than that of 'winid' in the same position as the
+  -- mouse. This function would consider the mouse to be hovering both windows.
+  local mousepos = fn.getmousepos()
+  local wininfo = fn.getwininfo(winid)[1]
+  return mousepos.screenrow >= wininfo.winrow
+    and mousepos.screenrow < wininfo.winrow + wininfo.height
+    and mousepos.screencol >= wininfo.wincol
+    and mousepos.screencol < wininfo.wincol + wininfo.width
+end
 
 -- Return window height, subtracting 1 if there is a winbar.
 local get_window_height = function(winid)
@@ -946,13 +955,23 @@ local show_scrollbar = function(winid, bar_winid)
   end
   -- Scroll to top so that the custom character spans full scrollbar height.
   vim.cmd('keepjumps call nvim_win_set_cursor(' .. bar_winid .. ', [1, 0])')
-  local group = 'ScrollView'
-  if is_restricted(winnr) then group = group .. 'Restricted' end
-  -- It's not sufficient to just specify Normal highlighting. With just that, a
-  -- color scheme's specification of EndOfBuffer would be used to color the
-  -- bottom of the scrollbar.
-  local winhighlight = string.format('Normal:%s,EndOfBuffer:%s', group, group)
-  set_window_option(bar_winid, 'winhighlight', winhighlight)
+  local highlight_fn = function(hover)
+    hover = hover and get_variable('scrollview_hover', winnr)
+    local group
+    if hover then
+      group = 'ScrollViewHover'
+    else
+      group = 'ScrollView'
+      if is_restricted(api.nvim_win_get_number(winid)) then
+        group = group .. 'Restricted'
+      end
+    end
+    -- It's not sufficient to just specify Normal highlighting. With just that, a
+    -- color scheme's specification of EndOfBuffer would be used to color the
+    -- bottom of the scrollbar.
+    local winhighlight = string.format('Normal:%s,EndOfBuffer:%s', group, group)
+    set_window_option(bar_winid, 'winhighlight', winhighlight)
+  end
   local winblend = get_variable('scrollview_winblend', winnr)
   set_window_option(bar_winid, 'winblend', winblend)
   set_window_option(bar_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
@@ -961,17 +980,25 @@ local show_scrollbar = function(winid, bar_winid)
   api.nvim_win_set_var(bar_winid, win_var, win_val)
   api.nvim_win_set_var(bar_winid, pending_async_removal_var, false)
   local props = {
-    type = bar_type,
-    parent_winid = winid,
-    scrollview_winid = bar_winid,
+    col = bar_position.col,
     -- Save bar_position.height, not the actual height, which may be reduced
     -- for the bar to fit in the window.
     height = bar_position.height,
+    parent_winid = winid,
     row = bar_position.row,
-    col = bar_position.col,
+    scrollview_winid = bar_winid,
+    type = bar_type,
     zindex = zindex,
   }
+  if to_bool(fn.has('nvim-0.7')) then
+    -- Neovim 0.7 required to later avoid "Cannot convert given lua type".
+    props.highlight_fn = highlight_fn
+  end
   api.nvim_win_set_var(bar_winid, props_var, props)
+  local hover = to_bool(fn.exists('&mousemoveevent'))
+    and vim.o.mousemoveevent
+    and is_mouse_over_win(bar_winid)
+  highlight_fn(hover)
   return bar_winid
 end
 
@@ -979,6 +1006,9 @@ end
 -- winids, 'sign_winids', is specified for possible reuse. Reused windows are
 -- removed from the list.
 local show_signs = function(winid, sign_winids)
+  -- Neovim 0.8 has an issue with matchaddpos highlighting (similar type of
+  -- issue reported in Neovim #22906).
+  if not to_bool(fn.has('nvim-0.9')) then return end
   local cur_winid = api.nvim_get_current_win()
   local winnr = api.nvim_win_get_number(winid)
   local wininfo = fn.getwininfo(winid)[1]
@@ -1136,11 +1166,6 @@ local show_signs = function(winid, sign_winids)
           {symbol}
         )
         api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
-        local highlight = properties.highlight
-        if highlight ~= nil then
-          api.nvim_buf_add_highlight(
-            sign_bufnr, hl_namespace, highlight, sign_line_count - 1, 0, -1)
-        end
         local sign_winid
         local zindex = get_variable('scrollview_signs_zindex', winnr)
         local config = {
@@ -1160,6 +1185,24 @@ local show_signs = function(winid, sign_winids)
           sign_winid = table.remove(sign_winids)
           api.nvim_win_set_config(sign_winid, config)
         end
+        local highlight_fn = function(hover)
+          hover = hover and get_variable('scrollview_hover', winnr)
+          local highlight
+          if hover then
+            highlight = 'ScrollViewHover'
+          else
+            highlight = properties.highlight
+          end
+          if highlight ~= nil then
+            api.nvim_win_call(sign_winid, function()
+              fn.matchaddpos(highlight, {sign_line_count})
+            end)
+          end
+        end
+        local hover = to_bool(fn.exists('&mousemoveevent'))
+          and vim.o.mousemoveevent
+          and is_mouse_over_win(sign_winid)
+        highlight_fn(hover)
         -- Scroll to the inserted line.
         local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
         vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
@@ -1167,11 +1210,6 @@ local show_signs = function(winid, sign_winids)
         set_window_option(sign_winid, 'winhighlight', winhighlight)
         local winblend = get_variable('scrollview_winblend', winnr)
         set_window_option(sign_winid, 'winblend', winblend)
-        -- Normal highlighting is ignored for floating windows in Neovim 0.8
-        -- (Neovim #22906) and fixed for Neovim 0.9. There's a workaround.
-        if to_bool(fn.has('nvim-0.8')) and not to_bool(fn.has('nvim-0.9')) then
-          api.nvim_win_set_hl_ns(sign_winid, hl_namespace)
-        end
         -- foldcolumn takes a string
         set_window_option(sign_winid, 'foldcolumn', '0')
         set_window_option(sign_winid, 'foldenable', false)
@@ -1179,16 +1217,20 @@ local show_signs = function(winid, sign_winids)
         api.nvim_win_set_var(sign_winid, win_var, win_val)
         api.nvim_win_set_var(sign_winid, pending_async_removal_var, false)
         local props = {
-          type = sign_type,
-          parent_winid = winid,
-          scrollview_winid = sign_winid,
-          row = row,
           col = col,
-          width = sign_width,
           lines = properties.lines,
-          zindex = zindex,
+          parent_winid = winid,
+          row = row,
+          scrollview_winid = sign_winid,
           sign_spec_id = properties.sign_spec_id,
+          type = sign_type,
+          width = sign_width,
+          zindex = zindex,
         }
+        if to_bool(fn.has('nvim-0.7')) then
+          -- Neovim 0.7 required to later avoid "Cannot convert given lua type".
+          props.highlight_fn = highlight_fn
+        end
         api.nvim_win_set_var(sign_winid, props_var, props)
       end
     end
@@ -1521,8 +1563,6 @@ local refresh_bars = function(async_removal)
     api.nvim_set_option('eventignore', eventignore)
     -- Delete all signs and highlights in the sign buffer.
     if sign_bufnr ~= -1 and to_bool(fn.bufexists(sign_bufnr)) then
-      -- Clear existing highlights to prevent memory leak.
-      api.nvim_buf_clear_namespace(sign_bufnr, hl_namespace, 0, -1)
       api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
       -- Don't use fn.deletebufline to avoid the "--No lines in buffer--"
       -- message that shows when the buffer is empty.
@@ -1610,6 +1650,19 @@ local refresh_bars_async = function()
       end
     end, 0)
   end, 0)
+end
+
+if vim.on_key ~= nil then
+  vim.on_key(function(str)
+    if string.find(str, mousemove) then
+      for _, winid in ipairs(get_scrollview_windows()) do
+        local props = api.nvim_win_get_var(winid, props_var)
+        if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
+          props.highlight_fn(is_mouse_over_win(winid))
+        end
+      end
+    end
+  end)
 end
 
 -- *************************************************

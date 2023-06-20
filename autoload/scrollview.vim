@@ -32,6 +32,7 @@ let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', v:false)
+let g:scrollview_hover = get(g:, 'scrollview_hover', v:true)
 let g:scrollview_include_end_region =
       \ get(g:, 'scrollview_include_end_region', v:false)
 " The plugin enters a restricted state when the number of buffer lines exceeds
@@ -232,6 +233,7 @@ for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
   execute 'highlight default link ' .. s:key .. ' ' .. s:highlight
 endfor
 highlight default link ScrollViewFolds Directory
+highlight default link ScrollViewHover Conceal
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks ColorColumn
 highlight default link ScrollViewQuickFix Constant

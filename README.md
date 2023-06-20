@@ -22,7 +22,7 @@ scrollview-configuration`).
 * `nvim>=0.5`
 * Scrollbar mouse dragging requires mouse support (see `:help 'mouse'`) and
   `nvim>=0.6`
-* Signs require `nvim>=0.7`
+* Signs require `nvim>=0.9`
 
 ## Installation
 
