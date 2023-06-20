@@ -99,16 +99,27 @@ local mousemove = t('<mousemove>')
 -- * Core
 -- *************************************************
 
-local is_mouse_over_win = function(winid)
+local is_mouse_over_scrollview_win = function(winid)
   -- WARN: This doesn't consider that there could be other floating windows
   -- with higher z-index than that of 'winid' in the same position as the
   -- mouse. This function would consider the mouse to be hovering both windows.
+  -- WARN: We use the positioning from the scrollview props. This is so that
+  -- clicking when hovering retains the hover highlight for scrollview windows
+  -- when their parent winnr > 1. Otherwise, it appeared getwininfo,
+  -- nvim_win_get_posiiton, and win_screenpos were not returning accurate info
+  -- (may relate to Neovim #24078). Perhaps it's because the windows were just
+  -- created and not yet in the necessary state. The
+  -- nvim_win_get_{height,width} functions work fine, so those can be used
+  -- without issue. #100
   local mousepos = fn.getmousepos()
-  local wininfo = fn.getwininfo(winid)[1]
-  return mousepos.screenrow >= wininfo.winrow
-    and mousepos.screenrow < wininfo.winrow + wininfo.height
-    and mousepos.screencol >= wininfo.wincol
-    and mousepos.screencol < wininfo.wincol + wininfo.width
+  local props = api.nvim_win_get_var(winid, props_var)
+  local parent_pos = fn.win_screenpos(props.parent_winid)
+  local winrow = props.row + parent_pos[1] - 1
+  local wincol = props.col + parent_pos[2] - 1
+  return mousepos.screenrow >= winrow
+    and mousepos.screenrow < winrow + api.nvim_win_get_height(winid)
+    and mousepos.screencol >= wincol
+    and mousepos.screencol < wincol + api.nvim_win_get_width(winid)
 end
 
 -- Return window height, subtracting 1 if there is a winbar.
@@ -997,7 +1008,7 @@ local show_scrollbar = function(winid, bar_winid)
   api.nvim_win_set_var(bar_winid, props_var, props)
   local hover = to_bool(fn.exists('&mousemoveevent'))
     and vim.o.mousemoveevent
-    and is_mouse_over_win(bar_winid)
+    and is_mouse_over_scrollview_win(bar_winid)
   highlight_fn(hover)
   return bar_winid
 end
@@ -1199,10 +1210,6 @@ local show_signs = function(winid, sign_winids)
             end)
           end
         end
-        local hover = to_bool(fn.exists('&mousemoveevent'))
-          and vim.o.mousemoveevent
-          and is_mouse_over_win(sign_winid)
-        highlight_fn(hover)
         -- Scroll to the inserted line.
         local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
         vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
@@ -1232,6 +1239,10 @@ local show_signs = function(winid, sign_winids)
           props.highlight_fn = highlight_fn
         end
         api.nvim_win_set_var(sign_winid, props_var, props)
+        local hover = to_bool(fn.exists('&mousemoveevent'))
+          and vim.o.mousemoveevent
+          and is_mouse_over_scrollview_win(sign_winid)
+        highlight_fn(hover)
       end
     end
   end
@@ -1658,7 +1669,7 @@ if vim.on_key ~= nil then
       for _, winid in ipairs(get_scrollview_windows()) do
         local props = api.nvim_win_get_var(winid, props_var)
         if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
-          props.highlight_fn(is_mouse_over_win(winid))
+          props.highlight_fn(is_mouse_over_scrollview_win(winid))
         end
       end
     end
