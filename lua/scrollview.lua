@@ -108,18 +108,16 @@ local is_mouse_over_scrollview_win = function(winid)
   -- when their parent winnr > 1. Otherwise, it appeared getwininfo,
   -- nvim_win_get_posiiton, and win_screenpos were not returning accurate info
   -- (may relate to Neovim #24078). Perhaps it's because the windows were just
-  -- created and not yet in the necessary state. The
-  -- nvim_win_get_{height,width} functions work fine, so those can be used
-  -- without issue. #100
+  -- created and not yet in the necessary state. #100
   local mousepos = fn.getmousepos()
   local props = api.nvim_win_get_var(winid, props_var)
   local parent_pos = fn.win_screenpos(props.parent_winid)
   local winrow = props.row + parent_pos[1] - 1
   local wincol = props.col + parent_pos[2] - 1
   return mousepos.screenrow >= winrow
-    and mousepos.screenrow < winrow + api.nvim_win_get_height(winid)
+    and mousepos.screenrow < winrow + props.height
     and mousepos.screencol >= wincol
-    and mousepos.screencol < wincol + api.nvim_win_get_width(winid)
+    and mousepos.screencol < wincol + props.width
 end
 
 -- Return window height, subtracting 1 if there is a winbar.
@@ -948,12 +946,13 @@ local show_scrollbar = function(winid, bar_winid)
   -- When there is a winbar, nvim_open_win with relative=win considers row 0 to
   -- be the line below the winbar.
   local max_height = get_window_height(winid) - bar_position.row + 1
+  local height = math.min(bar_position.height, max_height)
   local config = {
     win = winid,
     relative = 'win',
     focusable = false,
     style = 'minimal',
-    height = math.min(bar_position.height, max_height),
+    height = height,
     width = bar_width,
     row = bar_position.row - 1,
     col = bar_position.col - 1,
@@ -992,13 +991,15 @@ local show_scrollbar = function(winid, bar_winid)
   api.nvim_win_set_var(bar_winid, pending_async_removal_var, false)
   local props = {
     col = bar_position.col,
-    -- Save bar_position.height, not the actual height, which may be reduced
-    -- for the bar to fit in the window.
-    height = bar_position.height,
+    -- Save bar_position.height in addition to the actual height, since the
+    -- latter may be reduced for the bar to fit in the window.
+    full_height = bar_position.height,
+    height = height,
     parent_winid = winid,
     row = bar_position.row,
     scrollview_winid = bar_winid,
     type = bar_type,
+    width = bar_width,
     zindex = zindex,
   }
   if to_bool(fn.has('nvim-0.7')) then
@@ -1225,6 +1226,7 @@ local show_signs = function(winid, sign_winids)
         api.nvim_win_set_var(sign_winid, pending_async_removal_var, false)
         local props = {
           col = col,
+          height = 1,
           lines = properties.lines,
           parent_winid = winid,
           row = row,
@@ -1257,7 +1259,7 @@ end
 local move_scrollbar = function(props, row)
   props = copy(props)
   local max_height = get_window_height(props.parent_winid) - row + 1
-  local height = math.min(props.height, max_height)
+  local height = math.min(props.full_height, max_height)
   local options = {
     win = props.parent_winid,
     relative = 'win',
@@ -1267,6 +1269,7 @@ local move_scrollbar = function(props, row)
   }
   api.nvim_win_set_config(props.scrollview_winid, options)
   props.row = row
+  props.height = height
   api.nvim_win_set_var(props.scrollview_winid, props_var, props)
   return props
 end
