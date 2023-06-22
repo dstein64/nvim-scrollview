@@ -1666,9 +1666,10 @@ local refresh_bars_async = function()
   end, 0)
 end
 
-if vim.on_key ~= nil then
+if vim.on_key ~= nil
+    and to_bool(fn.exists('&mousemoveevent')) then
   vim.on_key(function(str)
-    if string.find(str, mousemove) then
+    if vim.o.mousemoveevent and string.find(str, mousemove) then
       for _, winid in ipairs(get_scrollview_windows()) do
         local props = api.nvim_win_get_var(winid, props_var)
         if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
