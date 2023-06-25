@@ -1516,9 +1516,8 @@ end
 -- Refreshes scrollbars. There is an optional argument that specifies whether
 -- removing existing scrollbars is asynchronous (defaults to true). Global
 -- state is initialized and restored.
-local refresh_bars = function(async_removal)
+local refresh_bars = function()
   vim.g.scrollview_refreshing = true
-  if async_removal == nil then async_removal = true end
   local state = init()
   -- Use a pcall block, so that unanticipated errors don't interfere. The
   -- worst case scenario is that bars won't be shown properly, which was
@@ -1962,7 +1961,7 @@ local handle_mouse = function(button)
             -- Refresh scrollbars to handle the scenario where
             -- scrollview_hide_on_intersect is enabled and dragging resulted in
             -- a scrollbar overlapping a floating window.
-            refresh_bars(false)
+            refresh_bars()
           end
           return
         end
@@ -1992,7 +1991,7 @@ local handle_mouse = function(button)
                 local target = subsequent(sign_props.lines, current, true)
                 vim.cmd('normal!' .. target .. 'G')
               end)
-              refresh_bars(false)
+              refresh_bars()
               return
             end
           end
@@ -2008,7 +2007,7 @@ local handle_mouse = function(button)
           -- not, ignore all mouse events until a mouseup. This approach was
           -- deemed preferable to refreshing scrollbars initially, as that could
           -- result in unintended clicking/dragging where there is no scrollbar.
-          refresh_bars(false)
+          refresh_bars()
           vim.cmd('redraw')
           props = get_scrollview_bar_props(mouse_winid)
           if vim.tbl_isempty(props)
@@ -2056,7 +2055,7 @@ local handle_mouse = function(button)
             set_topline(winid, topline)
             if api.nvim_win_get_option(winid, 'scrollbind')
                 or api.nvim_win_get_option(winid, 'cursorbind') then
-              refresh_bars(false)
+              refresh_bars()
               props = get_scrollview_bar_props(winid)
             end
             props = move_scrollbar(props, row)
