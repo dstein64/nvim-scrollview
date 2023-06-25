@@ -203,45 +203,6 @@ let g:scrollview_trail_priority = get(g:, 'scrollview_trail_priority', 50)
 let g:scrollview_trail_symbol =
       \ get(g:, 'scrollview_trail_symbol', nr2char(0x25a1))
 
-" === Highlights ===
-
-" The default highlight groups are specified below.
-" Change the defaults by defining or linking an alternative highlight group.
-" E.g., the following will use the Pmenu highlight.
-"   :highlight link ScrollView Pmenu
-" E.g., the following will use custom highlight colors.
-"   :highlight ScrollView ctermbg=159 guibg=LightCyan
-highlight default link ScrollView Visual
-highlight default link ScrollViewConflictsTop DiffAdd
-highlight default link ScrollViewConflictsMiddle DiffAdd
-highlight default link ScrollViewConflictsBottom DiffAdd
-highlight default link ScrollViewCursor Identifier
-" Set the diagnostic highlights to the corresponding Neovim sign text
-" highlight if defined, or the default otherwise.
-let s:diagnostics_highlight_data = [
-  \   ['ScrollViewDiagnosticsError', 'DiagnosticError', 'DiagnosticSignError'],
-  \   ['ScrollViewDiagnosticsHint', 'DiagnosticHint', 'DiagnosticSignHint'],
-  \   ['ScrollViewDiagnosticsInfo', 'DiagnosticInfo', 'DiagnosticSignInfo'],
-  \   ['ScrollViewDiagnosticsWarn', 'DiagnosticWarn', 'DiagnosticSignWarn'],
-  \ ]
-for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
-  try
-    let s:highlight = sign_getdefined(s:sign)[0].texthl
-  catch
-    let s:highlight = s:fallback
-  endtry
-  execute 'highlight default link ' .. s:key .. ' ' .. s:highlight
-endfor
-highlight default link ScrollViewFolds Directory
-highlight default link ScrollViewHover Conceal
-highlight default link ScrollViewLocList LineNr
-highlight default link ScrollViewMarks ColorColumn
-highlight default link ScrollViewQuickFix Constant
-highlight default link ScrollViewRestricted SpellLocal
-highlight default link ScrollViewSearch NonText
-highlight default link ScrollViewSpell Statement
-highlight default link ScrollViewTextWidth Question
-
 " *************************************************
 " * Global State
 " *************************************************

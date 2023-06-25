@@ -6,6 +6,51 @@ if !has('nvim-0.5') || !exists('##WinScrolled')
   finish
 endif
 
+" === Highlights ===
+
+" Highlights are specified here instead of in autoload/scrollview.vim. Since
+" that file is loaded asynchronously, calling ':highlight ...' would clear the
+" intro screen. #102
+
+" The default highlight groups are specified below.
+" Change the defaults by defining or linking an alternative highlight group.
+" E.g., the following will use the Pmenu highlight.
+"   :highlight link ScrollView Pmenu
+" E.g., the following will use custom highlight colors.
+"   :highlight ScrollView ctermbg=159 guibg=LightCyan
+highlight default link ScrollView Visual
+highlight default link ScrollViewConflictsTop DiffAdd
+highlight default link ScrollViewConflictsMiddle DiffAdd
+highlight default link ScrollViewConflictsBottom DiffAdd
+highlight default link ScrollViewCursor Identifier
+" Set the diagnostic highlights to the corresponding Neovim sign text
+" highlight if defined, or the default otherwise.
+let s:diagnostics_highlight_data = [
+  \   ['ScrollViewDiagnosticsError', 'DiagnosticError', 'DiagnosticSignError'],
+  \   ['ScrollViewDiagnosticsHint', 'DiagnosticHint', 'DiagnosticSignHint'],
+  \   ['ScrollViewDiagnosticsInfo', 'DiagnosticInfo', 'DiagnosticSignInfo'],
+  \   ['ScrollViewDiagnosticsWarn', 'DiagnosticWarn', 'DiagnosticSignWarn'],
+  \ ]
+for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
+  try
+    let s:highlight = sign_getdefined(s:sign)[0].texthl
+  catch
+    let s:highlight = s:fallback
+  endtry
+  execute 'highlight default link ' .. s:key .. ' ' .. s:highlight
+endfor
+highlight default link ScrollViewFolds Directory
+highlight default link ScrollViewHover Conceal
+highlight default link ScrollViewLocList LineNr
+highlight default link ScrollViewMarks ColorColumn
+highlight default link ScrollViewQuickFix Constant
+highlight default link ScrollViewRestricted SpellLocal
+highlight default link ScrollViewSearch NonText
+highlight default link ScrollViewSpell Statement
+highlight default link ScrollViewTextWidth Question
+
+" === Initialization ===
+
 " Initialize scrollview asynchronously. Asynchronous initialization is used to
 " prevent issues when setting configuration variables is deferred (#99). This
 " was originally used to avoid an issue that prevents diff mode from
