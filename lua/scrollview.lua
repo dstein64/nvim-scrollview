@@ -82,9 +82,6 @@ local sign_type = 1
 -- A key for saving scrollbar properties using a window variable.
 local props_var = 'scrollview_props'
 
--- A key for flagging windows that are pending async removal.
-local pending_async_removal_var = 'scrollview_pending_async_removal'
-
 -- Stores registered sign specifications.
 -- WARN: There is an assumption in the code that signs specs cannot be
 -- unregistered. For example, the ID is currently the position in this array.
@@ -988,7 +985,6 @@ local show_scrollbar = function(winid, bar_winid)
   set_window_option(bar_winid, 'foldenable', false)
   set_window_option(bar_winid, 'wrap', false)
   api.nvim_win_set_var(bar_winid, win_var, win_val)
-  api.nvim_win_set_var(bar_winid, pending_async_removal_var, false)
   local props = {
     col = bar_position.col,
     -- Save bar_position.height in addition to the actual height, since the
@@ -1223,7 +1219,6 @@ local show_signs = function(winid, sign_winids)
         set_window_option(sign_winid, 'foldenable', false)
         set_window_option(sign_winid, 'wrap', false)
         api.nvim_win_set_var(sign_winid, win_var, win_val)
-        api.nvim_win_set_var(sign_winid, pending_async_removal_var, false)
         local props = {
           col = col,
           height = 1,
@@ -1541,15 +1536,6 @@ local refresh_bars = function(async_removal)
         end
       end
     end
-    -- Remove any scrollbars that are pending asynchronous removal. This
-    -- reduces the appearance of motion blur that results from the accumulation
-    -- of windows for asynchronous removal (e.g., when CPU utilization is
-    -- high).
-    for _, winid in ipairs(get_scrollview_windows()) do
-      if to_bool(api.nvim_win_get_var(winid, pending_async_removal_var)) then
-        close_scrollview_window(winid)
-      end
-    end
     -- Existing windows are determined before adding new windows, but removed
     -- later (they have to be removed after adding to prevent flickering from
     -- the delay between removal and adding).
@@ -1612,22 +1598,6 @@ local refresh_bars = function(async_removal)
       -- Do nothing. The following clauses are only applicable when there are
       -- existing windows. Skipping prevents the creation of an unnecessary
       -- timer.
-    elseif async_removal then
-      -- Remove bars asynchronously to prevent flickering (this may help when
-      -- there are folds and mode='virtual' in some cases). Even when
-      -- nvim_win_close is called synchronously after the code that adds the
-      -- other windows, the window removal still happens earlier in time, as
-      -- confirmed by using 'writedelay'. Even with asynchronous execution, the
-      -- call to vim.defer_fn must still occur after the code for the window
-      -- additions.
-      -- - remove_bars is used instead of close_scrollview_window for global
-      --   state initialization and restoration.
-      for _, winid in ipairs(existing_wins) do
-        api.nvim_win_set_var(winid, pending_async_removal_var, true)
-      end
-      vim.defer_fn(function()
-        remove_bars(existing_wins)
-      end, 0)
     else
       for _, winid in ipairs(existing_wins) do
         close_scrollview_window(winid)
