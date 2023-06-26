@@ -611,7 +611,7 @@ colors.
 `ScrollViewFolds`               fold signs
   Directory
 `ScrollViewHover`               scrollbar and signs on hover
-  Conceal
+  SpellCap
 `ScrollViewLocList`             loclist signs
   LineNr
 `ScrollViewMarks`               mark signs
