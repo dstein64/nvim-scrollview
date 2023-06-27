@@ -884,6 +884,40 @@ local is_valid_column = function(winid, col, width)
   return true
 end
 
+-- Returns true if 'cterm' has a 'reverse' attribute for the specified
+-- highlight group, or false otherwise. Checks 'gui' instead of 'cterm' if a
+-- GUI is running.
+local is_hl_reversed = function(group)
+  local items
+  while true do
+    local highlight = fn.execute('highlight ' .. group)
+    items = fn.split(highlight)
+    table.remove(items, 1)  -- Remove the group name
+    table.remove(items, 1)  -- Remove "xxx"
+    if items[1] == 'links' and items[2] == 'to' then
+      group = items[3]
+    else
+      break
+    end
+  end
+  if items[1] ~= 'cleared' then
+    for _, item in ipairs(items) do
+      local key, val = unpack(vim.split(item, '='))
+      local gui = fn.has('gui_running')
+      if (not gui and key == 'cterm')
+          or (gui and key == 'gui') then
+        local attrs = vim.split(val, ',')
+        for _, attr in ipairs(attrs) do
+          if attr == 'reverse' or attr == 'inverse' then
+            return true
+          end
+        end
+      end
+    end
+  end
+  return false
+end
+
 -- Show a scrollbar for the specified 'winid' window ID, using the specified
 -- 'bar_winid' floating window ID (a new floating window will be created if
 -- this is -1). Returns -1 if the bar is not shown, and the floating window ID
@@ -978,6 +1012,10 @@ local show_scrollbar = function(winid, bar_winid)
     -- bottom of the scrollbar.
     local winhighlight = string.format('Normal:%s,EndOfBuffer:%s', group, group)
     set_window_option(bar_winid, 'winhighlight', winhighlight)
+    -- Add a workaround for Neovim #24159.
+    if is_hl_reversed(group) then
+      set_window_option(bar_winid, 'winblend', '0')
+    end
   end
   local winblend = get_variable('scrollview_winblend', winnr)
   set_window_option(bar_winid, 'winblend', winblend)
@@ -1205,6 +1243,10 @@ local show_signs = function(winid, sign_winids)
             api.nvim_win_call(sign_winid, function()
               fn.matchaddpos(highlight, {sign_line_count})
             end)
+            -- Add a workaround for Neovim #24159.
+            if is_hl_reversed(highlight) then
+              set_window_option(sign_winid, 'winblend', '0')
+            end
           end
         end
         -- Scroll to the inserted line.
