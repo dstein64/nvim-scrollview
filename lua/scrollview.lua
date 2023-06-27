@@ -1052,7 +1052,10 @@ local show_scrollbar = function(winid, bar_winid)
     props.highlight_fn = highlight_fn
   end
   api.nvim_win_set_var(bar_winid, props_var, props)
-  local hover = mousemove_received and is_mouse_over_scrollview_win(bar_winid)
+  local hover = mousemove_received
+    and to_bool(fn.exists('&mousemoveevent'))
+    and vim.o.mousemoveevent
+    and is_mouse_over_scrollview_win(bar_winid)
   highlight_fn(hover)
   return bar_winid
 end
@@ -1288,6 +1291,8 @@ local show_signs = function(winid, sign_winids)
         end
         api.nvim_win_set_var(sign_winid, props_var, props)
         local hover = mousemove_received
+          and to_bool(fn.exists('&mousemoveevent'))
+          and vim.o.mousemoveevent
           and is_mouse_over_scrollview_win(sign_winid)
         highlight_fn(hover)
       end
