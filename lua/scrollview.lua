@@ -92,6 +92,17 @@ local sign_group_state = {}
 
 local mousemove = t('<mousemove>')
 
+-- Track whether there has been a <mousemove> occurrence. Hover highlights are
+-- only used if this has been set to true. Without this, the bar would be
+-- highlighted when being dragged even if the client doesn't support
+-- <mousemove> (e.g., nvim-qt), and may retain the wrong highlight after
+-- dragging completes if the mouse is still over the bar.
+-- WARN: It's possible that Neovim is opened, with the mouse exactly where it
+-- needs to be for a user to start dragging without first moving the mouse. In
+-- that case, hover highlights should be used, but won't be. This scenario is
+-- unlikely.
+local mousemove_received = false
+
 -- *************************************************
 -- * Core
 -- *************************************************
@@ -1041,9 +1052,7 @@ local show_scrollbar = function(winid, bar_winid)
     props.highlight_fn = highlight_fn
   end
   api.nvim_win_set_var(bar_winid, props_var, props)
-  local hover = to_bool(fn.exists('&mousemoveevent'))
-    and vim.o.mousemoveevent
-    and is_mouse_over_scrollview_win(bar_winid)
+  local hover = mousemove_received and is_mouse_over_scrollview_win(bar_winid)
   highlight_fn(hover)
   return bar_winid
 end
@@ -1278,8 +1287,7 @@ local show_signs = function(winid, sign_winids)
           props.highlight_fn = highlight_fn
         end
         api.nvim_win_set_var(sign_winid, props_var, props)
-        local hover = to_bool(fn.exists('&mousemoveevent'))
-          and vim.o.mousemoveevent
+        local hover = mousemove_received
           and is_mouse_over_scrollview_win(sign_winid)
         highlight_fn(hover)
       end
@@ -1681,6 +1689,7 @@ if vim.on_key ~= nil
     and to_bool(fn.exists('&mousemoveevent')) then
   vim.on_key(function(str)
     if vim.o.mousemoveevent and string.find(str, mousemove) then
+      mousemove_received = true
       for _, winid in ipairs(get_scrollview_windows()) do
         local props = api.nvim_win_get_var(winid, props_var)
         if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
