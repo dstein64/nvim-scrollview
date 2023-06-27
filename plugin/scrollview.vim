@@ -40,7 +40,7 @@ for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
   execute 'highlight default link ' .. s:key .. ' ' .. s:highlight
 endfor
 highlight default link ScrollViewFolds Directory
-highlight default link ScrollViewHover SpellCap
+highlight default link ScrollViewHover WildMenu
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks ColorColumn
 highlight default link ScrollViewQuickFix Constant
