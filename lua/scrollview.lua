@@ -1889,10 +1889,10 @@ local move_to_sign_line = function(location, groups, args)
   local current = fn.line('.')
   local target = nil
   if location == 'next' then
-    count = args.count or 1
+    local count = args.count or 1
     target = subsequent(lines, current, count, vim.o.wrapscan)
   elseif location == 'prev' then
-    count = args.count or 1
+    local count = args.count or 1
     target = preceding(lines, current, count, vim.o.wrapscan)
   elseif location == '$' then
     target = lines[#lines]
