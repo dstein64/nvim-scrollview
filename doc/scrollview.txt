@@ -35,19 +35,59 @@ Use |packages| or one of the various package managers.
   signs.
 
                                            *scrollview-commands*
-* *:ScrollViewDisable* disables the plugin. When arguments are given, the
-  specified sign groups are disabled.
-* *:ScrollViewEnable* enables the plugin. This is only necessary if
-  nvim-scrollview has previously been disabled. When arguments are given, the
-  specified sign groups are enabled.
-* *:ScrollViewToggle* toggles the plugin. When arguments are given, the
-  specified sign groups are toggled.
-* *:ScrollViewRefresh* refreshes the scrollbars. This is relevant when the
-  scrollbars are out-of-sync, which can occur e.g., as a result of some
-  window arrangement actions (see |scrollview-issues|).
-* *:ScrollViewNext* *:ScrollViewPrev* *:ScrollViewFirst* *:ScrollViewLast*
-  These move the cursor to lines with signs. Arguments can specify which sign
-  groups are considered.
+
+                                           *:ScrollViewDisable*
+:ScrollViewDisable     Disable the plugin.
+
+:ScrollViewDisable {group1} ...
+                       Disable the specified sign groups.
+
+                                           *:ScrollViewEnable*
+:ScrollViewEnable      Enable the plugin. This is only necessary if
+                       nvim-scrollview has previously been disabled.
+
+:ScrollViewEnable {group1} ...
+                       Enable the specified sign groups.
+
+                                           *:ScrollViewToggle*
+:ScrollViewToggle      Toggle the plugin.
+
+:ScrollViewToggle {group1} ...
+                       Toggle the specified sign groups.
+
+                                           *:ScrollViewRefresh*
+:ScrollViewRefresh     Refresh the scrollbars and signs. This is relevant when
+                       the state becomes out-of-sync, which can occur e.g., as
+                       a result of some window arrangement actions (see
+                       |scrollview-issues|).
+
+:[count]ScrollViewNext [{group1} ...]       *:ScrollViewNext*
+                       Move the cursor to the [count]'th next line with a
+                       sign. If the |'wrapscan'| option is set, the movement
+                       wraps around the end of the buffer when necessary.
+                       Otherwise, the movement stops at the last line with a
+                       sign. The optional trailing arguments specify which
+                       sign groups are considered (all groups when not
+                       specified).
+
+:[count]ScrollViewPrev [{group1} ...]       *:ScrollViewPrev*
+                       Move the cursor to the [count]'th previous line with
+                       a sign. If the |'wrapscan'| option is set, the movement
+                       wraps around the beginning of the buffer when
+                       necessary. Otherwise, the movement stops at the first
+                       line with a sign. The optional trailing arguments
+                       specify which sign groups are considered (all groups
+                       when not specified).
+
+:ScrollViewFirst [{group1} ...]             *:ScrollViewFirst*
+                       Move the cursor to the first line with a sign. The
+                       optional trailing arguments specify which sign groups
+                       are considered (all groups when not specified).
+
+:ScrollViewLast [{group1} ...]              *:ScrollViewLast*
+                       Move the cursor to the last line with a sign. The
+                       optional trailing arguments specify which sign groups
+                       are considered (all groups when not specified).
 
                                            *scrollview-mappings*
 The following |<Plug>| mappings are defined for convenience.

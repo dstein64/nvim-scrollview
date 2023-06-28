@@ -1858,10 +1858,13 @@ end
 -- Move the cursor to the specified line with a sign. Can take (1) an integer
 -- value, (2) '$' for the last line, (3) 'next' for the next line, or (4)
 -- 'prev' for the previous line. 'groups' specifies the sign groups that are
--- considered; use nil for all.
-local move_to_sign_line = function(location, groups)
+-- considered; use nil for all. 'args' is a dictionary with optional arguments.
+local move_to_sign_line = function(location, groups, args)
   if groups ~= nil then
     groups = utils.sorted(groups)
+  end
+  if args == nil then
+    args = {}
   end
   local lines = {}
   local winid = api.nvim_get_current_win()
@@ -1886,9 +1889,11 @@ local move_to_sign_line = function(location, groups)
   local current = fn.line('.')
   local target = nil
   if location == 'next' then
-    target = subsequent(lines, current, vim.o.wrapscan)
+    count = args.count or 1
+    target = subsequent(lines, current, count, vim.o.wrapscan)
   elseif location == 'prev' then
-    target = preceding(lines, current, vim.o.wrapscan)
+    count = args.count or 1
+    target = preceding(lines, current, count, vim.o.wrapscan)
   elseif location == '$' then
     target = lines[#lines]
   elseif type(location) == 'number' then
@@ -1900,13 +1905,13 @@ local move_to_sign_line = function(location, groups)
 end
 
 -- Move the cursor to the next line that has a sign.
-local next = function(groups)  -- luacheck: ignore 431 (shadowing upvalue next)
-  move_to_sign_line('next', groups)
+local next = function(groups, count)  -- luacheck: ignore 431 (shadowing upvalue next)
+  move_to_sign_line('next', groups, {count = count})
 end
 
 -- Move the cursor to the previous line that has a sign.
-local prev = function(groups)
-  move_to_sign_line('prev', groups)
+local prev = function(groups, count)
+  move_to_sign_line('prev', groups, {count = count})
 end
 
 -- Move the cursor to the first line with a sign.
@@ -2044,7 +2049,7 @@ local handle_mouse = function(button)
               api.nvim_win_call(mouse_winid, function()
                 -- Go to the next sign_props line after the cursor.
                 local current = fn.line('.')
-                local target = subsequent(sign_props.lines, current, true)
+                local target = subsequent(sign_props.lines, current, 1, true)
                 vim.cmd('normal!' .. target .. 'G')
               end)
               refresh_bars()

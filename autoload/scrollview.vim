@@ -294,15 +294,15 @@ if !exists(':ScrollViewLast')
 endif
 
 if !exists(':ScrollViewNext')
-  command -bar -nargs=* -complete=custom,s:Complete ScrollViewNext
+  command -count=1 -bar -nargs=* -complete=custom,s:Complete ScrollViewNext
         \ lua require('scrollview').next(
-        \   #{<f-args>} > 0 and {<f-args>} or nil)
+        \   #{<f-args>} > 0 and {<f-args>} or nil, <count>)
 endif
 
 if !exists(':ScrollViewPrev')
-  command -bar -nargs=* -complete=custom,s:Complete ScrollViewPrev
+  command -count=1 -bar -nargs=* -complete=custom,s:Complete ScrollViewPrev
         \ lua require('scrollview').prev(
-        \   #{<f-args>} > 0 and {<f-args>} or nil)
+        \   #{<f-args>} > 0 and {<f-args>} or nil, <count>)
 endif
 
 if !exists(':ScrollViewRefresh')
