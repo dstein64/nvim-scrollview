@@ -61,7 +61,7 @@ Use |packages| or one of the various package managers.
                        a result of some window arrangement actions (see
                        |scrollview-issues|).
 
-:[count]ScrollViewNext [{group1} ...]       *:ScrollViewNext*
+:[count]ScrollViewNext [{group1} ...]      *:ScrollViewNext*
                        Move the cursor to the [count]'th next line with a
                        sign. If the |'wrapscan'| option is set, the movement
                        wraps around the end of the buffer when necessary.
@@ -70,7 +70,7 @@ Use |packages| or one of the various package managers.
                        sign groups are considered (all groups when not
                        specified).
 
-:[count]ScrollViewPrev [{group1} ...]       *:ScrollViewPrev*
+:[count]ScrollViewPrev [{group1} ...]      *:ScrollViewPrev*
                        Move the cursor to the [count]'th previous line with
                        a sign. If the |'wrapscan'| option is set, the movement
                        wraps around the beginning of the buffer when
@@ -79,12 +79,12 @@ Use |packages| or one of the various package managers.
                        specify which sign groups are considered (all groups
                        when not specified).
 
-:ScrollViewFirst [{group1} ...]             *:ScrollViewFirst*
+:ScrollViewFirst [{group1} ...]            *:ScrollViewFirst*
                        Move the cursor to the first line with a sign. The
                        optional trailing arguments specify which sign groups
                        are considered (all groups when not specified).
 
-:ScrollViewLast [{group1} ...]              *:ScrollViewLast*
+:ScrollViewLast [{group1} ...]             *:ScrollViewLast*
                        Move the cursor to the last line with a sign. The
                        optional trailing arguments specify which sign groups
                        are considered (all groups when not specified).
