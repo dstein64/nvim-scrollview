@@ -44,7 +44,7 @@ highlight default link ScrollViewHover WildMenu
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks ColorColumn
 highlight default link ScrollViewQuickFix Constant
-highlight default link ScrollViewRestricted SpellLocal
+highlight default link ScrollViewRestricted MatchParen
 highlight default link ScrollViewSearch NonText
 highlight default link ScrollViewSpell Statement
 highlight default link ScrollViewTextWidth Question
