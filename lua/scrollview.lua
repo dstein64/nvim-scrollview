@@ -692,7 +692,7 @@ local simple_topline_lookup = function(winid)
   local winnr = fn.winnr()
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  local target_topline_count = get_window_height(0)
+  local target_topline_count = get_window_height(winid)
   if to_bool(vim.g.scrollview_include_end_region) then
     local scrollbar_height = calculate_scrollbar_height(winnr)
     target_topline_count = target_topline_count - scrollbar_height + 1
