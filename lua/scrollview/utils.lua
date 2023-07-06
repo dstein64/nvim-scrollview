@@ -14,9 +14,9 @@ function M.binary_search(l, x)
       -- Keep searching for the leftmost match.
       hi = mid - 1
     elseif l[mid] < x then
-      lo = lo + 1
+      lo = mid + 1
     else
-      hi = hi - 1
+      hi = mid - 1
     end
   end
   return lo
