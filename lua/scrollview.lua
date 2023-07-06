@@ -1574,10 +1574,11 @@ end
 local refresh_bars = function()
   vim.g.scrollview_refreshing = true
   local state = init()
+  local resume_memoize = memoize
+  start_memoize()
   -- Use a pcall block, so that unanticipated errors don't interfere. The
   -- worst case scenario is that bars won't be shown properly, which was
   -- deemed preferable to an obscure error message that can be interrupting.
-  start_memoize()
   pcall(function()
     if in_command_line_window() then return end
     -- Don't refresh when the current window shows a scrollview buffer. This
@@ -1658,8 +1659,10 @@ local refresh_bars = function()
       end
     end
   end)
-  stop_memoize()
-  reset_memoize()
+  if not resume_memoize then
+    stop_memoize()
+    reset_memoize()
+  end
   restore(state)
   vim.g.scrollview_refreshing = false
 end
@@ -1938,6 +1941,8 @@ local handle_mouse = function(button)
     return
   end
   local state = init()
+  local resume_memoize = memoize
+  start_memoize()
   pcall(function()
     -- Re-send the click, so its position can be obtained through
     -- read_input_stream().
@@ -2128,6 +2133,10 @@ local handle_mouse = function(button)
       end  -- end if
     end  -- end while
   end)  -- end pcall
+  if not resume_memoize then
+    stop_memoize()
+    reset_memoize()
+  end
   restore(state)
 end
 
