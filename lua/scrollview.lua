@@ -391,6 +391,10 @@ local scrollview_mode = function(winnr, precedence, default)
   if byte_limit ~= -1 and byte_count > byte_limit then
     return improper_virtual_mode
   end
+  if not api.nvim_win_get_option(winid, 'wrap') then
+    -- Proper virtual mode is not necessary when there is no wrapping.
+    return improper_virtual_mode
+  end
   return proper_virtual_mode
 end
 
@@ -546,31 +550,6 @@ local virtual_line_count = function(winid, start, end_)
   return count
 end
 
--- Uses gj to get the virtual line count between start and end_, inclusive. The
--- cursor may be moved.
-local proper_virtual_line_count_gj = function(start, end_)
-  local result = 0
-  if end_ >= start then
-    vim.cmd('keepjumps normal! ' .. start .. 'G0')
-    while true do
-      result = result + 1
-      local prior_line = fn.line('.')
-      local prior_col = fn.col('.')
-      vim.cmd('keepjumps normal! gj')
-      local line = fn.line('.')
-      local col = fn.col('.')
-      -- Check if we're already on the last virtual line.
-      if line == prior_line and col == prior_col then
-        break
-      end
-      if line > end_ then
-        break
-      end
-    end
-  end
-  return result
-end
-
 -- Returns the virtual line count between the two lines.
 local proper_virtual_line_count = function(winid, start, end_)
   local last_line = api.nvim_buf_line_count(api.nvim_win_get_buf(winid))
@@ -583,12 +562,32 @@ local proper_virtual_line_count = function(winid, start, end_)
     table.concat({'proper_virtual_line_count', base_winid, start, end_}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count
+  -- The two approaches that follow, nvim_win_text_height and strdisplaywidth,
+  -- take similar amounts of time, but the nvim_win_text_height returns exact
+  -- results, whereas the other approach returns approximations.
   if api.nvim_win_text_height ~= nil then
     count = api.nvim_win_text_height(
       winid, {start_row = start - 1, end_row = end_ - 1})
   else
-    count = with_win_workspace(winid, function()
-      return proper_virtual_line_count_gj(start, end_)
+    -- The approach that follows gives an approximate virtual line count. It
+    -- doesn't account for 'linebreak' and 'breakat', which could make the
+    -- line count higher.
+    api.nvim_win_call(winid, function()
+      count = 0
+      local line = start
+      while line <= end_ do
+        local count_diff = 1
+        if api.nvim_win_get_option(winid, 'wrap') then
+          count_diff = math.ceil(fn.strdisplaywidth(fn.getline(line)) / 100)
+        end
+        count_diff = math.max(1, count_diff)  -- to avoid 0 for an empty line
+        count = count + count_diff
+        local foldclosedend = fn.foldclosedend(line)
+        if foldclosedend ~= -1 then
+          line = foldclosedend
+        end
+        line = line + 1
+      end
     end)
   end
   if memoize then cache[memoize_key] = count end
@@ -779,8 +778,7 @@ end
 
 -- Returns a topline lookup for the current window. The cursor is moved only if
 -- api.nvim_win_text_height is not available.
-local proper_virtual_topline_lookup = function()
-  local winid = api.nvim_get_current_win()
+local proper_virtual_topline_lookup = function(winid)
   local winnr = api.nvim_win_get_number(winid)
   local target_topline_count = get_target_topline_count(winid)
   local bufnr = api.nvim_win_get_buf(winid)
@@ -809,18 +807,13 @@ local proper_virtual_topline_lookup = function()
         end
         prior_line = line
         prior_vline = vline
-        local vline_diff
-        -- Calling proper_virtual_line_count is avoided here since it caches
-        -- results and for the case where nvim_win_text_height is not available,
-        -- it uses with_win_workspace, so many intermediate windows would be
-        -- created (one for each iteration).
-        if api.nvim_win_text_height ~= nil then
-          vline_diff = api.nvim_win_text_height(
-            winid, {start_row = line - 1, end_row = line - 1})
-        else
-          -- Compared to using nvim_win_text_height, this makes the function run
-          -- about 30 times slower (tested on a large file).
-          vline_diff = proper_virtual_line_count_gj(line, line)
+        -- Disable caching. It's not useful here, so avoid the memory usage
+        -- that would be incurred from caching each line's result.
+        local resume_memoize = memoize
+        stop_memoize()
+        local vline_diff = proper_virtual_line_count(winid, line, line)
+        if resume_memoize then
+          start_memoize()
         end
         vline = vline + vline_diff
         local foldclosedend = api.nvim_win_call(winid, function()
@@ -868,11 +861,7 @@ local get_topline_lookup = function(winid)
   elseif mode == improper_virtual_mode then
     topline_lookup = virtual_topline_lookup(winid)
   elseif mode == proper_virtual_mode then
-    local runner = api.nvim_win_text_height ~= nil
-      and api.nvim_wincall or with_win_workspace
-    runner(winid, function()
-      topline_lookup = proper_virtual_topline_lookup()
-    end)
+    topline_lookup = proper_virtual_topline_lookup(winid)
   else
     error('Unknown mode: ' .. mode)
   end
