@@ -26,6 +26,9 @@ local to_bool = utils.to_bool
 -- named as if it were only applicable to bars (since it was implemented prior
 -- to sign support).
 
+-- TODO: Use numbers for memoization keys
+-- TODO: Switch constants to upper case
+
 -- *************************************************
 -- * Memoization
 -- *************************************************
@@ -102,6 +105,10 @@ local mousemove = t('<mousemove>')
 -- that case, hover highlights should be used, but won't be. This scenario is
 -- unlikely.
 local mousemove_received = false
+
+local simple_mode = 0            -- doesn't consider folds nor wrapped lines
+local improper_virtual_mode = 1  -- considers folds, but not wrapped lines
+local proper_virtual_mode = 2    -- considers folds and wrapped lines
 
 -- *************************************************
 -- * Core
@@ -333,6 +340,12 @@ local get_variable = function(name, winnr, precedence, default)
   return default
 end
 
+local get_byte_count = function(winid)
+  return api.nvim_win_call(winid, function()
+    return fn.line2byte(fn.line('$') + 1) - 1
+  end)
+end
+
 -- Returns a boolean indicating whether a restricted state should be used.
 -- The function signature matches s:GetVariable, without the 'name' argument.
 local is_restricted = function(winnr, precedence, default)
@@ -344,9 +357,7 @@ local is_restricted = function(winnr, precedence, default)
   if line_limit ~= -1 and line_count > line_limit then
     return true
   end
-  local byte_count = api.nvim_win_call(winid, function()
-    return fn.line2byte(fn.line('$') + 1) - 1
-  end)
+  local byte_count = get_byte_count(winid)
   local byte_limit
     = get_variable('scrollview_byte_limit', winnr, precedence, default)
   if byte_limit ~= -1 and byte_count > byte_limit then
@@ -359,9 +370,28 @@ end
 -- without the 'name' argument.
 local scrollview_mode = function(winnr, precedence, default)
   if is_restricted(winnr, precedence, default) then
-    return 'simple'
+    return simple_mode
   end
-  return get_variable('scrollview_mode', winnr, precedence, default)
+  local specified_mode =
+    get_variable('scrollview_mode', winnr, precedence, default)
+  if specified_mode == 'simple' then
+    return simple_mode
+  end
+  local winid = fn.win_getid(winnr)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  -- TODO: get line_limit from a config variable
+  local line_limit = api.nvim_win_text_height ~= nil and 1000 or 100
+  if line_limit ~= -1 and line_count > line_limit then
+    return improper_virtual_mode
+  end
+  local byte_count = get_byte_count(winid)
+  -- TODO: get byte_limit from a config variable
+  local byte_limit = api.nvim_win_text_height ~= nil and 50000 or 5000
+  if byte_limit ~= -1 and byte_count > byte_limit then
+    return improper_virtual_mode
+  end
+  return proper_virtual_mode
 end
 
 -- Return top line and bottom line in window. For folds, the top line
@@ -516,17 +546,69 @@ local virtual_line_count = function(winid, start, end_)
   return count
 end
 
+-- Uses gj to get the virtual line count between start and end_, inclusive. The
+-- cursor may be moved.
+local proper_virtual_line_count_gj = function(start, end_)
+  local result = 0
+  if end_ >= start then
+    vim.cmd('keepjumps normal! ' .. start .. 'G0')
+    while true do
+      result = result + 1
+      local prior_line = fn.line('.')
+      local prior_col = fn.col('.')
+      vim.cmd('keepjumps normal! gj')
+      local line = fn.line('.')
+      local col = fn.col('.')
+      -- Check if we're already on the last virtual line.
+      if line == prior_line and col == prior_col then
+        break
+      end
+      if line > end_ then
+        break
+      end
+    end
+  end
+  return result
+end
+
+-- Returns the virtual line count between the two lines.
+local proper_virtual_line_count = function(winid, start, end_)
+  local last_line = api.nvim_buf_line_count(api.nvim_win_get_buf(winid))
+  if type(end_) == 'string' and end_ == '$' then
+    end_ = last_line
+  end
+  start = math.max(1, start)
+  local base_winid = get_base_winid(winid)
+  local memoize_key =
+    table.concat({'proper_virtual_line_count', base_winid, start, end_}, ':')
+  if memoize and cache[memoize_key] then return cache[memoize_key] end
+  local count
+  if api.nvim_win_text_height ~= nil then
+    count = api.nvim_win_text_height(
+      winid, {start_row = start - 1, end_row = end_ - 1})
+  else
+    count = with_win_workspace(winid, function()
+      return proper_virtual_line_count_gj(start, end_)
+    end)
+  end
+  if memoize then cache[memoize_key] = count end
+  return count
+end
+
 local calculate_scrollbar_height = function(winnr)
   local winid = fn.win_getid(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
   local winheight = get_window_height(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  local effective_line_count = line_count
   local mode = scrollview_mode(winnr)
-  if mode ~= 'simple' then
-    -- For virtual mode or an unknown mode, update effective_line_count to
-    -- correspond to virtual lines, which account for closed folds.
+  if mode == simple_mode then
+    effective_line_count = line_count
+  elseif mode == improper_virtual_mode then
     effective_line_count = virtual_line_count(winid, 1, '$')
+  elseif mode == proper_virtual_mode then
+    effective_line_count = proper_virtual_line_count(winid, 1, '$')
+  else
+    error('Unknown mode: ' .. mode)
   end
   if to_bool(vim.g.scrollview_include_end_region) then
     effective_line_count = effective_line_count + winheight - 1
@@ -537,18 +619,43 @@ local calculate_scrollbar_height = function(winnr)
   return height
 end
 
+-- Return the target number of items for a topline lookup table.
+local get_target_topline_count = function(winid)
+  local target_topline_count = get_window_height(winid)
+  if to_bool(vim.g.scrollview_include_end_region) then
+    local winnr = api.nvim_win_get_number(winid)
+    local scrollbar_height = calculate_scrollbar_height(winnr)
+    target_topline_count = target_topline_count - scrollbar_height + 1
+  end
+  return target_topline_count
+end
+
+local sanitize_topline_lookup = function(
+    winid, topline_lookup, target_topline_count)
+  api.nvim_win_call(winid, function()
+    while #topline_lookup < target_topline_count do
+      table.insert(topline_lookup, fn.line('$'))
+    end
+    for idx, line in ipairs(topline_lookup) do
+      line = math.max(1, line)
+      line = math.min(fn.line('$'), line)
+      local foldclosed = fn.foldclosed(line)
+      if foldclosed ~= -1 then
+        line = foldclosed
+      end
+      topline_lookup[idx] = line
+    end
+  end)
+end
+
 -- Returns an array that maps window rows to the topline that corresponds to a
 -- scrollbar at that row under virtual scrollview mode, in the current window.
 -- The computation loops over virtual spans. The cursor may be moved.
 local virtual_topline_lookup_spanwise = function()
   local winnr = fn.winnr()
-  local target_topline_count = get_window_height(0)
-  if to_bool(vim.g.scrollview_include_end_region) then
-    local scrollbar_height = calculate_scrollbar_height(winnr)
-    target_topline_count = target_topline_count - scrollbar_height + 1
-  end
-  local result = {}  -- A list of line numbers
   local winid = api.nvim_get_current_win()
+  local target_topline_count = get_target_topline_count(winid)
+  local result = {}  -- A list of line numbers
   local total_vlines = virtual_line_count(winid, 1, '$')
   if total_vlines > 1 and target_topline_count > 1 then
     local line = 0
@@ -595,32 +702,18 @@ local virtual_topline_lookup_spanwise = function()
   while #result < target_topline_count do
     table.insert(result, fn.line('$'))
   end
-  for idx, line in ipairs(result) do
-    line = math.max(1, line)
-    line = math.min(fn.line('$'), line)
-    local foldclosed = fn.foldclosed(line)
-    if foldclosed ~= -1 then
-      line = foldclosed
-    end
-    result[idx] = line
-  end
+  sanitize_topline_lookup(winid, result, target_topline_count)
   return result
 end
 
 -- Returns an array that maps window rows to the topline that corresponds to a
 -- scrollbar at that row under virtual scrollview mode, in the current window.
--- The computation primarily loops over lines, but may loop over virtual spans
--- as part of calling 'virtual_line_count', so the cursor may be moved.
 local virtual_topline_lookup_linewise = function()
   local winnr = fn.winnr()
-  local target_topline_count = get_window_height(0)
-  if to_bool(vim.g.scrollview_include_end_region) then
-    local scrollbar_height = calculate_scrollbar_height(winnr)
-    target_topline_count = target_topline_count - scrollbar_height + 1
-  end
+  local winid = api.nvim_get_current_win()
+  local target_topline_count = get_target_topline_count(winid)
   local last_line = fn.line('$')
   local result = {}  -- A list of line numbers
-  local winid = api.nvim_get_current_win()
   local total_vlines = virtual_line_count(winid, 1, '$')
   if total_vlines > 1 and target_topline_count > 1 then
     local count = 1  -- The count of virtual lines
@@ -660,17 +753,14 @@ local virtual_topline_lookup_linewise = function()
       table.insert(result, value)
     end
   end
-  while #result < target_topline_count do
-    table.insert(result, fn.line('$'))
-  end
+  sanitize_topline_lookup(winid, result, target_topline_count)
   return result
 end
 
 -- Returns an array that maps window rows to the topline that corresponds to a
--- scrollbar at that row under virtual scrollview mode. The computation loops
--- over either lines or virtual spans, so the cursor may be moved.
+-- scrollbar at that row under virtual scrollview mode.
 local virtual_topline_lookup = function(winid)
-  local result = with_win_workspace(winid, function()
+  return with_win_workspace(winid, function()
     local last_line = api.nvim_buf_line_count(api.nvim_win_get_buf(winid))
     -- On an AMD Ryzen 7 2700X, linewise computation takes about 1.6e-6 seconds
     -- per line (this is an overestimate, as it assumes all folds are open, but
@@ -685,6 +775,66 @@ local virtual_topline_lookup = function(winid)
       return virtual_topline_lookup_spanwise()
     end
   end)
+end
+
+-- Returns a topline lookup for the current window. The cursor is moved only if
+-- api.nvim_win_text_height is not available.
+local proper_virtual_topline_lookup = function()
+  local winid = api.nvim_get_current_win()
+  local winnr = api.nvim_win_get_number(winid)
+  local target_topline_count = get_target_topline_count(winid)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  local result = {}  -- A list of line numbers
+  local total_vlines = proper_virtual_line_count(winid, 1, '$')
+  if total_vlines > 1 and target_topline_count > 1 then
+    local line = 1
+    local vline = 1
+    local prior_line = 1
+    local prior_vline = 1
+    for row = 1, target_topline_count do
+      local proportion = (row - 1) / (target_topline_count - 1)
+      line = prior_line
+      vline = prior_vline
+      local best_distance = math.huge
+      local best_line = line
+      while line <= line_count do
+        local current = (vline - 1) / (total_vlines - 1)
+        local distance = math.abs(current - proportion)
+        if distance < best_distance then
+          best_distance = distance
+          best_line = line
+        elseif distance > best_distance then
+          break
+        end
+        prior_line = line
+        prior_vline = vline
+        local vline_diff
+        -- Calling proper_virtual_line_count is avoided here since it caches
+        -- results and for the case where nvim_win_text_height is not available,
+        -- it uses with_win_workspace, so many intermediate windows would be
+        -- created (one for each iteration).
+        if api.nvim_win_text_height ~= nil then
+          vline_diff = api.nvim_win_text_height(
+            winid, {start_row = line - 1, end_row = line - 1})
+        else
+          -- Compared to using nvim_win_text_height, this makes the function run
+          -- about 30 times slower (tested on a large file).
+          vline_diff = proper_virtual_line_count_gj(line, line)
+        end
+        vline = vline + vline_diff
+        local foldclosedend = api.nvim_win_call(winid, function()
+          return fn.foldclosedend(line)
+        end)
+        if foldclosedend ~= -1 then
+          line = foldclosedend
+        end
+        line = line + 1
+      end
+      table.insert(result, best_line)
+    end
+  end
+  sanitize_topline_lookup(winid, result, target_topline_count)
   return result
 end
 
@@ -692,23 +842,20 @@ local simple_topline_lookup = function(winid)
   local winnr = fn.winnr()
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  local target_topline_count = get_window_height(winid)
-  if to_bool(vim.g.scrollview_include_end_region) then
-    local scrollbar_height = calculate_scrollbar_height(winnr)
-    target_topline_count = target_topline_count - scrollbar_height + 1
-  end
+  local target_topline_count = get_target_topline_count(winid)
   local topline_lookup = {}
   for row = 1, target_topline_count do
     local proportion = (row - 1) / (target_topline_count - 1)
     local topline = round(proportion * (line_count - 1)) + 1
     table.insert(topline_lookup, topline)
   end
+  sanitize_topline_lookup(winid, topline_lookup, target_topline_count)
   return topline_lookup
 end
 
 -- Returns an array that maps window rows to the topline that corresponds to a
 -- scrollbar at that row.
-local topline_lookup = function(winid)
+local get_topline_lookup = function(winid)
   local winnr = api.nvim_win_get_number(winid)
   local mode = scrollview_mode(winnr)
   local base_winid = get_base_winid(winid)
@@ -716,11 +863,18 @@ local topline_lookup = function(winid)
     table.concat({'topline_lookup', base_winid, mode}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local topline_lookup
-  if mode ~= 'simple' then
-    -- Handling for virtual mode or an unknown mode.
-    topline_lookup = virtual_topline_lookup(winid)
-  else
+  if mode == simple_mode then
     topline_lookup = simple_topline_lookup(winid)
+  elseif mode == improper_virtual_mode then
+    topline_lookup = virtual_topline_lookup(winid)
+  elseif mode == proper_virtual_mode then
+    local runner = api.nvim_win_text_height ~= nil
+      and api.nvim_wincall or with_win_workspace
+    runner(winid, function()
+      topline_lookup = proper_virtual_topline_lookup()
+    end)
+  else
+    error('Unknown mode: ' .. mode)
   end
   if memoize then cache[memoize_key] = topline_lookup end
   return topline_lookup
@@ -754,11 +908,11 @@ local calculate_position = function(winnr)
   local winid = fn.win_getid(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
   local topline, _ = line_range(winid)
-  local the_topline_lookup = topline_lookup(winid)
+  local topline_lookup = get_topline_lookup(winid)
   -- top is the position for the top of the scrollbar, relative to the window.
-  local top = binary_search(the_topline_lookup, topline)
-  top = math.min(top, #the_topline_lookup)
-  if top > 1 and the_topline_lookup[top] > topline then
+  local top = binary_search(topline_lookup, topline)
+  top = math.min(top, #topline_lookup)
+  if top > 1 and topline_lookup[top] > topline then
     top = top - 1  -- use the preceding line from topline lookup.
   end
   local winheight = get_window_height(winid)
@@ -1073,7 +1227,7 @@ local show_signs = function(winid, sign_winids)
   if is_restricted(winnr) then return end
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  local the_topline_lookup = nil  -- only set when needed
+  local topline_lookup = nil  -- only set when needed
   local base_col = calculate_scrollbar_column(winnr)
   base_col = base_col + get_variable('scrollview_signs_column', winnr)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
@@ -1118,14 +1272,14 @@ local show_signs = function(winid, sign_winids)
         end
       end
     end
-    if not vim.tbl_isempty(lines) and the_topline_lookup == nil then
-      the_topline_lookup = topline_lookup(winid)
+    if not vim.tbl_isempty(lines) and topline_lookup == nil then
+      topline_lookup = get_topline_lookup(winid)
     end
     for _, line in ipairs(lines) do
       if line >= 1 and line <= line_count then
-        local row = binary_search(the_topline_lookup, line)
-        row = math.min(row, #the_topline_lookup)
-        if row > 1 and the_topline_lookup[row] > line then
+        local row = binary_search(topline_lookup, line)
+        row = math.min(row, #topline_lookup)
+        if row > 1 and topline_lookup[row] > line then
           row = row - 1  -- use the preceding line from topline lookup.
         end
         if lookup[row] == nil then
@@ -1963,7 +2117,7 @@ local handle_mouse = function(button)
     local props
     -- Computing this prior to the first mouse event could distort the location
     -- since this could be an expensive operation (and the mouse could move).
-    local the_topline_lookup = nil
+    local topline_lookup = nil
     while true do
       while true do
         idx = idx + 1
@@ -2108,10 +2262,10 @@ local handle_mouse = function(button)
           end
           -- Only update scrollbar if the row changed.
           if previous_row ~= row then
-            if the_topline_lookup == nil then
-              the_topline_lookup = topline_lookup(winid)
+            if topline_lookup == nil then
+              topline_lookup = get_topline_lookup(winid)
             end
-            local topline = the_topline_lookup[row]
+            local topline = topline_lookup[row]
             topline = math.max(1, topline)
             if row == 1 then
               -- If the scrollbar was dragged to the top of the window, always
