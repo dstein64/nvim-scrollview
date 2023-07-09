@@ -875,7 +875,6 @@ local simple_topline_lookup = function(winid)
     local topline = round(proportion * (line_count - 1)) + 1
     table.insert(topline_lookup, topline)
   end
-  sanitize_topline_lookup(winid, topline_lookup, target_topline_count)
   return topline_lookup
 end
 
