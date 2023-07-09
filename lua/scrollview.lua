@@ -19,9 +19,9 @@ local to_bool = utils.to_bool
 -- WARN: Don't move the cursor or change the current window. It can have
 -- unwanted side effects (e.g., #18, #23, #43, window sizes changing to satisfy
 -- winheight/winwidth, etc.).
--- WARN: Functionality that temporarily moves the cursor and restores it should
--- use a window workspace to prevent unwanted side effects. More details are in
--- the documentation for with_win_workspace.
+-- WARN: Functionality that temporarily moves the cursor, or changes the 'wrap'
+-- setting should use a window workspace to prevent unwanted side effects. More
+-- details are in the documentation for with_win_workspace.
 -- XXX: Some of the functionality is applicable to bars and signs, but is
 -- named as if it were only applicable to bars (since it was implemented prior
 -- to sign support).
@@ -77,6 +77,9 @@ local win_val = 'scrollview_val'
 
 -- For win workspaces, a window variable is used to store the base window ID.
 local win_workspace_base_winid_var = 'scrollview_win_workspace_base_winid'
+
+-- Maps window IDs to a corresponding window workspace.
+local win_workspace_lookup = {}
 
 -- A type field is used to indicate the type of scrollview windows.
 local bar_type = 0
@@ -184,45 +187,65 @@ end
 -- cursor in the actual window, even when autocmd's are disabled with
 -- eventignore=all and the cursor is restored (e.g., Issue #18: window
 -- flickering when resizing with the mouse, Issue #19: cursorbind/scrollbind
--- out-of-sync).
+-- out-of-sync). This can also be used to prevent unintended side effects when
+-- changing the 'wrap' setting temporarily while lines are wrapped (Issue #103).
 local with_win_workspace = function(winid, fun)
-  -- Make the target window active, so that its folds are inherited by the
-  -- created floating window (this is necessary when there are multiple windows
-  -- that have the same buffer, each window having different folds).
-  local workspace_winid = api.nvim_win_call(winid, function()
-    local bufnr = api.nvim_win_get_buf(winid)
-    return api.nvim_open_win(bufnr, false, {
-      relative = 'editor',
-      focusable = false,
-      width = math.max(1, api.nvim_win_get_width(winid)),
-      -- The floating window doesn't inherit a winbar. Use the winbar-omitted
-      -- height where applicable.
-      height = math.max(1, get_window_height(winid)),
-      row = 0,
-      col = 0
-    })
-  end)
-  -- Disable scrollbind and cursorbind on the workspace window so that diff
-  -- mode and other functionality that utilizes binding (e.g., :Gdiff, :Gblame)
-  -- can function properly.
-  set_window_option(workspace_winid, 'scrollbind', false)
-  set_window_option(workspace_winid, 'cursorbind', false)
-  api.nvim_win_set_var(workspace_winid, win_workspace_base_winid_var, winid)
-  -- As a precautionary measure, make sure the floating window has no winbar,
-  -- which is assumed above.
-  if to_bool(fn.exists('+winbar')) then
-    set_window_option(workspace_winid, 'winbar', '')
+  local workspace_winid = win_workspace_lookup[winid]
+  if workspace_winid == nil then
+    -- If winid is already a window workspace, use that. Otherwise, create a
+    -- new workspace window.
+    if get_base_winid(winid) ~= winid then
+      workspace_winid = winid
+    else
+      -- Make the target window active, so that its folds are inherited by the
+      -- created floating window (this is necessary when there are multiple
+      -- windows that have the same buffer, each window having different
+      -- folds).
+      workspace_winid = api.nvim_win_call(winid, function()
+        local bufnr = api.nvim_win_get_buf(winid)
+        return api.nvim_open_win(bufnr, false, {
+          relative = 'editor',
+          focusable = false,
+          width = math.max(1, api.nvim_win_get_width(winid)),
+          -- The floating window doesn't inherit a winbar. Use the
+          -- winbar-omitted height where applicable.
+          height = math.max(1, get_window_height(winid)),
+          row = 0,
+          col = 0
+        })
+      end)
+      win_workspace_lookup[winid] = workspace_winid
+      -- Disable scrollbind and cursorbind on the workspace window so that diff
+      -- mode and other functionality that utilizes binding (e.g., :Gdiff,
+      -- :Gblame) can function properly.
+      set_window_option(workspace_winid, 'scrollbind', false)
+      set_window_option(workspace_winid, 'cursorbind', false)
+      api.nvim_win_set_var(workspace_winid, win_workspace_base_winid_var, winid)
+      -- As a precautionary measure, make sure the floating window has no
+      -- winbar, which is assumed above.
+      if to_bool(fn.exists('+winbar')) then
+        set_window_option(workspace_winid, 'winbar', '')
+      end
+      -- Don't include the workspace window in a diff session. If included,
+      -- closing it could end the diff session (e.g., when there is one other
+      -- window in the session). Issue #57.
+      set_window_option(workspace_winid, 'diff', false)
+    end
   end
-  -- Don't include the workspace window in a diff session. If included, closing
-  -- it could end the diff session (e.g., when there is one other window in the
-  -- session). Issue #57.
-  set_window_option(workspace_winid, 'diff', false)
   local success, result = pcall(function()
     return api.nvim_win_call(workspace_winid, fun)
   end)
-  api.nvim_win_close(workspace_winid, true)
   if not success then error(result) end
   return result
+end
+
+local reset_win_workspaces = function()
+  for _, workspace_winid in pairs(win_workspace_lookup) do
+    if api.nvim_win_is_valid(workspace_winid) then
+      api.nvim_win_close(workspace_winid, true)
+    end
+  end
+  win_workspace_lookup = {}
 end
 
 local is_visual_mode = function(mode)
@@ -266,24 +289,30 @@ end
 -- Returns the window column where the buffer's text begins. This may be
 -- negative due to horizontal scrolling. This may be greater than one due to
 -- the sign column and 'number' column.
-local buf_text_begins_col = function()
-  -- The calculation assumes lines don't wrap, so 'nowrap' is temporarily set.
-  local wrap = api.nvim_win_get_option(0, 'wrap')
-  set_window_option(0, 'wrap', false)
-  local result = fn.wincol() - fn.virtcol('.') + 1
-  set_window_option(0, 'wrap', wrap)
-  return result
+local buf_text_begins_col = function(winid)
+  -- Use a window workspace to avoid Issue #103.
+  return with_win_workspace(winid, function()
+    -- The calculation assumes lines don't wrap, so 'nowrap' is temporarily set.
+    local wrap = api.nvim_win_get_option(0, 'wrap')
+    set_window_option(0, 'wrap', false)
+    local result = fn.wincol() - fn.virtcol('.') + 1
+    set_window_option(0, 'wrap', wrap)
+    return result
+  end)
 end
 
 -- Returns the window column where the view of the buffer begins. This can be
 -- greater than one due to the sign column and 'number' column.
-local buf_view_begins_col = function()
-  -- The calculation assumes lines don't wrap, so 'nowrap' is temporarily set.
-  local wrap = api.nvim_win_get_option(0, 'wrap')
-  set_window_option(0, 'wrap', false)
-  local result = fn.wincol() - fn.virtcol('.') + fn.winsaveview().leftcol + 1
-  set_window_option(0, 'wrap', wrap)
-  return result
+local buf_view_begins_col = function(winid)
+  -- Use a window workspace to avoid Issue #103.
+  return with_win_workspace(winid, function()
+    -- The calculation assumes lines don't wrap, so 'nowrap' is temporarily set.
+    local wrap = api.nvim_win_get_option(0, 'wrap')
+    set_window_option(0, 'wrap', false)
+    local result = fn.wincol() - fn.virtcol('.') + fn.winsaveview().leftcol + 1
+    set_window_option(0, 'wrap', wrap)
+    return result
+  end)
 end
 
 -- Returns the specified variable. There are two optional arguments, for
@@ -380,14 +409,18 @@ local scrollview_mode = function(winnr, precedence, default)
   local winid = fn.win_getid(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
+  -- TODO: Use proper_virtual_mode when applicable
+  do
+    return improper_virtual_mode
+  end
   -- TODO: get line_limit from a config variable
-  local line_limit = api.nvim_win_text_height ~= nil and 1000 or 100
+  local line_limit = 1000
   if line_limit ~= -1 and line_count > line_limit then
     return improper_virtual_mode
   end
   local byte_count = get_byte_count(winid)
   -- TODO: get byte_limit from a config variable
-  local byte_limit = api.nvim_win_text_height ~= nil and 50000 or 5000
+  local byte_limit = 50000
   if byte_limit ~= -1 and byte_count > byte_limit then
     return improper_virtual_mode
   end
@@ -562,21 +595,18 @@ local proper_virtual_line_count = function(winid, start, end_)
     table.concat({'proper_virtual_line_count', base_winid, start, end_}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count
-  -- The two approaches that follow, nvim_win_text_height and virtcol, take
-  -- similar amounts of time, but the nvim_win_text_height also accounts for
-  -- diff filler and virtual text lines.
+  -- For the two approaches that follow, nvim_win_text_height and virtcol, the
+  -- latter takes about twice the time as the former. In addition to the timing
+  -- benefit, nvim_win_text_height also accounts for diff filler and virtual
+  -- text lines.
   if api.nvim_win_text_height ~= nil then
     count = api.nvim_win_text_height(
       winid, {start_row = start - 1, end_row = end_ - 1})
   else
     api.nvim_win_call(winid, function()
-      -- TODO: The following doesn't move the cursor, but without a window
-      -- workspace, for buffers with wrapped lines, scrolling with the mouse
-      -- wheel can get stuck and <c-e> scrolling doesn't work for some lines
-      -- (presumably from temporarily changing wrap/nowrap settings).
       local winnr = api.nvim_win_get_number(winid)
       local winwidth = fn.winwidth(winnr)
-      local bufwidth = winwidth - buf_view_begins_col() + 1
+      local bufwidth = winwidth - buf_view_begins_col(winid) + 1
       count = 0
       local line = start
       while line <= end_ do
@@ -887,7 +917,7 @@ local calculate_scrollbar_column = function(winnr)
   elseif base == 'right' then
     left = left + winwidth - column
   elseif base == 'buffer' then
-    local btbc = api.nvim_win_call(winid, buf_text_begins_col)
+    local btbc = buf_text_begins_col(winid)
     left = left + column - 1 + btbc - 1
   else
     -- For an unknown base, use the default position (right edge of window).
@@ -1032,7 +1062,7 @@ local is_valid_column = function(winid, col, width)
   local max_valid_col = winwidth - width + 1
   local base = get_variable('scrollview_base', winnr)
   if base == 'buffer' then
-    min_valid_col = api.nvim_win_call(winid, buf_view_begins_col)
+    min_valid_col = buf_view_begins_col(winid)
   end
   if col < min_valid_col then
     return false
@@ -1807,6 +1837,7 @@ local refresh_bars = function()
       end
     end
   end)
+  reset_win_workspaces()
   if not resume_memoize then
     stop_memoize()
     reset_memoize()
@@ -2273,6 +2304,9 @@ local handle_mouse = function(button)
               props = get_scrollview_bar_props(winid)
             end
             props = move_scrollbar(props, row)
+            -- Window workspaces may still be present as a result of the
+            -- earlier commands (e.g., set_topline). Remove prior to redrawing.
+            reset_win_workspaces()
             vim.cmd('redraw')
             previous_row = row
           end
@@ -2281,6 +2315,7 @@ local handle_mouse = function(button)
       end  -- end if
     end  -- end while
   end)  -- end pcall
+  reset_win_workspaces()  -- as a precaution
   if not resume_memoize then
     stop_memoize()
     reset_memoize()
