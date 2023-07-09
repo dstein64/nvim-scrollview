@@ -406,13 +406,14 @@ local scrollview_mode = function(winnr, precedence, default)
   if specified_mode == 'simple' then
     return simple_mode
   end
-  local winid = fn.win_getid(winnr)
-  local bufnr = api.nvim_win_get_buf(winid)
-  local line_count = api.nvim_buf_line_count(bufnr)
   -- TODO: Use proper_virtual_mode when applicable
+  -- luacheck: ignore 511 (unreachable code)
   do
     return improper_virtual_mode
   end
+  local winid = fn.win_getid(winnr)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
   -- TODO: get line_limit from a config variable
   local line_limit = 1000
   if line_limit ~= -1 and line_count > line_limit then
@@ -635,6 +636,7 @@ local calculate_scrollbar_height = function(winnr)
   local winheight = get_window_height(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local mode = scrollview_mode(winnr)
+  local effective_line_count
   if mode == simple_mode then
     effective_line_count = line_count
   elseif mode == improper_virtual_mode then
@@ -686,7 +688,6 @@ end
 -- scrollbar at that row under virtual scrollview mode, in the current window.
 -- The computation loops over virtual spans. The cursor may be moved.
 local virtual_topline_lookup_spanwise = function()
-  local winnr = fn.winnr()
   local winid = api.nvim_get_current_win()
   local target_topline_count = get_target_topline_count(winid)
   local result = {}  -- A list of line numbers
@@ -743,7 +744,6 @@ end
 -- Returns an array that maps window rows to the topline that corresponds to a
 -- scrollbar at that row under virtual scrollview mode, in the current window.
 local virtual_topline_lookup_linewise = function()
-  local winnr = fn.winnr()
   local winid = api.nvim_get_current_win()
   local target_topline_count = get_target_topline_count(winid)
   local last_line = fn.line('$')
@@ -814,7 +814,6 @@ end
 -- Returns a topline lookup for the current window. The cursor is moved only if
 -- api.nvim_win_text_height is not available.
 local proper_virtual_topline_lookup = function(winid)
-  local winnr = api.nvim_win_get_number(winid)
   local target_topline_count = get_target_topline_count(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
@@ -823,8 +822,8 @@ local proper_virtual_topline_lookup = function(winid)
   if total_vlines > 1 and target_topline_count > 1 then
     local line = 1
     local vline = 1
-    local prior_line = 1
-    local prior_vline = 1
+    local prior_line = line
+    local prior_vline = vline
     for row = 1, target_topline_count do
       local proportion = (row - 1) / (target_topline_count - 1)
       line = prior_line
@@ -867,7 +866,6 @@ local proper_virtual_topline_lookup = function(winid)
 end
 
 local simple_topline_lookup = function(winid)
-  local winnr = fn.winnr()
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local target_topline_count = get_target_topline_count(winid)
