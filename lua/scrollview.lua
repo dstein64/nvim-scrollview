@@ -27,7 +27,6 @@ local to_bool = utils.to_bool
 -- to sign support).
 
 -- TODO: Use numbers for memoization keys
--- TODO: Switch constants to upper case
 
 -- *************************************************
 -- * Memoization
@@ -72,21 +71,21 @@ local pending_async_refresh_count = 0
 -- scrollview windows, in addition to matching the scrollview buffer number
 -- saved in bar_bufnr. This was preferable versus maintaining a list of window
 -- IDs.
-local win_var = 'scrollview_key'
-local win_val = 'scrollview_val'
+local WIN_VAR = 'scrollview_key'
+local WIN_VAL = 'scrollview_val'
 
 -- For win workspaces, a window variable is used to store the base window ID.
-local win_workspace_base_winid_var = 'scrollview_win_workspace_base_winid'
+local WIN_WORKSPACE_BASE_WINID_VAR = 'scrollview_win_workspace_base_winid'
 
 -- Maps window IDs to a corresponding window workspace.
 local win_workspace_lookup = {}
 
 -- A type field is used to indicate the type of scrollview windows.
-local bar_type = 0
-local sign_type = 1
+local BAR_TYPE = 0
+local SIGN_TYPE = 1
 
 -- A key for saving scrollbar properties using a window variable.
-local props_var = 'scrollview_props'
+local PROPS_VAR = 'scrollview_props'
 
 -- Stores registered sign specifications.
 -- WARN: There is an assumption in the code that signs specs cannot be
@@ -95,8 +94,6 @@ local sign_specs = {}
 
 -- Maps sign groups to state (enabled or disabled).
 local sign_group_state = {}
-
-local mousemove = t('<mousemove>')
 
 -- Track whether there has been a <mousemove> occurrence. Hover highlights are
 -- only used if this has been set to true. Without this, the bar would be
@@ -109,9 +106,9 @@ local mousemove = t('<mousemove>')
 -- unlikely.
 local mousemove_received = false
 
-local simple_mode = 0            -- doesn't consider folds nor wrapped lines
-local improper_virtual_mode = 1  -- considers folds, but not wrapped lines
-local proper_virtual_mode = 2    -- considers folds and wrapped lines
+local SIMPLE_MODE = 0            -- doesn't consider folds nor wrapped lines
+local IMPROPER_VIRTUAL_MODE = 1  -- considers folds, but not wrapped lines
+local PROPER_VIRTUAL_MODE = 2    -- considers folds and wrapped lines
 
 -- *************************************************
 -- * Core
@@ -128,7 +125,7 @@ local is_mouse_over_scrollview_win = function(winid)
   -- (may relate to Neovim #24078). Perhaps it's because the windows were just
   -- created and not yet in the necessary state. #100
   local mousepos = fn.getmousepos()
-  local props = api.nvim_win_get_var(winid, props_var)
+  local props = api.nvim_win_get_var(winid, PROPS_VAR)
   local parent_pos = fn.win_screenpos(props.parent_winid)
   local winrow = props.row + parent_pos[1] - 1
   local wincol = props.col + parent_pos[2] - 1
@@ -166,14 +163,14 @@ local set_window_option = function(winid, key, value)
 end
 
 -- Return the base window ID for the specified window. Assumes that windows
--- have been properly marked with win_workspace_base_winid_var.
+-- have been properly marked with WIN_WORKSPACE_BASE_WINID_VAR.
 local get_base_winid = function(winid)
   local base_winid = winid
   pcall(function()
     -- Loop until reaching a window with no base winid specified.
     while true do
       base_winid = api.nvim_win_get_var(
-        base_winid, win_workspace_base_winid_var)
+        base_winid, WIN_WORKSPACE_BASE_WINID_VAR)
     end
   end)
   return base_winid
@@ -220,7 +217,7 @@ local with_win_workspace = function(winid, fun)
       -- :Gblame) can function properly.
       set_window_option(workspace_winid, 'scrollbind', false)
       set_window_option(workspace_winid, 'cursorbind', false)
-      api.nvim_win_set_var(workspace_winid, win_workspace_base_winid_var, winid)
+      api.nvim_win_set_var(workspace_winid, WIN_WORKSPACE_BASE_WINID_VAR, winid)
       -- As a precautionary measure, make sure the floating window has no
       -- winbar, which is assumed above.
       if to_bool(fn.exists('+winbar')) then
@@ -399,17 +396,17 @@ end
 -- without the 'name' argument.
 local scrollview_mode = function(winnr, precedence, default)
   if is_restricted(winnr, precedence, default) then
-    return simple_mode
+    return SIMPLE_MODE
   end
   local specified_mode =
     get_variable('scrollview_mode', winnr, precedence, default)
   if specified_mode == 'simple' then
-    return simple_mode
+    return SIMPLE_MODE
   end
-  -- TODO: Use proper_virtual_mode when applicable
+  -- TODO: Use PROPER_VIRTUAL_MODE when applicable
   -- luacheck: ignore 511 (unreachable code)
   do
-    return improper_virtual_mode
+    return IMPROPER_VIRTUAL_MODE
   end
   local winid = fn.win_getid(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
@@ -417,19 +414,19 @@ local scrollview_mode = function(winnr, precedence, default)
   -- TODO: get line_limit from a config variable
   local line_limit = 1000
   if line_limit ~= -1 and line_count > line_limit then
-    return improper_virtual_mode
+    return IMPROPER_VIRTUAL_MODE
   end
   local byte_count = get_byte_count(winid)
   -- TODO: get byte_limit from a config variable
   local byte_limit = 50000
   if byte_limit ~= -1 and byte_count > byte_limit then
-    return improper_virtual_mode
+    return IMPROPER_VIRTUAL_MODE
   end
   if not api.nvim_win_get_option(winid, 'wrap') then
     -- Proper virtual mode is not necessary when there is no wrapping.
-    return improper_virtual_mode
+    return IMPROPER_VIRTUAL_MODE
   end
-  return proper_virtual_mode
+  return PROPER_VIRTUAL_MODE
 end
 
 -- Return top line and bottom line in window. For folds, the top line
@@ -637,11 +634,11 @@ local calculate_scrollbar_height = function(winnr)
   local line_count = api.nvim_buf_line_count(bufnr)
   local mode = scrollview_mode(winnr)
   local effective_line_count
-  if mode == simple_mode then
+  if mode == SIMPLE_MODE then
     effective_line_count = line_count
-  elseif mode == improper_virtual_mode then
+  elseif mode == IMPROPER_VIRTUAL_MODE then
     effective_line_count = virtual_line_count(winid, 1, '$')
-  elseif mode == proper_virtual_mode then
+  elseif mode == PROPER_VIRTUAL_MODE then
     effective_line_count = proper_virtual_line_count(winid, 1, '$')
   else
     error('Unknown mode: ' .. mode)
@@ -888,11 +885,11 @@ local get_topline_lookup = function(winid)
     table.concat({'topline_lookup', base_winid, mode}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local topline_lookup
-  if mode == simple_mode then
+  if mode == SIMPLE_MODE then
     topline_lookup = simple_topline_lookup(winid)
-  elseif mode == improper_virtual_mode then
+  elseif mode == IMPROPER_VIRTUAL_MODE then
     topline_lookup = virtual_topline_lookup(winid)
-  elseif mode == proper_virtual_mode then
+  elseif mode == PROPER_VIRTUAL_MODE then
     topline_lookup = proper_virtual_topline_lookup(winid)
   else
     error('Unknown mode: ' .. mode)
@@ -958,7 +955,7 @@ local is_scrollview_window = function(winid)
   if is_ordinary_window(winid) then return false end
   local has_attr = false
   pcall(function()
-    has_attr = api.nvim_win_get_var(winid, win_var) == win_val
+    has_attr = api.nvim_win_get_var(winid, WIN_VAR) == WIN_VAL
   end)
   if not has_attr then return false end
   local bufnr = api.nvim_win_get_buf(winid)
@@ -1208,7 +1205,7 @@ local show_scrollbar = function(winid, bar_winid)
   set_window_option(bar_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
   set_window_option(bar_winid, 'foldenable', false)
   set_window_option(bar_winid, 'wrap', false)
-  api.nvim_win_set_var(bar_winid, win_var, win_val)
+  api.nvim_win_set_var(bar_winid, WIN_VAR, WIN_VAL)
   local props = {
     col = bar_position.col,
     -- Save bar_position.height in addition to the actual height, since the
@@ -1218,7 +1215,7 @@ local show_scrollbar = function(winid, bar_winid)
     parent_winid = winid,
     row = bar_position.row,
     scrollview_winid = bar_winid,
-    type = bar_type,
+    type = BAR_TYPE,
     width = bar_width,
     zindex = zindex,
   }
@@ -1226,7 +1223,7 @@ local show_scrollbar = function(winid, bar_winid)
     -- Neovim 0.7 required to later avoid "Cannot convert given lua type".
     props.highlight_fn = highlight_fn
   end
-  api.nvim_win_set_var(bar_winid, props_var, props)
+  api.nvim_win_set_var(bar_winid, PROPS_VAR, props)
   local hover = mousemove_received
     and to_bool(fn.exists('&mousemoveevent'))
     and vim.o.mousemoveevent
@@ -1447,7 +1444,7 @@ local show_signs = function(winid, sign_winids)
         set_window_option(sign_winid, 'foldcolumn', '0')
         set_window_option(sign_winid, 'foldenable', false)
         set_window_option(sign_winid, 'wrap', false)
-        api.nvim_win_set_var(sign_winid, win_var, win_val)
+        api.nvim_win_set_var(sign_winid, WIN_VAR, WIN_VAL)
         local props = {
           col = col,
           height = 1,
@@ -1456,7 +1453,7 @@ local show_signs = function(winid, sign_winids)
           row = row,
           scrollview_winid = sign_winid,
           sign_spec_id = properties.sign_spec_id,
-          type = sign_type,
+          type = SIGN_TYPE,
           width = sign_width,
           zindex = zindex,
         }
@@ -1464,7 +1461,7 @@ local show_signs = function(winid, sign_winids)
           -- Neovim 0.7 required to later avoid "Cannot convert given lua type".
           props.highlight_fn = highlight_fn
         end
-        api.nvim_win_set_var(sign_winid, props_var, props)
+        api.nvim_win_set_var(sign_winid, PROPS_VAR, props)
         local hover = mousemove_received
           and to_bool(fn.exists('&mousemoveevent'))
           and vim.o.mousemoveevent
@@ -1495,7 +1492,7 @@ local move_scrollbar = function(props, row)
   api.nvim_win_set_config(props.scrollview_winid, options)
   props.row = row
   props.height = height
-  api.nvim_win_set_var(props.scrollview_winid, props_var, props)
+  api.nvim_win_set_var(props.scrollview_winid, PROPS_VAR, props)
   return props
 end
 
@@ -1698,8 +1695,8 @@ end
 -- dictionary is returned if there is no corresponding scrollbar.
 local get_scrollview_bar_props = function(winid)
   for _, scrollview_winid in ipairs(get_scrollview_windows()) do
-    local props = api.nvim_win_get_var(scrollview_winid, props_var)
-    if props.type == bar_type and props.parent_winid == winid then
+    local props = api.nvim_win_get_var(scrollview_winid, PROPS_VAR)
+    if props.type == BAR_TYPE and props.parent_winid == winid then
       return props
     end
   end
@@ -1711,8 +1708,8 @@ end
 local get_scrollview_sign_props = function(winid)
   local result = {}
   for _, scrollview_winid in ipairs(get_scrollview_windows()) do
-    local props = api.nvim_win_get_var(scrollview_winid, props_var)
-    if props.type == sign_type and props.parent_winid == winid then
+    local props = api.nvim_win_get_var(scrollview_winid, PROPS_VAR)
+    if props.type == SIGN_TYPE and props.parent_winid == winid then
       table.insert(result, props)
     end
   end
@@ -1772,10 +1769,10 @@ local refresh_bars = function()
     local existing_barids = {}
     local existing_signids = {}
     for _, winid in ipairs(get_scrollview_windows()) do
-      local props = api.nvim_win_get_var(winid, props_var)
-      if props.type == bar_type then
+      local props = api.nvim_win_get_var(winid, PROPS_VAR)
+      if props.type == BAR_TYPE then
         table.insert(existing_barids, winid)
-      elseif props.type == sign_type then
+      elseif props.type == SIGN_TYPE then
         table.insert(existing_signids, winid)
       end
     end
@@ -1872,10 +1869,10 @@ end
 if vim.on_key ~= nil
     and to_bool(fn.exists('&mousemoveevent')) then
   vim.on_key(function(str)
-    if vim.o.mousemoveevent and string.find(str, mousemove) then
+    if vim.o.mousemoveevent and string.find(str, t('<mousemove>')) then
       mousemove_received = true
       for _, winid in ipairs(get_scrollview_windows()) do
-        local props = api.nvim_win_get_var(winid, props_var)
+        local props = api.nvim_win_get_var(winid, PROPS_VAR)
         if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
           props.highlight_fn(is_mouse_over_scrollview_win(winid))
         end
@@ -2253,7 +2250,7 @@ local handle_mouse = function(button)
           vim.cmd('redraw')
           props = get_scrollview_bar_props(mouse_winid)
           if vim.tbl_isempty(props)
-              or props.type ~= bar_type
+              or props.type ~= BAR_TYPE
               or mouse_row < props.row
               or mouse_row >= props.row + props.height then
             while fn.getchar() ~= mouseup do end
