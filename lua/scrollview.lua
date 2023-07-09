@@ -1087,7 +1087,7 @@ local show_scrollbar = function(winid, bar_winid)
   local winnr = api.nvim_win_get_number(winid)
   local wininfo = fn.getwininfo(winid)[1]
   local bar_position = calculate_position(winnr)
-  if not to_bool(get_variable('scrollview_out_of_bounds', winnr)) then
+  if to_bool(get_variable('scrollview_out_of_bounds_adjust', winnr)) then
     local winwidth = fn.winwidth(winnr)
     bar_position.col = math.max(1, math.min(winwidth, bar_position.col))
   end
