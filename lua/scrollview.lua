@@ -562,16 +562,13 @@ local proper_virtual_line_count = function(winid, start, end_)
     table.concat({'proper_virtual_line_count', base_winid, start, end_}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count
-  -- The two approaches that follow, nvim_win_text_height and strdisplaywidth,
-  -- take similar amounts of time, but the nvim_win_text_height returns exact
-  -- results, whereas the other approach returns approximations.
+  -- The two approaches that follow, nvim_win_text_height and virtcol, take
+  -- similar amounts of time, but the nvim_win_text_height also accounts for
+  -- diff filler and virtual text lines.
   if api.nvim_win_text_height ~= nil then
     count = api.nvim_win_text_height(
       winid, {start_row = start - 1, end_row = end_ - 1})
   else
-    -- The approach that follows gives an approximate virtual line count. It
-    -- doesn't account for 'linebreak' and 'breakat', which could make the
-    -- line count higher.
     api.nvim_win_call(winid, function()
       -- TODO: The following doesn't move the cursor, but without a window
       -- workspace, for buffers with wrapped lines, scrolling with the mouse
@@ -585,7 +582,8 @@ local proper_virtual_line_count = function(winid, start, end_)
       while line <= end_ do
         local count_diff = 1
         if api.nvim_win_get_option(winid, 'wrap') then
-          count_diff = math.ceil(fn.strdisplaywidth(fn.getline(line)) / bufwidth)
+          local virtcol = fn.virtcol({line, '$'})
+          count_diff = math.ceil((virtcol - 1) / bufwidth)
         end
         count_diff = math.max(1, count_diff)  -- to avoid 0 for an empty line
         count = count + count_diff
