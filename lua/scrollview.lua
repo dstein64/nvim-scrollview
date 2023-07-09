@@ -573,9 +573,10 @@ local proper_virtual_line_count = function(winid, start, end_)
     -- doesn't account for 'linebreak' and 'breakat', which could make the
     -- line count higher.
     api.nvim_win_call(winid, function()
-      -- The following doesn't move the cursor, but without a window workspace,
-      -- scrolling with the mouse wheel can get stuck (presumably from
-      -- temporarily changing wrap/nowrap settings).
+      -- TODO: The following doesn't move the cursor, but without a window
+      -- workspace, for buffers with wrapped lines, scrolling with the mouse
+      -- wheel can get stuck and <c-e> scrolling doesn't work for some lines
+      -- (presumably from temporarily changing wrap/nowrap settings).
       local winnr = api.nvim_win_get_number(winid)
       local winwidth = fn.winwidth(winnr)
       local bufwidth = winwidth - buf_view_begins_col() + 1
