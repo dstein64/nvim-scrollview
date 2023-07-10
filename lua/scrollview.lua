@@ -107,6 +107,7 @@ local mousemove_received = false
 local SIMPLE_MODE = 0   -- doesn't consider folds nor wrapped lines
 local VIRTUAL_MODE = 1  -- considers folds, but not wrapped lines
 local PROPER_MODE = 2   -- considers folds and wrapped lines
+local AUTO_MODE = 3     -- with few lines, use proper mode, else virtual mode
 
 -- Memoization key prefixes.
 local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
@@ -405,31 +406,28 @@ local scrollview_mode = function(winnr, precedence, default)
     get_variable('scrollview_mode', winnr, precedence, default)
   if specified_mode == 'simple' then
     return SIMPLE_MODE
-  end
-  -- TODO: Use PROPER_MODE when applicable
-  -- luacheck: ignore 511 (unreachable code)
-  do
+  elseif specified_mode == 'virtual' then
     return VIRTUAL_MODE
+  elseif specified_mode == 'proper' then
+    return PROPER_MODE
+  elseif specified_mode == 'auto' then
+    local winid = fn.win_getid(winnr)
+    local bufnr = api.nvim_win_get_buf(winid)
+    local line_count = api.nvim_buf_line_count(bufnr)
+    if not api.nvim_win_get_option(winid, 'wrap') and not has('nvim-0.10') then
+      -- Proper mode is not necessary when there is no wrapping and nvim<0.10
+      -- (on nvim>=0.10, diff filler and virtual text lines are also considered).
+      return VIRTUAL_MODE
+    end
+    local winheight = get_window_height(winid)
+    local threshold_multiple = 5
+    if line_count <= winheight * threshold_multiple then
+      return PROPER_MODE
+    end
   end
-  local winid = fn.win_getid(winnr)
-  local bufnr = api.nvim_win_get_buf(winid)
-  local line_count = api.nvim_buf_line_count(bufnr)
-  -- TODO: get line_limit from a config variable
-  local line_limit = 1000
-  if line_limit ~= -1 and line_count > line_limit then
-    return VIRTUAL_MODE
-  end
-  local byte_count = get_byte_count(winid)
-  -- TODO: get byte_limit from a config variable
-  local byte_limit = 50000
-  if byte_limit ~= -1 and byte_count > byte_limit then
-    return VIRTUAL_MODE
-  end
-  if not api.nvim_win_get_option(winid, 'wrap') then
-    -- Proper virtual mode is not necessary when there is no wrapping.
-    return VIRTUAL_MODE
-  end
-  return PROPER_MODE
+  -- Fallback for when mode is unknown and for auto mode's case where there are
+  -- relatively many lines.
+  return VIRTUAL_MODE
 end
 
 -- Return top line and bottom line in window. For folds, the top line

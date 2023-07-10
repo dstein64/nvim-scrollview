@@ -38,7 +38,7 @@ let g:scrollview_include_end_region =
 " The plugin enters a restricted state when the number of buffer lines exceeds
 " the limit. Use -1 for no limit.
 let g:scrollview_line_limit = get(g:, 'scrollview_line_limit', 20000)
-let g:scrollview_mode = get(g:, 'scrollview_mode', 'virtual')
+let g:scrollview_mode = get(g:, 'scrollview_mode', 'auto')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', v:true)
 " Whether bars and signs beyond the window boundary (out-of-bounds) are
 " adjusted to be within the window.
