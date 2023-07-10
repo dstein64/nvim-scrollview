@@ -26,8 +26,6 @@ local to_bool = utils.to_bool
 -- named as if it were only applicable to bars (since it was implemented prior
 -- to sign support).
 
--- TODO: Use numbers for memoization keys
-
 -- *************************************************
 -- * Memoization
 -- *************************************************
@@ -109,6 +107,11 @@ local mousemove_received = false
 local SIMPLE_MODE = 0            -- doesn't consider folds nor wrapped lines
 local IMPROPER_VIRTUAL_MODE = 1  -- considers folds, but not wrapped lines
 local PROPER_VIRTUAL_MODE = 2    -- considers folds and wrapped lines
+
+-- Memoization key prefixes.
+local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
+local PROPER_VIRTUAL_LINE_COUNT_KEY_PREFIX = 1
+local TOPLINE_LOOKUP_KEY_PREFIX = 2
 
 -- *************************************************
 -- * Core
@@ -561,7 +564,7 @@ local virtual_line_count = function(winid, start, end_)
   end
   local base_winid = get_base_winid(winid)
   local memoize_key =
-    table.concat({'virtual_line_count', base_winid, start, end_}, ':')
+    table.concat({VIRTUAL_LINE_COUNT_KEY_PREFIX, base_winid, start, end_}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count = with_win_workspace(winid, function()
     -- On an AMD Ryzen 7 2700X, linewise computation takes about 3e-7 seconds
@@ -590,7 +593,8 @@ local proper_virtual_line_count = function(winid, start, end_)
   start = math.max(1, start)
   local base_winid = get_base_winid(winid)
   local memoize_key =
-    table.concat({'proper_virtual_line_count', base_winid, start, end_}, ':')
+    table.concat(
+      {PROPER_VIRTUAL_LINE_COUNT_KEY_PREFIX, base_winid, start, end_}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count
   -- For the two approaches that follow, nvim_win_text_height and virtcol, the
@@ -882,7 +886,7 @@ local get_topline_lookup = function(winid)
   local mode = scrollview_mode(winnr)
   local base_winid = get_base_winid(winid)
   local memoize_key =
-    table.concat({'topline_lookup', base_winid, mode}, ':')
+    table.concat({TOPLINE_LOOKUP_KEY_PREFIX, base_winid, mode}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local topline_lookup
   if mode == SIMPLE_MODE then
