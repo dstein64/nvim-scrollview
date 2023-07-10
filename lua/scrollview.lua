@@ -104,6 +104,8 @@ local sign_group_state = {}
 -- unlikely.
 local mousemove_received = false
 
+local MOUSEMOVE = t('<mousemove>')
+
 local SIMPLE_MODE = 0   -- doesn't consider folds nor wrapped lines
 local VIRTUAL_MODE = 1  -- considers folds, but not wrapped lines
 local PROPER_MODE = 2   -- considers folds and wrapped lines
@@ -1881,7 +1883,7 @@ end
 if vim.on_key ~= nil
     and to_bool(fn.exists('&mousemoveevent')) then
   vim.on_key(function(str)
-    if vim.o.mousemoveevent and string.find(str, t('<mousemove>')) then
+    if vim.o.mousemoveevent and string.find(str, MOUSEMOVE) then
       mousemove_received = true
       for _, winid in ipairs(get_scrollview_windows()) do
         local props = api.nvim_win_get_var(winid, PROPS_VAR)
