@@ -104,13 +104,13 @@ local sign_group_state = {}
 -- unlikely.
 local mousemove_received = false
 
-local SIMPLE_MODE = 0            -- doesn't consider folds nor wrapped lines
-local IMPROPER_VIRTUAL_MODE = 1  -- considers folds, but not wrapped lines
-local PROPER_VIRTUAL_MODE = 2    -- considers folds and wrapped lines
+local SIMPLE_MODE = 0   -- doesn't consider folds nor wrapped lines
+local VIRTUAL_MODE = 1  -- considers folds, but not wrapped lines
+local PROPER_MODE = 2   -- considers folds and wrapped lines
 
 -- Memoization key prefixes.
 local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
-local PROPER_VIRTUAL_LINE_COUNT_KEY_PREFIX = 1
+local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
 
 -- *************************************************
@@ -406,10 +406,10 @@ local scrollview_mode = function(winnr, precedence, default)
   if specified_mode == 'simple' then
     return SIMPLE_MODE
   end
-  -- TODO: Use PROPER_VIRTUAL_MODE when applicable
+  -- TODO: Use PROPER_MODE when applicable
   -- luacheck: ignore 511 (unreachable code)
   do
-    return IMPROPER_VIRTUAL_MODE
+    return VIRTUAL_MODE
   end
   local winid = fn.win_getid(winnr)
   local bufnr = api.nvim_win_get_buf(winid)
@@ -417,19 +417,19 @@ local scrollview_mode = function(winnr, precedence, default)
   -- TODO: get line_limit from a config variable
   local line_limit = 1000
   if line_limit ~= -1 and line_count > line_limit then
-    return IMPROPER_VIRTUAL_MODE
+    return VIRTUAL_MODE
   end
   local byte_count = get_byte_count(winid)
   -- TODO: get byte_limit from a config variable
   local byte_limit = 50000
   if byte_limit ~= -1 and byte_count > byte_limit then
-    return IMPROPER_VIRTUAL_MODE
+    return VIRTUAL_MODE
   end
   if not api.nvim_win_get_option(winid, 'wrap') then
     -- Proper virtual mode is not necessary when there is no wrapping.
-    return IMPROPER_VIRTUAL_MODE
+    return VIRTUAL_MODE
   end
-  return PROPER_VIRTUAL_MODE
+  return PROPER_MODE
 end
 
 -- Return top line and bottom line in window. For folds, the top line
@@ -584,9 +584,9 @@ local virtual_line_count = function(winid, start, end_)
   return count
 end
 
--- Returns the virtual line count between the two lines. 'store' is an optional
+-- Returns the proper line count between the two lines. 'store' is an optional
 -- dictionary that can be used to save/retrieve values for reuse.
-local proper_virtual_line_count = function(winid, start, end_, store)
+local proper_line_count = function(winid, start, end_, store)
   if store == nil then
     store = {}
   end
@@ -596,9 +596,8 @@ local proper_virtual_line_count = function(winid, start, end_, store)
   end
   start = math.max(1, start)
   local base_winid = get_base_winid(winid)
-  local memoize_key =
-    table.concat(
-      {PROPER_VIRTUAL_LINE_COUNT_KEY_PREFIX, base_winid, start, end_}, ':')
+  local memoize_key = table.concat(
+      {PROPER_LINE_COUNT_KEY_PREFIX, base_winid, start, end_}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count
   -- The two approaches that follow, which use nvim_win_text_height and
@@ -646,10 +645,10 @@ local calculate_scrollbar_height = function(winnr)
   local effective_line_count
   if mode == SIMPLE_MODE then
     effective_line_count = line_count
-  elseif mode == IMPROPER_VIRTUAL_MODE then
+  elseif mode == VIRTUAL_MODE then
     effective_line_count = virtual_line_count(winid, 1, '$')
-  elseif mode == PROPER_VIRTUAL_MODE then
-    effective_line_count = proper_virtual_line_count(winid, 1, '$')
+  elseif mode == PROPER_MODE then
+    effective_line_count = proper_line_count(winid, 1, '$')
   else
     error('Unknown mode: ' .. mode)
   end
@@ -825,11 +824,11 @@ local proper_virtual_topline_lookup = function(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local result = {}  -- A list of line numbers
-  local total_vlines = proper_virtual_line_count(winid, 1, '$')
-  -- 'store' is used to speed up calls to proper_virtual_line_count. This ends
-  -- up being faster than using the existing memoization appraoch for caching
-  -- (since the call to get_base_winid would be relatively slow, and it's
-  -- simpler to implement since memoization is turned off below).
+  local total_vlines = proper_line_count(winid, 1, '$')
+  -- 'store' is used to speed up calls to proper_line_count. This ends up being
+  -- faster than using the existing memoization approach for caching (since the
+  -- call to get_base_winid would be relatively slow, and it's simpler to
+  -- implement since memoization is turned off below).
   local store = {}
   if total_vlines > 1 and target_topline_count > 1 then
     local line = 1
@@ -857,7 +856,7 @@ local proper_virtual_topline_lookup = function(winid)
         -- that would be incurred from caching each line's result.
         local resume_memoize = memoize
         stop_memoize()
-        local vline_diff = proper_virtual_line_count(winid, line, line, store)
+        local vline_diff = proper_line_count(winid, line, line, store)
         if resume_memoize then
           start_memoize()
         end
@@ -902,9 +901,9 @@ local get_topline_lookup = function(winid)
   local topline_lookup
   if mode == SIMPLE_MODE then
     topline_lookup = simple_topline_lookup(winid)
-  elseif mode == IMPROPER_VIRTUAL_MODE then
+  elseif mode == VIRTUAL_MODE then
     topline_lookup = virtual_topline_lookup(winid)
-  elseif mode == PROPER_VIRTUAL_MODE then
+  elseif mode == PROPER_MODE then
     topline_lookup = proper_virtual_topline_lookup(winid)
   else
     error('Unknown mode: ' .. mode)
