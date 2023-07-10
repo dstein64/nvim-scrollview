@@ -415,7 +415,7 @@ local scrollview_mode = function(winnr, precedence, default)
     local bufnr = api.nvim_win_get_buf(winid)
     local line_count = api.nvim_buf_line_count(bufnr)
     if not api.nvim_win_get_option(winid, 'wrap')
-        and not fn.has('nvim-0.10') then
+        and not to_bool(fn.has('nvim-0.10')) then
       -- Proper mode is not necessary when there is no wrapping and nvim<0.10
       -- (on nvim>=0.10, diff filler and virtual text lines are also considered).
       return VIRTUAL_MODE
