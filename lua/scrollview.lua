@@ -584,8 +584,12 @@ local virtual_line_count = function(winid, start, end_)
   return count
 end
 
--- Returns the virtual line count between the two lines.
-local proper_virtual_line_count = function(winid, start, end_)
+-- Returns the virtual line count between the two lines. 'store' is an optional
+-- dictionary that can be used to save/retrieve values for reuse.
+local proper_virtual_line_count = function(winid, start, end_, store)
+  if store == nil then
+    store = {}
+  end
   local last_line = api.nvim_buf_line_count(api.nvim_win_get_buf(winid))
   if type(end_) == 'string' and end_ == '$' then
     end_ = last_line
@@ -597,25 +601,27 @@ local proper_virtual_line_count = function(winid, start, end_)
       {PROPER_VIRTUAL_LINE_COUNT_KEY_PREFIX, base_winid, start, end_}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local count
-  -- For the two approaches that follow, nvim_win_text_height and virtcol, the
-  -- latter takes about twice the time as the former. In addition to the timing
-  -- benefit, nvim_win_text_height also accounts for diff filler and virtual
-  -- text lines.
+  -- The two approaches that follow, which use nvim_win_text_height and
+  -- virtcol, take about the same time to run. However, the nvim_win_text_height
+  -- approach also accounts for diff filler and virtual text lines, in addition
+  -- to folds and wrapped lines.
   if api.nvim_win_text_height ~= nil then
     count = api.nvim_win_text_height(
       winid, {start_row = start - 1, end_row = end_ - 1})
   else
     api.nvim_win_call(winid, function()
-      local winnr = api.nvim_win_get_number(winid)
-      local winwidth = fn.winwidth(winnr)
-      local bufwidth = winwidth - buf_view_begins_col(winid) + 1
+      if store.bufwidth == nil then
+        local winnr = api.nvim_win_get_number(winid)
+        local winwidth = fn.winwidth(winnr)
+        store.bufwidth = winwidth - buf_view_begins_col(winid) + 1
+      end
       count = 0
       local line = start
       while line <= end_ do
         local count_diff = 1
         if api.nvim_win_get_option(winid, 'wrap') then
           local virtcol = fn.virtcol({line, '$'})
-          count_diff = math.ceil((virtcol - 1) / bufwidth)
+          count_diff = math.ceil((virtcol - 1) / store.bufwidth)
         end
         count_diff = math.max(1, count_diff)  -- to avoid 0 for an empty line
         count = count + count_diff
@@ -820,6 +826,11 @@ local proper_virtual_topline_lookup = function(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local result = {}  -- A list of line numbers
   local total_vlines = proper_virtual_line_count(winid, 1, '$')
+  -- 'store' is used to speed up calls to proper_virtual_line_count. This ends
+  -- up being faster than using the existing memoization appraoch for caching
+  -- (since the call to get_base_winid would be relatively slow, and it's
+  -- simpler to implement since memoization is turned off below).
+  local store = {}
   if total_vlines > 1 and target_topline_count > 1 then
     local line = 1
     local vline = 1
@@ -846,7 +857,7 @@ local proper_virtual_topline_lookup = function(winid)
         -- that would be incurred from caching each line's result.
         local resume_memoize = memoize
         stop_memoize()
-        local vline_diff = proper_virtual_line_count(winid, line, line)
+        local vline_diff = proper_virtual_line_count(winid, line, line, store)
         if resume_memoize then
           start_memoize()
         end
