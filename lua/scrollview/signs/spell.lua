@@ -111,7 +111,7 @@ function M.init(enable)
       --   :spe[llgood]!
       --   :[count]spellw[rong]
       --   :spellw[rong]!
-      --   :[count]spellr[are]
+      --   :[count]spellra[re]
       --   :spellr[are]!
       --   :[count]spellu[ndo]
       --   :spellu[ndo]!
