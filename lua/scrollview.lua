@@ -107,7 +107,6 @@ local mousemove_received = false
 local SIMPLE_MODE = 0   -- doesn't consider folds nor wrapped lines
 local VIRTUAL_MODE = 1  -- considers folds, but not wrapped lines
 local PROPER_MODE = 2   -- considers folds and wrapped lines
-local AUTO_MODE = 3     -- with few lines, use proper mode, else virtual mode
 
 -- Memoization key prefixes.
 local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
