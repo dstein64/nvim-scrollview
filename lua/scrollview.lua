@@ -412,6 +412,10 @@ local scrollview_mode = function(winnr, precedence, default)
   elseif specified_mode == 'proper' then
     return PROPER_MODE
   elseif specified_mode == 'auto' then
+    if jit == nil then
+      -- Proper mode is slower. Only use it when luajit is available.
+      return VIRTUAL_MODE
+    end
     local winid = fn.win_getid(winnr)
     local bufnr = api.nvim_win_get_buf(winid)
     local line_count = api.nvim_buf_line_count(bufnr)
