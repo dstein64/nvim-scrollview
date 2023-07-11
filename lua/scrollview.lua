@@ -622,7 +622,9 @@ local proper_line_count = function(winid, start, end_, store)
           local virtcol = fn.virtcol({line, '$'})
           count_diff = math.ceil((virtcol - 1) / store.bufwidth)
         end
-        count_diff = math.max(1, count_diff)  -- to avoid 0 for an empty line
+        -- Avoid zero as a precaution (virtcol's result is one for empty
+        -- lines).
+        count_diff = math.max(1, count_diff)
         count = count + count_diff
         local foldclosedend = fn.foldclosedend(line)
         if foldclosedend ~= -1 then
