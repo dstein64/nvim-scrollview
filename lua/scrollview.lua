@@ -1160,7 +1160,8 @@ local show_scrollbar = function(winid, bar_winid)
     if bar_bufnr == -1 then
       bar_bufnr = api.nvim_create_buf(false, true)
     end
-    fn.bufload(bar_bufnr)  -- Other plugins might have unloaded. #104
+    -- Other plugins might have unloaded the buffer. #104
+    fn.bufload(bar_bufnr)
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
     api.nvim_buf_set_option(bar_bufnr, 'filetype', 'scrollview')
     api.nvim_buf_set_option(bar_bufnr, 'buftype', 'nofile')
@@ -1404,7 +1405,8 @@ local show_signs = function(winid, sign_winids)
           if sign_bufnr == -1 then
             sign_bufnr = api.nvim_create_buf(false, true)
           end
-          fn.bufload(sign_bufnr)  -- Other plugins might have unloaded. #104
+          -- Other plugins might have unloaded the buffer. #104
+          fn.bufload(sign_bufnr)
           api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
           api.nvim_buf_set_option(sign_bufnr, 'filetype', 'scrollview_sign')
           api.nvim_buf_set_option(sign_bufnr, 'buftype', 'nofile')
