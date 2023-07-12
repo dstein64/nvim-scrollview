@@ -1156,14 +1156,11 @@ local show_scrollbar = function(winid, bar_winid)
       return -1
     end
   end
-  -- Other plugins might unload the bar buffer. If so, delete it so that it
-  -- gets recreated. #104
-  if bar_bufnr ~= -1 and not to_bool(fn.bufloaded(bar_bufnr)) then
-    api.nvim_buf_delete(bar_bufnr, {force = true})
-    bar_bufnr = -1
-  end
-  if bar_bufnr == -1 or not to_bool(fn.bufexists(bar_bufnr)) then
-    bar_bufnr = api.nvim_create_buf(false, true)
+  if bar_bufnr == -1 or not to_bool(fn.bufloaded(bar_bufnr)) then
+    if bar_bufnr == -1 then
+      bar_bufnr = api.nvim_create_buf(false, true)
+    end
+    fn.bufload(bar_bufnr)  -- Other plugins might have unloaded. #104
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
     api.nvim_buf_set_option(bar_bufnr, 'filetype', 'scrollview')
     api.nvim_buf_set_option(bar_bufnr, 'buftype', 'nofile')
@@ -1403,14 +1400,11 @@ local show_signs = function(winid, sign_winids)
       end
       if show then
         shown[row .. ',' .. col] = true
-        -- Other plugins might unload the sign buffer. If so, delete it so that
-        -- it gets recreated. #104
-        if sign_bufnr ~= -1 and not to_bool(fn.bufloaded(sign_bufnr)) then
-          api.nvim_buf_delete(sign_bufnr, {force = true})
-          sign_bufnr = -1
-        end
-        if sign_bufnr == -1 or not to_bool(fn.bufexists(sign_bufnr)) then
-          sign_bufnr = api.nvim_create_buf(false, true)
+        if sign_bufnr == -1 or not to_bool(fn.bufloaded(sign_bufnr)) then
+          if sign_bufnr == -1 then
+            sign_bufnr = api.nvim_create_buf(false, true)
+          end
+          fn.bufload(sign_bufnr)  -- Other plugins might have unloaded. #104
           api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
           api.nvim_buf_set_option(sign_bufnr, 'filetype', 'scrollview_sign')
           api.nvim_buf_set_option(sign_bufnr, 'buftype', 'nofile')
