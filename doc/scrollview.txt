@@ -101,8 +101,8 @@ The following |<Plug>| mappings are defined for convenience.
 * `<Plug>(ScrollViewRefresh)`
 * `<Plug>(ScrollViewToggle)`
 
-The following (experimental) |<Plug>| mappings are defined for customizing
-mouse functionality (see |scrollview-mouse-customization|).
+The following |<Plug>| mappings are defined for customizing mouse functionality
+(see |scrollview-mouse-customization|).
 
 * `<Plug>(ScrollViewLeftMouse)`
 * `<Plug>(ScrollViewMiddleMouse)`
@@ -231,7 +231,7 @@ scrollview_hover                           *scrollview_hover*
                        |'mousemoveevent'| set. Defaults to |v:true|.
 
 scrollview_include_end_region              *scrollview_include_end_region*
-(experimental)         |Boolean| specifying whether the region beyond the last
+                       |Boolean| specifying whether the region beyond the last
                        line is considered as containing ordinary lines for the
                        calculation of scrollbar height and positioning.
                        Defaults to |v:false|. Considered only at global scope.
@@ -692,7 +692,7 @@ following example.
     " Specify custom highlighting for ScrollView
     highlight ScrollView ctermbg=159 guibg=LightCyan
 
-Mouse Customization (experimental) ~
+Mouse Customization
                                            *scrollview-mouse-customization*
 When |scrollview_auto_mouse| is set, a |<LeftMouse>| mapping is automatically
 created for interactive mouse support. An existing mapping will not be
