@@ -912,9 +912,8 @@ local get_topline_lookup = function(winid)
   return topline_lookup
 end
 
-local calculate_scrollbar_column = function(winnr)
-  local winid = fn.win_getid(winnr)
-  local winwidth = fn.winwidth(winnr)
+local calculate_scrollbar_column = function(winid)
+  local winwidth = fn.winwidth(winid)
   -- left is the position for the left of the scrollbar, relative to the
   -- window, and 0-indexed.
   local left = 0
@@ -960,7 +959,7 @@ local calculate_position = function(winnr)
   local result = {
     height = height,
     row = top,
-    col = calculate_scrollbar_column(winnr)
+    col = calculate_scrollbar_column(winid)
   }
   return result
 end
@@ -1264,7 +1263,7 @@ local show_signs = function(winid, sign_winids)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local topline_lookup = nil  -- only set when needed
-  local base_col = calculate_scrollbar_column(winnr)
+  local base_col = calculate_scrollbar_column(winid)
   base_col = base_col + get_variable('scrollview_signs_column', winid)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
