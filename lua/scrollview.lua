@@ -935,8 +935,7 @@ end
 
 -- Calculates the bar position for the specified window. Returns a dictionary
 -- with a height, row, and col. Uses 1-indexing.
-local calculate_position = function(winnr)
-  local winid = fn.win_getid(winnr)
+local calculate_position = function(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local topline, _ = line_range(winid)
   local topline_lookup = get_topline_lookup(winid)
@@ -1119,11 +1118,10 @@ end
 -- this is -1). Returns -1 if the bar is not shown, and the floating window ID
 -- otherwise.
 local show_scrollbar = function(winid, bar_winid)
-  local winnr = api.nvim_win_get_number(winid)
   local wininfo = fn.getwininfo(winid)[1]
-  local bar_position = calculate_position(winnr)
+  local bar_position = calculate_position(winid)
   if to_bool(get_variable('scrollview_out_of_bounds_adjust', winid)) then
-    local winwidth = fn.winwidth(winnr)
+    local winwidth = fn.winwidth(winid)
     bar_position.col = math.max(1, math.min(winwidth, bar_position.col))
   end
   local bar_width = 1
