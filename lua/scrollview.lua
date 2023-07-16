@@ -611,8 +611,7 @@ local proper_line_count = function(winid, start, end_, store)
   else
     api.nvim_win_call(winid, function()
       if store.bufwidth == nil then
-        local winnr = api.nvim_win_get_number(winid)
-        local winwidth = fn.winwidth(winnr)
+        local winwidth = fn.winwidth(winid)
         store.bufwidth = winwidth - buf_view_begins_col(winid) + 1
       end
       count = 0
@@ -1029,11 +1028,10 @@ end
 -- Whether scrollbar and signs should be shown. This is the first check; it
 -- only checks for conditions that apply to both the position bar and signs.
 local should_show = function(winid)
-  local winnr = api.nvim_win_get_number(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local buf_filetype = api.nvim_buf_get_option(bufnr, 'filetype')
   local winheight = get_window_height(winid)
-  local winwidth = fn.winwidth(winnr)
+  local winwidth = fn.winwidth(winid)
   local wininfo = fn.getwininfo(winid)[1]
   -- Skip if the filetype is on the list of exclusions.
   local excluded_filetypes = get_variable('scrollview_excluded_filetypes', winid)
@@ -1062,8 +1060,7 @@ end
 
 -- Indicates whether the column is valid for showing a scrollbar or signs.
 local is_valid_column = function(winid, col, width)
-  local winnr = api.nvim_win_get_number(winid)
-  local winwidth = fn.winwidth(winnr)
+  local winwidth = fn.winwidth(winid)
   local min_valid_col = 1
   local max_valid_col = winwidth - width + 1
   local base = get_variable('scrollview_base', winid)
@@ -1255,7 +1252,6 @@ local show_signs = function(winid, sign_winids)
   -- issue reported in Neovim #22906).
   if not to_bool(fn.has('nvim-0.9')) then return end
   local cur_winid = api.nvim_get_current_win()
-  local winnr = api.nvim_win_get_number(winid)
   local wininfo = fn.getwininfo(winid)[1]
   if is_restricted(winid) then return end
   local bufnr = api.nvim_win_get_buf(winid)
@@ -1373,7 +1369,7 @@ local show_signs = function(winid, sign_winids)
       end
       total_width = total_width + sign_width
       if to_bool(get_variable('scrollview_out_of_bounds_adjust', winid)) then
-        local winwidth = fn.winwidth(winnr)
+        local winwidth = fn.winwidth(winid)
         col = math.max(1, math.min(winwidth - sign_width + 1, col))
       end
       local show = is_valid_column(winid, col, sign_width)
