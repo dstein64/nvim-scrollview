@@ -1991,8 +1991,10 @@ local enable = function()
 
       " Scrollbar positions can become stale when the number column or sign
       " column is added or removed (when scrollview_base=buffer).
-      autocmd OptionSet number,relativenumber,signcolumn
-            \ :lua require('scrollview').refresh_bars_async()
+      " WARN: The following line is kept on a single line to avoid an error in
+      " Neovim 0.5 when using \ to continue a line (Vim:E10: \ should be
+      " followed by /, ?, or &).
+      autocmd OptionSet number,relativenumber,signcolumn :lua require('scrollview').refresh_bars_async()
     augroup END
   ]])
   -- The initial refresh is asynchronous, since :ScrollViewEnable can be used
