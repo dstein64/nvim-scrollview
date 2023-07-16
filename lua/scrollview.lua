@@ -1541,7 +1541,7 @@ local init = function()
   local eventignore = api.nvim_get_option('eventignore')
   api.nvim_set_option('eventignore', 'all')
   local state = {
-    initial_winid = fn.win_getid(fn.winnr()),
+    initial_winid = api.nvim_get_current_win(),
     belloff = api.nvim_get_option('belloff'),
     eventignore = eventignore,
     mode = fn.mode(),
@@ -1558,7 +1558,7 @@ local init = function()
 end
 
 local restore = function(state)
-  local current_winid = fn.win_getid(fn.winnr())
+  local current_winid = api.nvim_get_current_win()
   -- Switch back to select mode where applicable.
   if current_winid == state.initial_winid then
     if is_select_mode(state.mode) then
@@ -1773,7 +1773,7 @@ local refresh_bars = function()
     for _, scrollview_bufnr in ipairs({sign_bufnr, bar_bufnr}) do
       if scrollview_bufnr ~= -1 and to_bool(fn.bufexists(scrollview_bufnr)) then
         local windows = fn.getbufinfo(scrollview_bufnr)[1].windows
-        if vim.tbl_contains(windows, fn.win_getid(fn.winnr())) then
+        if vim.tbl_contains(windows, api.nvim_get_current_win()) then
           return
         end
       end
