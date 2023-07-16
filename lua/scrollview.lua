@@ -639,8 +639,7 @@ local proper_line_count = function(winid, start, end_, store)
   return count
 end
 
-local calculate_scrollbar_height = function(winnr)
-  local winid = fn.win_getid(winnr)
+local calculate_scrollbar_height = function(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local winheight = get_window_height(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
@@ -668,8 +667,7 @@ end
 local get_target_topline_count = function(winid)
   local target_topline_count = get_window_height(winid)
   if to_bool(vim.g.scrollview_include_end_region) then
-    local winnr = api.nvim_win_get_number(winid)
-    local scrollbar_height = calculate_scrollbar_height(winnr)
+    local scrollbar_height = calculate_scrollbar_height(winid)
     target_topline_count = target_topline_count - scrollbar_height + 1
   end
   return target_topline_count
@@ -950,7 +948,7 @@ local calculate_position = function(winnr)
     top = top - 1  -- use the preceding line from topline lookup.
   end
   local winheight = get_window_height(winid)
-  local height = calculate_scrollbar_height(winnr)
+  local height = calculate_scrollbar_height(winid)
   if not to_bool(vim.g.scrollview_include_end_region) then
     -- Make sure bar properly reflects bottom of document.
     local _, botline = line_range(winid)
