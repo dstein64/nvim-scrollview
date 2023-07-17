@@ -607,7 +607,7 @@ local proper_line_count = function(winid, start, end_, store)
   -- to folds and wrapped lines.
   if api.nvim_win_text_height ~= nil then
     count = api.nvim_win_text_height(
-      winid, {start_row = start - 1, end_row = end_ - 1})
+      winid, {start_row = start - 1, end_row = end_ - 1}).all
   else
     api.nvim_win_call(winid, function()
       if store.bufwidth == nil then
