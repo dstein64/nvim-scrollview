@@ -220,8 +220,8 @@ scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
                        `[]`.
 
 scrollview_floating_windows                *scrollview_floating_windows*
-(experimental)         |Boolean| specifying whether scrollbars and signs are shown
-                       in floating windows. Defaults to |v:false|.
+(experimental)         |Boolean| specifying whether scrollbars and signs are
+                       shown in floating windows. Defaults to |v:false|.
 
 scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
                        |Boolean| specifying whether each scrollbar or sign
