@@ -65,6 +65,7 @@ scrollview_diagnostics_severities	scrollview.txt	/*scrollview_diagnostics_severi
 scrollview_diagnostics_warn_priority	scrollview.txt	/*scrollview_diagnostics_warn_priority*
 scrollview_diagnostics_warn_symbol	scrollview.txt	/*scrollview_diagnostics_warn_symbol*
 scrollview_excluded_filetypes	scrollview.txt	/*scrollview_excluded_filetypes*
+scrollview_floating_windows	scrollview.txt	/*scrollview_floating_windows*
 scrollview_folds_priority	scrollview.txt	/*scrollview_folds_priority*
 scrollview_folds_symbol	scrollview.txt	/*scrollview_folds_symbol*
 scrollview_hide_on_intersect	scrollview.txt	/*scrollview_hide_on_intersect*

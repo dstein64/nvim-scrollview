@@ -132,12 +132,28 @@ local is_mouse_over_scrollview_win = function(winid)
   local mousepos = fn.getmousepos()
   local props = api.nvim_win_get_var(winid, PROPS_VAR)
   local parent_pos = fn.win_screenpos(props.parent_winid)
-  local winrow = props.row + parent_pos[1] - 1
-  local wincol = props.col + parent_pos[2] - 1
-  return mousepos.screenrow >= winrow
-    and mousepos.screenrow < winrow + props.height
-    and mousepos.screencol >= wincol
-    and mousepos.screencol < wincol + props.width
+  local row = props.row + parent_pos[1] - 1
+  local col = props.col + parent_pos[2] - 1
+  -- Adjust for floating window borders.
+  local config = api.nvim_win_get_config(props.parent_winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
+  if is_float then
+    local border = config.border
+    if border ~= nil and vim.tbl_islist(border) and #border == 8 then
+      if border[2] ~= '' then
+        -- There is a top border.
+        row = row + 1
+      end
+      if border[8] ~= '' then
+        -- There is a left border.
+        col = col + 1
+      end
+    end
+  end
+  return mousepos.screenrow >= row
+    and mousepos.screenrow < row + props.height
+    and mousepos.screencol >= col
+    and mousepos.screencol < col + props.width
 end
 
 -- Return window height, subtracting 1 if there is a winbar.
@@ -265,18 +281,6 @@ local is_ordinary_window = function(winid)
   local not_external = not tbl_get(config, 'external', false)
   local not_floating = tbl_get(config, 'relative', '') == ''
   return not_external and not_floating
-end
-
--- Returns a list of window IDs for the ordinary windows.
-local get_ordinary_windows = function()
-  local winids = {}
-  for winnr = 1, fn.winnr('$') do
-    local winid = fn.win_getid(winnr)
-    if is_ordinary_window(winid) then
-      table.insert(winids, winid)
-    end
-  end
-  return winids
 end
 
 local in_command_line_window = function()
@@ -1028,11 +1032,22 @@ end
 -- Whether scrollbar and signs should be shown. This is the first check; it
 -- only checks for conditions that apply to both the position bar and signs.
 local should_show = function(winid)
+  if is_scrollview_window(winid) then
+    return false
+  end
   local bufnr = api.nvim_win_get_buf(winid)
   local buf_filetype = api.nvim_buf_get_option(bufnr, 'filetype')
   local winheight = get_window_height(winid)
   local winwidth = fn.winwidth(winid)
   local wininfo = fn.getwininfo(winid)[1]
+  local config = api.nvim_win_get_config(winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
+  -- Skip if the window is a floating window and scrollview_floating_windows is
+  -- false.
+  if not to_bool(get_variable('scrollview_floating_windows', winid))
+      and is_float then
+    return false
+  end
   -- Skip if the filetype is on the list of exclusions.
   local excluded_filetypes = get_variable('scrollview_excluded_filetypes', winid)
   if vim.tbl_contains(excluded_filetypes, buf_filetype) then
@@ -1116,6 +1131,8 @@ end
 -- otherwise.
 local show_scrollbar = function(winid, bar_winid)
   local wininfo = fn.getwininfo(winid)[1]
+  local config = api.nvim_win_get_config(winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
   local bar_position = calculate_position(winid)
   if to_bool(get_variable('scrollview_out_of_bounds_adjust', winid)) then
     local winwidth = fn.winwidth(winid)
@@ -1141,7 +1158,9 @@ local show_scrollbar = function(winid, bar_winid)
       wincol0 + bar_position.col
     )
     if not vim.tbl_isempty(float_overlaps) then
-      return -1
+      if #float_overlaps > 1 or float_overlaps[1] ~= winid then
+        return -1
+      end
     end
   end
   if bar_bufnr == -1 or not to_bool(fn.bufloaded(bar_bufnr)) then
@@ -1169,11 +1188,14 @@ local show_scrollbar = function(winid, bar_winid)
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
   end
   local zindex = get_variable('scrollview_zindex', winid)
+  if is_float then
+    zindex = zindex + config.zindex
+  end
   -- When there is a winbar, nvim_open_win with relative=win considers row 0 to
   -- be the line below the winbar.
   local max_height = get_window_height(winid) - bar_position.row + 1
   local height = math.min(bar_position.height, max_height)
-  local config = {
+  local bar_config = {
     win = winid,
     relative = 'win',
     focusable = false,
@@ -1185,9 +1207,9 @@ local show_scrollbar = function(winid, bar_winid)
     zindex = zindex
   }
   if bar_winid == -1 then
-    bar_winid = api.nvim_open_win(bar_bufnr, false, config)
+    bar_winid = api.nvim_open_win(bar_bufnr, false, bar_config)
   else
-    api.nvim_win_set_config(bar_winid, config)
+    api.nvim_win_set_config(bar_winid, bar_config)
   end
   -- Scroll to top so that the custom character spans full scrollbar height.
   vim.cmd('keepjumps call nvim_win_set_cursor(' .. bar_winid .. ', [1, 0])')
@@ -1253,6 +1275,8 @@ local show_signs = function(winid, sign_winids)
   if not to_bool(fn.has('nvim-0.9')) then return end
   local cur_winid = api.nvim_get_current_win()
   local wininfo = fn.getwininfo(winid)[1]
+  local config = api.nvim_win_get_config(winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
   if is_restricted(winid) then return end
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
@@ -1384,7 +1408,11 @@ local show_signs = function(winid, sign_winids)
           wincol0 + col,
           wincol0 + col + sign_width - 1
         )
-        show = vim.tbl_isempty(float_overlaps)
+        if not vim.tbl_isempty(float_overlaps) then
+          if #float_overlaps > 1 or float_overlaps[1] ~= winid then
+            show = false
+          end
+        end
       end
       if show then
         shown[row .. ',' .. col] = true
@@ -1413,7 +1441,10 @@ local show_signs = function(winid, sign_winids)
         api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
         local sign_winid
         local zindex = get_variable('scrollview_signs_zindex', winid)
-        local config = {
+        if is_float then
+          zindex = zindex + config.zindex
+        end
+        local sign_config = {
           win = winid,
           relative = 'win',
           focusable = false,
@@ -1425,10 +1456,10 @@ local show_signs = function(winid, sign_winids)
           zindex = zindex,
         }
         if vim.tbl_isempty(sign_winids) then
-          sign_winid = api.nvim_open_win(sign_bufnr, false, config)
+          sign_winid = api.nvim_open_win(sign_bufnr, false, sign_config)
         else
           sign_winid = table.remove(sign_winids)
-          api.nvim_win_set_config(sign_winid, config)
+          api.nvim_win_set_config(sign_winid, sign_config)
         end
         local highlight_fn = function(hover)
           hover = hover and get_variable('scrollview_hover', winid)
@@ -1451,7 +1482,27 @@ local show_signs = function(winid, sign_winids)
         -- Scroll to the inserted line.
         local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
         vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
-        local winhighlight = 'Normal:Normal'
+        -- Set the Normal highlight to match the base window.
+        -- WARN: 'nvim_win_set_hl_ns' "takes precedence over the 'winhighlight'
+        -- option". However, it seems there's no way to retrieve what's been
+        -- set with that function (Neovim #24309).
+        local target = 'Normal'
+        if is_float then
+          target = 'NormalFloat'
+        end
+        local base_winhighlight = api.nvim_win_get_option(winid, 'winhighlight')
+        if base_winhighlight ~= '' then
+          pcall(function()
+            for _, item in ipairs(fn.split(base_winhighlight, ',')) do
+              local from, to = unpack(fn.split(item, ':'))
+              if from == 'Normal' then
+                target = to
+                break
+              end
+            end
+          end)
+        end
+        local winhighlight = fn.printf('Normal:%s', target)
         set_window_option(sign_winid, 'winhighlight', winhighlight)
         local winblend = get_variable('scrollview_winblend', winid)
         set_window_option(sign_winid, 'winblend', winblend)
@@ -1585,12 +1636,13 @@ end
 --   2) str_idx
 --   3) charmod
 --   4) mouse_winid
---   5) mouse_row
---   6) mouse_col
+--   5) mouse_row (1-indexed)
+--   6) mouse_col (1-indexed)
 -- The mouse values are 0 when there was no mouse event or getmousepos is not
 -- available. The mouse_winid is set to -1 when a mouse event was on the
 -- command line. The mouse_winid is set to -2 when a mouse event was on the
--- tabline.
+-- tabline. For floating windows with borders, the left border is considered
+-- column 0 and the top border is considered row 0.
 local read_input_stream = function()
   local chars = {}
   local chars_props = {}
@@ -1646,6 +1698,22 @@ local read_input_stream = function()
       if mouse_winid > 0
           and to_bool(tbl_get(fn.getwininfo(mouse_winid)[1], 'winbar', 0)) then
         mouse_row = mouse_row - 1
+      end
+      -- Adjust for floating window borders.
+      local config = api.nvim_win_get_config(mouse_winid)
+      local is_float = tbl_get(config, 'relative', '') ~= ''
+      if is_float then
+        local border = config.border
+        if border ~= nil and vim.tbl_islist(border) and #border == 8 then
+          if border[2] ~= '' then
+            -- There is a top border.
+            mouse_row = mouse_row - 1
+          end
+          if border[8] ~= '' then
+            -- There is a left border.
+            mouse_col = mouse_col - 1
+          end
+        end
       end
     end
     local char_props = {
@@ -1796,7 +1864,8 @@ local refresh_bars = function()
     if to_bool(get_variable('scrollview_current_only', current_winid, 'tg')) then
       table.insert(target_wins, api.nvim_get_current_win())
     else
-      for _, winid in ipairs(get_ordinary_windows()) do
+      for winnr = 1, fn.winnr('$') do
+        local winid = fn.win_getid(winnr)
         table.insert(target_wins, winid)
       end
     end
@@ -2448,7 +2517,8 @@ end
 -- Returns a list of window IDs that could potentially have signs.
 local get_sign_eligible_windows = function()
   local winids = {}
-  for _, winid in ipairs(get_ordinary_windows()) do
+  for winnr = 1, fn.winnr('$') do
+    local winid = fn.win_getid(winnr)
     if should_show(winid) then
       if not is_restricted(winid) then
         table.insert(winids, winid)
