@@ -1229,13 +1229,19 @@ local show_scrollbar = function(winid, bar_winid)
     -- bottom of the scrollbar.
     local winhighlight = string.format('Normal:%s,EndOfBuffer:%s', group, group)
     set_window_option(bar_winid, 'winhighlight', winhighlight)
+    local winblend = get_variable('scrollview_winblend', winid)
+    -- Add a workaround for Neovim #14624.
+    if is_float then
+      -- Disable winblend for base windows that are floating. The scrollbar would
+      -- blend with an orinary window, not the base floating window.
+      winblend = 0
+    end
     -- Add a workaround for Neovim #24159.
     if is_hl_reversed(group) then
-      set_window_option(bar_winid, 'winblend', '0')
+      winblend = 0
     end
+    set_window_option(bar_winid, 'winblend', winblend)
   end
-  local winblend = get_variable('scrollview_winblend', winid)
-  set_window_option(bar_winid, 'winblend', winblend)
   set_window_option(bar_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
   set_window_option(bar_winid, 'foldenable', false)
   set_window_option(bar_winid, 'wrap', false)
@@ -1473,10 +1479,19 @@ local show_signs = function(winid, sign_winids)
             api.nvim_win_call(sign_winid, function()
               fn.matchaddpos(highlight, {sign_line_count})
             end)
+            local winblend = get_variable('scrollview_winblend', winid)
+            -- Add a workaround for Neovim #14624.
+            if is_float then
+              -- Disable winblend for base windows that are floating. The sign
+              -- would blend with an orinary window, not the base floating
+              -- window.
+              winblend = 0
+            end
             -- Add a workaround for Neovim #24159.
             if is_hl_reversed(highlight) then
-              set_window_option(sign_winid, 'winblend', '0')
+              winblend = 0
             end
+            set_window_option(sign_winid, 'winblend', winblend)
           end
         end
         -- Scroll to the inserted line.
@@ -1504,8 +1519,6 @@ local show_signs = function(winid, sign_winids)
         end
         local winhighlight = fn.printf('Normal:%s', target)
         set_window_option(sign_winid, 'winhighlight', winhighlight)
-        local winblend = get_variable('scrollview_winblend', winid)
-        set_window_option(sign_winid, 'winblend', winblend)
         -- foldcolumn takes a string
         set_window_option(sign_winid, 'foldcolumn', '0')
         set_window_option(sign_winid, 'foldenable', false)
