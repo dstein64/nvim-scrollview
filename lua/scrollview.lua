@@ -1212,6 +1212,7 @@ local show_scrollbar = function(winid, bar_winid)
     api.nvim_buf_set_option(bar_bufnr, 'swapfile', false)
     api.nvim_buf_set_option(bar_bufnr, 'bufhidden', 'hide')
     api.nvim_buf_set_option(bar_bufnr, 'buflisted', false)
+    api.nvim_buf_set_option(bar_bufnr, 'undolevels', -1)
   end
   -- Make sure that a custom character is up-to-date and is repeated enough to
   -- cover the full height of the scrollbar.
@@ -1481,6 +1482,7 @@ local show_signs = function(winid, sign_winids)
           api.nvim_buf_set_option(sign_bufnr, 'swapfile', false)
           api.nvim_buf_set_option(sign_bufnr, 'bufhidden', 'hide')
           api.nvim_buf_set_option(sign_bufnr, 'buflisted', false)
+          api.nvim_buf_set_option(sign_bufnr, 'undolevels', -1)
         end
         local sign_line_count = api.nvim_buf_line_count(sign_bufnr)
         api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
