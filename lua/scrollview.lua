@@ -1125,6 +1125,39 @@ local is_hl_reversed = function(group)
   return false
 end
 
+-- Returns the Normal highlight for the specified window.
+-- WARN: 'nvim_win_set_hl_ns' "takes precedence over the 'winhighlight'
+-- option". However, it seems there's no way to retrieve what's been set with
+-- that function (Neovim #24309). When that's implemented, this function may
+-- have to create new groups in case the highlight doesn't have a group name.
+local get_normal_highlight = function(winid)
+  local config = api.nvim_win_get_config(winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
+  local highlight = 'Normal'
+  if is_float then
+    highlight = 'NormalFloat'
+  end
+  local base_winhighlight = api.nvim_win_get_option(winid, 'winhighlight')
+  if base_winhighlight ~= '' then
+    pcall(function()
+      for _, item in ipairs(fn.split(base_winhighlight, ',')) do
+        local from, to = unpack(fn.split(item, ':'))
+        if from == 'NormalFloat' and is_float then
+          -- NormalFloat takes precedence for floating windows, but if it's not
+          -- specified, Normal will be used if present.
+          highlight = to
+          break
+        end
+        if from == 'Normal' then
+          highlight = to
+          break
+        end
+      end
+    end)
+  end
+  return highlight
+end
+
 -- Show a scrollbar for the specified 'winid' window ID, using the specified
 -- 'bar_winid' floating window ID (a new floating window will be created if
 -- this is -1). Returns -1 if the bar is not shown, and the floating window ID
@@ -1179,12 +1212,16 @@ local show_scrollbar = function(winid, bar_winid)
   -- Make sure that a custom character is up-to-date and is repeated enough to
   -- cover the full height of the scrollbar.
   local bar_line_count = api.nvim_buf_line_count(bar_bufnr)
-  if api.nvim_buf_get_lines(bar_bufnr, 0, 1, false)[1] ~= vim.g.scrollview_character
+  local character = vim.g.scrollview_character
+  character = character:gsub('\n', '')
+  character = character:gsub('\r', '')
+  if #character < 1 then character = ' ' end
+  if api.nvim_buf_get_lines(bar_bufnr, 0, 1, false)[1] ~= character
       or bar_position.height > bar_line_count then
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', true)
     api.nvim_buf_set_lines(
       bar_bufnr, 0, bar_line_count, false,
-      fn['repeat']({vim.g.scrollview_character}, bar_position.height))
+      fn['repeat']({character}, bar_position.height))
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
   end
   local zindex = get_variable('scrollview_zindex', winid)
@@ -1215,21 +1252,18 @@ local show_scrollbar = function(winid, bar_winid)
   vim.cmd('keepjumps call nvim_win_set_cursor(' .. bar_winid .. ', [1, 0])')
   local highlight_fn = function(hover)
     hover = hover and get_variable('scrollview_hover', winid)
-    local group
+    local highlight
     if hover then
-      group = 'ScrollViewHover'
+      highlight = 'ScrollViewHover'
     else
-      group = 'ScrollView'
+      highlight = 'ScrollView'
       if is_restricted(winid) then
-        group = group .. 'Restricted'
+        highlight = highlight .. 'Restricted'
       end
     end
-    -- It's not sufficient to just specify Normal highlighting. With just that, a
-    -- color scheme's specification of EndOfBuffer would be used to color the
-    -- bottom of the scrollbar.
-    local winhighlight = string.format(
-      'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', group, group, group)
-    set_window_option(bar_winid, 'winhighlight', winhighlight)
+    api.nvim_win_call(bar_winid, function()
+      fn.matchaddpos(highlight, fn.range(1, fn.winheight(bar_winid)))
+    end)
     local winblend = get_variable('scrollview_winblend', winid)
     -- Add a workaround for Neovim #14624.
     if is_float then
@@ -1238,11 +1272,19 @@ local show_scrollbar = function(winid, bar_winid)
       winblend = 0
     end
     -- Add a workaround for Neovim #24159.
-    if is_hl_reversed(group) then
+    if is_hl_reversed(highlight) then
       winblend = 0
     end
     set_window_option(bar_winid, 'winblend', winblend)
   end
+  -- Set the Normal highlight to match the base window. It's not sufficient to
+  -- just specify Normal highlighting. With just that, a color scheme's
+  -- specification of EndOfBuffer would be used to color the bottom of the
+  -- scrollbar.
+  local target = get_normal_highlight(winid)
+  local winhighlight = string.format(
+    'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
+  set_window_option(bar_winid, 'winhighlight', winhighlight)
   set_window_option(bar_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
   set_window_option(bar_winid, 'foldenable', false)
   set_window_option(bar_winid, 'wrap', false)
@@ -1499,25 +1541,7 @@ local show_signs = function(winid, sign_winids)
         local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
         vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
         -- Set the Normal highlight to match the base window.
-        -- WARN: 'nvim_win_set_hl_ns' "takes precedence over the 'winhighlight'
-        -- option". However, it seems there's no way to retrieve what's been
-        -- set with that function (Neovim #24309).
-        local target = 'Normal'
-        if is_float then
-          target = 'NormalFloat'
-        end
-        local base_winhighlight = api.nvim_win_get_option(winid, 'winhighlight')
-        if base_winhighlight ~= '' then
-          pcall(function()
-            for _, item in ipairs(fn.split(base_winhighlight, ',')) do
-              local from, to = unpack(fn.split(item, ':'))
-              if from == 'Normal' then
-                target = to
-                break
-              end
-            end
-          end)
-        end
+        local target = get_normal_highlight(winid)
         local winhighlight = string.format(
           'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
         set_window_option(sign_winid, 'winhighlight', winhighlight)
