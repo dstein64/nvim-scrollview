@@ -1227,7 +1227,8 @@ local show_scrollbar = function(winid, bar_winid)
     -- It's not sufficient to just specify Normal highlighting. With just that, a
     -- color scheme's specification of EndOfBuffer would be used to color the
     -- bottom of the scrollbar.
-    local winhighlight = string.format('Normal:%s,EndOfBuffer:%s', group, group)
+    local winhighlight = string.format(
+      'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', group, group, group)
     set_window_option(bar_winid, 'winhighlight', winhighlight)
     local winblend = get_variable('scrollview_winblend', winid)
     -- Add a workaround for Neovim #14624.
@@ -1517,7 +1518,8 @@ local show_signs = function(winid, sign_winids)
             end
           end)
         end
-        local winhighlight = fn.printf('Normal:%s', target)
+        local winhighlight = string.format(
+          'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
         set_window_option(sign_winid, 'winhighlight', winhighlight)
         -- foldcolumn takes a string
         set_window_option(sign_winid, 'foldcolumn', '0')
