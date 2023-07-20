@@ -1267,7 +1267,10 @@ local show_scrollbar = function(winid, bar_winid)
       end
     end
     api.nvim_win_call(bar_winid, function()
-      fn.matchaddpos(highlight, fn.range(1, fn.winheight(bar_winid)))
+      fn.clearmatches()
+      -- Use the full height (bar_position.height), not the actual height
+      -- (fn.winheight(bar_winid)). #106
+      fn.matchaddpos(highlight, fn.range(1, bar_position.height))
     end)
     local winblend = get_variable('scrollview_winblend', winid)
     -- Add a workaround for Neovim #14624.
@@ -1526,6 +1529,7 @@ local show_signs = function(winid, sign_winids)
           end
           if highlight ~= nil then
             api.nvim_win_call(sign_winid, function()
+              fn.clearmatches()
               fn.matchaddpos(highlight, {sign_line_count})
             end)
             local winblend = get_variable('scrollview_winblend', winid)
