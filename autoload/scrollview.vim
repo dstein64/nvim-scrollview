@@ -11,6 +11,26 @@ function! s:ToBool(x)
   endif
 endfunction
 
+" Indicates whether a mapping already exists for seq or its prefixes. #107
+function scrollview#HasMapConflict(mode, seq) abort
+  let l:end = 0
+  let l:len = len(a:seq)
+  while l:end <=# l:len
+    if a:seq[l:end] == '<'
+      let l:end2 = stridx(a:seq, '>', l:end)
+      if l:end2 !=# -1
+        let l:end = l:end2
+      endif
+    endif
+    let l:prefix = a:seq[0:l:end]
+    if maparg(l:prefix, a:mode) !=# ''
+      return v:true
+    endif
+    let l:end += 1
+  endwhile
+  return v:false
+endfunction
+
 " *************************************************
 " * User Configuration
 " *************************************************
@@ -169,10 +189,6 @@ if !has_key(g:, 'scrollview_marks_characters')
   for s:code in s:codes
     call add(g:scrollview_marks_characters, nr2char(s:code))
   endfor
-endif
-if !has_key(g:, 'scrollview_marks_create_mappings')
-  let s:has_m_mapping = maparg('m', 'n') !=# '' || maparg('m', 'x') !=# ''
-  let g:scrollview_marks_create_mappings = s:ToBool(!s:has_m_mapping)
 endif
 let g:scrollview_marks_priority = get(g:, 'scrollview_marks_priority', 50)
 
@@ -385,6 +401,9 @@ inoremap <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 function s:CreateRefreshMapping(modes, seq) abort
   for l:idx in range(strchars(a:modes))
     let l:mode = strcharpart(a:modes, l:idx, 1)
+    if scrollview#HasMapConflict(l:mode, a:seq)
+      return
+    endif
     " A <plug> mapping is avoided since it doesn't work properly in
     " terminal-job mode.
     let l:rhs = a:seq .. '<cmd>ScrollViewRefresh<cr>'
@@ -448,8 +467,10 @@ if g:scrollview_auto_workarounds
     call s:CreateRefreshMapping('nvit', s:seq)
   endfor
   " === Fold command synchronization workarounds ===
-  " zf takes a motion in normal mode, so it requires a g@ mapping.
-  silent! nnoremap <unique> zf <cmd>set operatorfunc=<sid>ZfOperator<cr>g@
+  if !scrollview#HasMapConflict('n', 'zf')
+    " zf takes a motion in normal mode, so it requires a g@ mapping.
+    silent! nnoremap <unique> zf <cmd>set operatorfunc=<sid>ZfOperator<cr>g@
+  endif
   call s:CreateRefreshMapping('x', 'zf')
   let s:fold_seqs = [
         \   'zF', 'zd', 'zD', 'zE', 'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zv',

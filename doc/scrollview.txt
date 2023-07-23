@@ -480,15 +480,6 @@ scrollview_marks_characters                *scrollview_marks_characters*
                        `A-Z`. Considered only at global scope, when the plugin
                        is loaded.
 
-scrollview_marks_create_mappings           *scrollview_marks_create_mappings*
-                       |Boolean| specifying whether mappings are created to
-                       refresh scrollbars and signs after marks are inserted
-                       with m{mark}. Defaults to |v:false| when there is an
-                       existing `m` mapping, and |v:true| otherwise. In either
-                       case, existing m{mark} mappings are not clobbered.
-                       Considered only at global scope, when the plugin is
-                       loaded.
-
 scrollview_marks_priority                  *scrollview_marks_priority*
                        |List| specifying the priority for mark signs. Defaults
                        to `50`. Considered only at global scope, when the plugin
