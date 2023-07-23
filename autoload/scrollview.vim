@@ -402,7 +402,7 @@ function s:CreateRefreshMapping(modes, seq) abort
   for l:idx in range(strchars(a:modes))
     let l:mode = strcharpart(a:modes, l:idx, 1)
     if scrollview#HasMapConflict(l:mode, a:seq)
-      return
+      continue
     endif
     " A <plug> mapping is avoided since it doesn't work properly in
     " terminal-job mode.
