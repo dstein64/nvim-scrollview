@@ -45,7 +45,9 @@ function M.init(enable)
             and vim.g.scrollview_refresh_mapping_desc ~= vim.NIL then
           opts.desc = vim.g.scrollview_refresh_mapping_desc
         end
-        vim.keymap.set(mode, seq, rhs, opts)
+        pcall(function()
+          vim.keymap.set(mode, seq, rhs, opts)
+        end)
       end
     end
   end

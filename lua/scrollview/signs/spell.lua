@@ -35,15 +35,17 @@ function M.init(enable)
   for _, seq in ipairs(seqs) do
     for _, mode in ipairs({'n', 'x'}) do
       if not fn['scrollview#HasMapConflict'](mode, seq) then
-        vim.keymap.set(mode, seq, function()
-          invalidate_cache()
-          vim.cmd('ScrollViewRefresh')  -- asynchronous
-          return seq
-        end, {
-          noremap = true,
-          unique = true,
-          expr = true,
-        })
+        pcall(function()
+          vim.keymap.set(mode, seq, function()
+            invalidate_cache()
+            vim.cmd('ScrollViewRefresh')  -- asynchronous
+            return seq
+          end, {
+            noremap = true,
+            unique = true,
+            expr = true,
+          })
+        end)
       end
     end
   end
