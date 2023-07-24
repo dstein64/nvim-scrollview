@@ -41,7 +41,6 @@ scrollview.setup()	scrollview.txt	/*scrollview.setup()*
 scrollview.txt	scrollview.txt	/*scrollview.txt*
 scrollview_always_show	scrollview.txt	/*scrollview_always_show*
 scrollview_auto_mouse	scrollview.txt	/*scrollview_auto_mouse*
-scrollview_auto_workarounds	scrollview.txt	/*scrollview_auto_workarounds*
 scrollview_base	scrollview.txt	/*scrollview_base*
 scrollview_byte_limit	scrollview.txt	/*scrollview_byte_limit*
 scrollview_character	scrollview.txt	/*scrollview_character*

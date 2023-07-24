@@ -435,51 +435,49 @@ function! s:ZfOperator(type) abort
   ScrollViewRefresh
 endfunction
 
-if g:scrollview_auto_workarounds
-  " === Window arrangement synchronization workarounds ===
-  let s:win_seqs = [
-        \   '<c-w>H', '<c-w>J', '<c-w>K', '<c-w>L',
-        \   '<c-w>r', '<c-w><c-r>', '<c-w>R'
-        \ ]
-  for s:seq in s:win_seqs
-    call s:CreateRefreshMapping('nv', s:seq)
-  endfor
-  augroup scrollview_wincmd_workaround
-    autocmd!
-    " Refresh after :wincmd.
-    "   :[count]winc[md]
-    "   :winc[md]!
-    " WARN: Only text at the beginning of the command is considered.
-    " WARN: CmdlineLeave is not executed for command mappings (<cmd>).
-    " WARN: CmdlineLeave is not executed for commands executed from Lua
-    autocmd CmdlineLeave *
-          \ : if !get(v:event, 'abort', v:false)
-          \ |   if expand('<afile>') ==# ':'
-          \ |     if getcmdline() =~# '^\d*winc'
-          \ |       ScrollViewRefresh
-          \ |     endif
-          \ |   endif
-          \ | endif
-  augroup END
-  " === Mouse wheel scrolling synchronization workarounds ===
-  let s:wheel_seqs = ['<scrollwheelup>', '<scrollwheeldown>']
-  for s:seq in s:wheel_seqs
-    call s:CreateRefreshMapping('nvit', s:seq)
-  endfor
-  " === Fold command synchronization workarounds ===
-  if !scrollview#HasMapConflict('n', 'zf')
-    " zf takes a motion in normal mode, so it requires a g@ mapping.
-    silent! nnoremap <unique> zf <cmd>set operatorfunc=<sid>ZfOperator<cr>g@
-  endif
-  call s:CreateRefreshMapping('x', 'zf')
-  let s:fold_seqs = [
-        \   'zF', 'zd', 'zD', 'zE', 'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zv',
-        \   'zx', 'zX', 'zm', 'zM', 'zr', 'zR', 'zn', 'zN', 'zi'
-        \ ]
-  for s:seq in s:fold_seqs
-    call s:CreateRefreshMapping('nx', s:seq)
-  endfor
+" === Window arrangement synchronization workarounds ===
+let s:win_seqs = [
+      \   '<c-w>H', '<c-w>J', '<c-w>K', '<c-w>L',
+      \   '<c-w>r', '<c-w><c-r>', '<c-w>R'
+      \ ]
+for s:seq in s:win_seqs
+  call s:CreateRefreshMapping('nv', s:seq)
+endfor
+augroup scrollview_wincmd_workaround
+  autocmd!
+  " Refresh after :wincmd.
+  "   :[count]winc[md]
+  "   :winc[md]!
+  " WARN: Only text at the beginning of the command is considered.
+  " WARN: CmdlineLeave is not executed for command mappings (<cmd>).
+  " WARN: CmdlineLeave is not executed for commands executed from Lua
+  autocmd CmdlineLeave *
+        \ : if !get(v:event, 'abort', v:false)
+        \ |   if expand('<afile>') ==# ':'
+        \ |     if getcmdline() =~# '^\d*winc'
+        \ |       ScrollViewRefresh
+        \ |     endif
+        \ |   endif
+        \ | endif
+augroup END
+" === Mouse wheel scrolling synchronization workarounds ===
+let s:wheel_seqs = ['<scrollwheelup>', '<scrollwheeldown>']
+for s:seq in s:wheel_seqs
+  call s:CreateRefreshMapping('nvit', s:seq)
+endfor
+" === Fold command synchronization workarounds ===
+if !scrollview#HasMapConflict('n', 'zf')
+  " zf takes a motion in normal mode, so it requires a g@ mapping.
+  silent! nnoremap <unique> zf <cmd>set operatorfunc=<sid>ZfOperator<cr>g@
 endif
+call s:CreateRefreshMapping('x', 'zf')
+let s:fold_seqs = [
+      \   'zF', 'zd', 'zD', 'zE', 'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zv',
+      \   'zx', 'zX', 'zm', 'zM', 'zr', 'zR', 'zn', 'zN', 'zi'
+      \ ]
+for s:seq in s:fold_seqs
+  call s:CreateRefreshMapping('nx', s:seq)
+endfor
 
 " *************************************************
 " * Sign Group Initialization
