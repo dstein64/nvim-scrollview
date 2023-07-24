@@ -1268,9 +1268,14 @@ local show_scrollbar = function(winid, bar_winid)
     end
     api.nvim_win_call(bar_winid, function()
       fn.clearmatches()
+      -- Multiple matchaddpos calls are necessary since the maximum number of
+      -- positions that matchaddpos can take is 8 (for nvim<=0.8).
       -- Use the full height (bar_position.height), not the actual height
       -- (fn.winheight(bar_winid)). #106
-      fn.matchaddpos(highlight, fn.range(1, bar_position.height))
+      for pos_start = 1, bar_position.height, 8 do
+        local pos_end = math.min(pos_start + 7, bar_position.height)
+        fn.matchaddpos(highlight, fn.range(pos_start, pos_end))
+      end
     end)
     local winblend = get_variable('scrollview_winblend', winid)
     -- Add a workaround for Neovim #14624.
