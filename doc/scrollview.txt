@@ -913,7 +913,7 @@ Other Issues ~
     in the count. >
     local window_count = function()
       local result = 0
-      for winnr=1,vim.fn.winnr('$') do
+      for winnr = 1, vim.fn.winnr('$') do
         local config = vim.api.nvim_win_get_config(vim.fn.win_getid(winnr))
         local not_external = config.external == nil or not config.external
         local not_floating = config.relative == nil or config.relative == ''
