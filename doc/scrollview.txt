@@ -19,7 +19,7 @@ signs. The plugin is customizable (see |scrollview-configuration|).
 ============================================================================
 1. Requirements                            *scrollview-requirements*
 
-* `nvim>=0.5`
+* `nvim>=0.6`
 * Scrollbar mouse dragging requires mouse support (see |'mouse'|) and `nvim>=0.6`.
 * Signs require `nvim>=0.9`
 
