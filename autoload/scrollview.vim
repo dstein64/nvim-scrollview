@@ -39,8 +39,6 @@ endfunction
 
 let g:scrollview_always_show = get(g:, 'scrollview_always_show', v:false)
 let g:scrollview_auto_mouse = get(g:, 'scrollview_auto_mouse', v:true)
-let g:scrollview_auto_workarounds =
-      \ get(g:, 'scrollview_auto_workarounds', v:true)
 let g:scrollview_base = get(g:, 'scrollview_base', 'right')
 " The plugin enters a restricted state when the number of buffer bytes exceeds
 " the limit. Use -1 for no limit.
