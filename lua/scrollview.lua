@@ -134,7 +134,7 @@ local last_raw_mode = nil
 local key_sequence_callbacks = {}
 
 -- WARN: The modes here do not exactly match mode(), where there is no 'o'
--- mode. Also, these modes do not exactly match the the mapping modes (:h
+-- mode. Also, these modes do not exactly match the mapping modes (:h
 -- map-overview), where 'v' would correspond to both visual and select modes,
 -- and 'x' would be for visual mode only.
 --   o: Operator-pending
