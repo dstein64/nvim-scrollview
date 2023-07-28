@@ -156,6 +156,7 @@ vim.on_key(function(str)
     if raw_mode == last_raw_mode then
       active_key_sequence = active_key_sequence .. str
     else
+      -- Reset the active key sequence when the mode changes.
       active_key_sequence = str
     end
     last_raw_mode = raw_mode
