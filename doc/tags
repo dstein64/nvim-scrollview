@@ -80,7 +80,6 @@ scrollview_on_startup	scrollview.txt	/*scrollview_on_startup*
 scrollview_out_of_bounds_adjust	scrollview.txt	/*scrollview_out_of_bounds_adjust*
 scrollview_quickfix_priority	scrollview.txt	/*scrollview_quickfix_priority*
 scrollview_quickfix_symbol	scrollview.txt	/*scrollview_quickfix_symbol*
-scrollview_refresh_mapping_desc	scrollview.txt	/*scrollview_refresh_mapping_desc*
 scrollview_refreshing	scrollview.txt	/*scrollview_refreshing*
 scrollview_search_priority	scrollview.txt	/*scrollview_search_priority*
 scrollview_search_symbol	scrollview.txt	/*scrollview_search_symbol*
