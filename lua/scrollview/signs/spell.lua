@@ -29,25 +29,13 @@ function M.init(enable)
     end
   end
 
-  -- Create mappings to invalidate cache and refresh scrollbars after certain
-  -- spell key sequences.
+  -- Invalidate cache and refresh scrollbars after certain spell key sequences.
   local seqs = {'zg', 'zG', 'zq', 'zW', 'zuw', 'zug', 'zuW', 'zuG'}
   for _, seq in ipairs(seqs) do
-    for _, mode in ipairs({'n', 'x'}) do
-      if not fn['scrollview#HasMapConflict'](mode, seq) then
-        pcall(function()
-          vim.keymap.set(mode, seq, function()
-            invalidate_cache()
-            vim.cmd('ScrollViewRefresh')  -- asynchronous
-            return seq
-          end, {
-            noremap = true,
-            unique = true,
-            expr = true,
-          })
-        end)
-      end
-    end
+    scrollview.register_key_sequence_callback(seq, 'nv', function()
+      invalidate_cache()
+      scrollview.refresh()  -- asynchronous
+    end)
   end
 
   api.nvim_create_autocmd('User', {

@@ -256,12 +256,6 @@ scrollview_out_of_bounds_adjust            *scrollview_out_of_bounds_adjust*
                        within the window (as opposed to not showing). Defaults
                        to |v:true|.
 
-scrollview_refresh_mapping_desc            *scrollview_refresh_mapping_desc*
-(experimental)         |String| (or |v:null| to disable) that will be used for the
-                       'desc' field of nvim-scrollview refresh mappings (see
-                       |nvim_set_keymap| for details on that field). Defaults to
-                       |v:null|.
-
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
                        scrollbars. Defaults to `50`. Must be between `0` (opaque)

@@ -11,26 +11,6 @@ function! s:ToBool(x)
   endif
 endfunction
 
-" Indicates whether a mapping already exists for seq or its prefixes. #107
-function scrollview#HasMapConflict(mode, seq) abort
-  let l:end = 0
-  let l:len = len(a:seq)
-  while l:end <=# l:len
-    if a:seq[l:end] == '<'
-      let l:end2 = stridx(a:seq, '>', l:end)
-      if l:end2 !=# -1
-        let l:end = l:end2
-      endif
-    endif
-    let l:prefix = a:seq[0:l:end]
-    if maparg(l:prefix, a:mode) !=# ''
-      return v:true
-    endif
-    let l:end += 1
-  endwhile
-  return v:false
-endfunction
-
 " *************************************************
 " * User Configuration
 " *************************************************
@@ -64,8 +44,6 @@ let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', v:true)
 " adjusted to be within the window.
 let g:scrollview_out_of_bounds_adjust =
       \ get(g:, 'scrollview_out_of_bounds_adjust', v:true)
-let g:scrollview_refresh_mapping_desc =
-      \ get(g:, 'scrollview_refresh_mapping_desc', v:null)
 " Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
 let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 " The default zindex for floating windows is 50. A smaller value is used here
@@ -388,36 +366,12 @@ noremap  <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 inoremap <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 
 " *************************************************
-" * Workarounds
+" * Synchronization
 " *************************************************
 
-" Creates a mapping where the left-hand-side key sequence is repeated on the
-" right-hand-side, followed by a scrollview refresh. 'modes' is a string with
-" each character specifying a mode (e.g., 'nvi' for normal, visual, and insert
-" modes). 'seq' is the key sequence that will be remapped. Existing mappings
-" are not clobbered.
-function s:CreateRefreshMapping(modes, seq) abort
-  for l:idx in range(strchars(a:modes))
-    let l:mode = strcharpart(a:modes, l:idx, 1)
-    if scrollview#HasMapConflict(l:mode, a:seq)
-      continue
-    endif
-    " A <plug> mapping is avoided since it doesn't work properly in
-    " terminal-job mode.
-    let l:rhs = a:seq .. '<cmd>ScrollViewRefresh<cr>'
-    let l:opts = {
-          \   'noremap': v:true,
-          \   'unique': v:true,
-          \ }
-    if g:scrollview_refresh_mapping_desc !=# v:null
-      let l:opts.desc = g:scrollview_refresh_mapping_desc
-    endif
-    silent! call nvim_set_keymap(l:mode, a:seq, l:rhs, l:opts)
-  endfor
-endfunction
-
 " An 'operatorfunc' for g@ that executes zf and then refreshes scrollbars.
-function! s:ZfOperator(type) abort
+" This is used by code in scrollview.lua.
+function! scrollview#ZfOperator(type) abort
   " Handling for 'char' is needed since e.g., using linewise mark jumping
   " results in the cursor moving to the beginning of the line for zfl, which
   " should not move the cursor. Separate handling for 'line' is needed since
@@ -432,50 +386,6 @@ function! s:ZfOperator(type) abort
   endif
   ScrollViewRefresh
 endfunction
-
-" === Window arrangement synchronization workarounds ===
-let s:win_seqs = [
-      \   '<c-w>H', '<c-w>J', '<c-w>K', '<c-w>L',
-      \   '<c-w>r', '<c-w><c-r>', '<c-w>R'
-      \ ]
-for s:seq in s:win_seqs
-  call s:CreateRefreshMapping('nv', s:seq)
-endfor
-augroup scrollview_wincmd_workaround
-  autocmd!
-  " Refresh after :wincmd.
-  "   :[count]winc[md]
-  "   :winc[md]!
-  " WARN: Only text at the beginning of the command is considered.
-  " WARN: CmdlineLeave is not executed for command mappings (<cmd>).
-  " WARN: CmdlineLeave is not executed for commands executed from Lua
-  autocmd CmdlineLeave *
-        \ : if !get(v:event, 'abort', v:false)
-        \ |   if expand('<afile>') ==# ':'
-        \ |     if getcmdline() =~# '^\d*winc'
-        \ |       ScrollViewRefresh
-        \ |     endif
-        \ |   endif
-        \ | endif
-augroup END
-" === Mouse wheel scrolling synchronization workarounds ===
-let s:wheel_seqs = ['<scrollwheelup>', '<scrollwheeldown>']
-for s:seq in s:wheel_seqs
-  call s:CreateRefreshMapping('nvit', s:seq)
-endfor
-" === Fold command synchronization workarounds ===
-if !scrollview#HasMapConflict('n', 'zf')
-  " zf takes a motion in normal mode, so it requires a g@ mapping.
-  silent! nnoremap <unique> zf <cmd>set operatorfunc=<sid>ZfOperator<cr>g@
-endif
-call s:CreateRefreshMapping('x', 'zf')
-let s:fold_seqs = [
-      \   'zF', 'zd', 'zD', 'zE', 'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zv',
-      \   'zx', 'zX', 'zm', 'zM', 'zr', 'zR', 'zn', 'zN', 'zi'
-      \ ]
-for s:seq in s:fold_seqs
-  call s:CreateRefreshMapping('nx', s:seq)
-endfor
 
 " *************************************************
 " * Sign Group Initialization

@@ -104,6 +104,8 @@ local sign_group_state = {}
 -- unlikely.
 local mousemove_received = false
 
+local CTRLS = t('<c-s>')
+local CTRLV = t('<c-v>')
 local MOUSEMOVE = t('<mousemove>')
 
 local SIMPLE_MODE = 0   -- doesn't consider folds nor wrapped lines
@@ -114,6 +116,106 @@ local PROPER_MODE = 2   -- considers folds and wrapped lines
 local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
 local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
+
+-- *************************************************
+-- * Key Sequence Callbacks
+-- *************************************************
+
+-- The max length of all key sequences that have been registered.
+local max_key_sequence_length = 0
+
+-- A buffer of recent key sequences, whose size does not exceed
+-- max_key_sequence_length.
+local active_key_sequence = ''
+
+local last_raw_mode = nil
+
+-- Maps a mode concatenated with a key sequence to a callback.
+local key_sequence_callbacks = {}
+
+-- WARN: The modes here do not exactly match mode(), where there is no 'o'
+-- mode. Also, these modes do not exactly match the the mapping modes (:h
+-- map-overview), where 'v' would correspond to both visual and select modes,
+-- and 'x' would be for visual mode only.
+--   o: Operator-pending
+--   n: Normal
+--   v: Visual
+--   s: Select
+--   i: Insert
+--   R: Replace
+--   c: Command-line editing or Vim Ex mode
+--   r: Prompt
+--   !: Shell or external command
+--   t: Terminal
+local KNOWN_MODES = {'o', 'n', 'v', 's', 'i', 'R', 'c', 'r', '!', 't'}
+
+vim.on_key(function(str)
+  -- Use pcall to avoid an error in some cases for nvim<0.8 (Neovim #17273).
+  pcall(function()
+    local raw_mode = fn.mode(1)
+    if raw_mode == last_raw_mode then
+      active_key_sequence = active_key_sequence .. str
+    else
+      active_key_sequence = str
+    end
+    last_raw_mode = raw_mode
+    active_key_sequence = string.sub(
+      active_key_sequence, -max_key_sequence_length, -1)
+    local mode
+    if vim.startswith(raw_mode, 'no') then
+      mode = 'o'
+    else
+      mode = string.lower(string.sub(raw_mode, 1, 1))
+      if mode == CTRLV then
+        mode = 'v'
+      elseif mode == CTRLS then
+        mode = 's'
+      end
+    end
+    local known_mode = false
+    for _, x in ipairs(KNOWN_MODES) do
+      if mode == x then
+        known_mode = true
+        break
+      end
+    end
+    if not known_mode then
+      mode = nil
+    end
+    if mode ~= nil then
+      for start_idx = -1, -#active_key_sequence, -1 do
+        local subseq = string.sub(active_key_sequence, start_idx, -1)
+        local key = mode .. subseq
+        local callback = key_sequence_callbacks[key]
+        if callback ~= nil then
+          callback()
+        end
+      end
+    end
+  end)
+end)
+
+-- Register a sequence of keys, for which the callback will be executed when
+-- those keys are pressed under the specified modes. There is a comment above
+-- on the supported modes.
+local register_key_sequence_callback = function(seq, modes, callback)
+  for idx = 1, #modes do
+    local mode = string.sub(modes, idx, idx)
+    local known_mode = false
+    for _, x in ipairs(KNOWN_MODES) do
+      if mode == x then
+        known_mode = true
+        break
+      end
+    end
+    if not known_mode then
+      error('Unknown mode ' .. mode)
+    end
+    local key = mode .. seq
+    key_sequence_callbacks[key] = callback
+    max_key_sequence_length = math.max(max_key_sequence_length, #seq)
+  end
+end
 
 -- *************************************************
 -- * Core
@@ -1994,6 +2096,9 @@ local refresh_bars_async = function()
 end
 
 if to_bool(fn.exists('&mousemoveevent')) then
+  -- pcall is not necessary here to avoid an error in some cases (Neovim
+  -- #17273), since that would be necessary for nvim<0.8, where this code would
+  -- not execute ('mousemoveevent' was introduced in nvim==0.8).
   vim.on_key(function(str)
     if vim.o.mousemoveevent and string.find(str, MOUSEMOVE) then
       mousemove_received = true
@@ -2568,6 +2673,82 @@ local get_sign_eligible_windows = function()
 end
 
 -- *************************************************
+-- * Synchronization
+-- *************************************************
+
+-- === Window arrangement synchronization ===
+
+local win_seqs = {
+  t('<c-w>H'), t('<c-w>J'), t('<c-w>K'), t('<c-w>L'),
+  t('<c-w>r'), t('<c-w><c-r>'), t('<c-w>R')
+}
+for _, seq in ipairs(win_seqs) do
+  register_key_sequence_callback(seq, 'nvs', refresh_bars_async)
+end
+
+-- Refresh after :wincmd.
+--   :[count]winc[md]
+--   :winc[md]!
+-- WARN: Only text at the beginning of the command is considered.
+-- WARN: CmdlineLeave is not executed for command mappings (<cmd>).
+-- WARN: CmdlineLeave is not executed for commands executed from Lua
+-- (e.g., vim.cmd('help')).
+if api.nvim_create_autocmd ~= nil then
+  api.nvim_create_autocmd('CmdlineLeave', {
+    callback = function()
+      if to_bool(vim.v.event.abort) then
+        return
+      end
+      if fn.expand('<afile>') ~= ':' then
+        return
+      end
+      local cmdline = fn.getcmdline()
+      if string.match(cmdline, '^%d*winc') ~= nil then
+        refresh_bars_async()
+      end
+    end
+  })
+end
+
+-- === Mouse wheel scrolling synchronization ===
+
+-- For nvim<0.9, scrollbars become out-of-sync when the mouse wheel is used to
+-- scroll a non-current window. This is because the WinScrolled event only
+-- corresponds to the current window.
+local wheel_seqs = {t('<scrollwheelup>'), t('<scrollwheeldown>')}
+for _, seq in ipairs(wheel_seqs) do
+  register_key_sequence_callback(seq, 'nvsit', refresh_bars_async)
+end
+
+-- === Fold command synchronization ===
+
+register_key_sequence_callback('zf', 'n', function()
+  -- Newer versions of Neovim allow for operatorfunc to be a lambda (:help
+  -- option-value-function), which would permit calling a Lua operatorfunc
+  -- function defined e.g., in this file. However, this would be problematic on
+  -- earlier Neovim versions (e.g., v0.6).
+  -- If you don't use defer_fn, the mode will be normal (not operator pending).
+  -- Here we check for operator pending since it's possible that zf is part of
+  -- some other mapping that doesn't enter operator pending mode.
+  vim.defer_fn(function()
+    if vim.startswith(fn.mode(1), 'no') and vim.v.operator == 'zf' then
+      api.nvim_set_option('operatorfunc', 'scrollview#ZfOperator')
+      -- <esc> is used to cancel waiting for a motion (from having pressed zf).
+      fn.feedkeys(t('<esc>' .. 'g@'), 'nt')
+    end
+  end, 0)
+end)
+register_key_sequence_callback('zf', 'v', refresh_bars_async)
+
+local fold_seqs = {
+  'zF', 'zd', 'zD', 'zE', 'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zv',
+  'zx', 'zX', 'zm', 'zM', 'zr', 'zR', 'zn', 'zN', 'zi'
+}
+for _, seq in ipairs(fold_seqs) do
+  register_key_sequence_callback(seq, 'nv', refresh_bars_async)
+end
+
+-- *************************************************
 -- * API
 -- *************************************************
 
@@ -2595,6 +2776,9 @@ return {
   is_sign_group_active = is_sign_group_active,
   register_sign_spec = register_sign_spec,
   set_sign_group_state = set_sign_group_state,
+
+  -- Key sequence callback registration
+  register_key_sequence_callback = register_key_sequence_callback,
 
   -- Functions called by tests.
   virtual_line_count_spanwise = virtual_line_count_spanwise,
