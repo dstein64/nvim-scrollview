@@ -27,25 +27,6 @@ local to_bool = utils.to_bool
 -- to sign support).
 
 -- *************************************************
--- * Memoization
--- *************************************************
-
-local cache = {}
-local memoize = false
-
-local start_memoize = function()
-  memoize = true
-end
-
-local stop_memoize = function()
-  memoize = false
-end
-
-local reset_memoize = function()
-  cache = {}
-end
-
--- *************************************************
 -- * Globals
 -- *************************************************
 
@@ -116,6 +97,25 @@ local PROPER_MODE = 2   -- considers folds and wrapped lines
 local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
 local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
+
+-- *************************************************
+-- * Memoization
+-- *************************************************
+
+local cache = {}
+local memoize = false
+
+local start_memoize = function()
+  memoize = true
+end
+
+local stop_memoize = function()
+  memoize = false
+end
+
+local reset_memoize = function()
+  cache = {}
+end
 
 -- *************************************************
 -- * Key Sequence Callbacks
