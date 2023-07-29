@@ -366,28 +366,6 @@ noremap  <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 inoremap <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 
 " *************************************************
-" * Synchronization
-" *************************************************
-
-" An 'operatorfunc' for g@ that executes zf and then refreshes scrollbars.
-" This is used by code in scrollview.lua.
-function! scrollview#ZfOperator(type) abort
-  " Handling for 'char' is needed since e.g., using linewise mark jumping
-  " results in the cursor moving to the beginning of the line for zfl, which
-  " should not move the cursor. Separate handling for 'line' is needed since
-  " e.g., with 'char' handling, zfG won't include the last line in the fold if
-  " the cursor gets positioned on the first character.
-  if a:type ==# 'char'
-    silent normal! `[zf`]
-  elseif a:type ==# 'line'
-    silent normal! '[zf']
-  else
-    " Unsupported
-  endif
-  ScrollViewRefresh
-endfunction
-
-" *************************************************
 " * Sign Group Initialization
 " *************************************************
 

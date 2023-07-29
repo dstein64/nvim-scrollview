@@ -2723,17 +2723,30 @@ end
 
 -- === Fold command synchronization ===
 
+local zf_operator = function(type_)
+  -- Handling for 'char' is needed since e.g., using linewise mark jumping
+  -- results in the cursor moving to the beginning of the line for zfl, which
+  -- should not move the cursor. Separate handling for 'line' is needed since
+  -- e.g., with 'char' handling, zfG won't include the last line in the fold if
+  -- the cursor gets positioned on the first character.
+  if type_ == 'char' then
+    vim.cmd('silent normal! `[zf`]')
+  elseif type_ == 'line' then
+    vim.cmd("silent normal! '[zf']")
+  else  -- luacheck: ignore 542 (an empty if branch)
+    -- Unsupported
+  end
+  refresh_bars_async()
+end
+
 register_key_sequence_callback('zf', 'n', function()
-  -- Newer versions of Neovim allow for operatorfunc to be a lambda (:help
-  -- option-value-function), which would permit calling a Lua operatorfunc
-  -- function defined e.g., in this file. However, this would be problematic on
-  -- earlier Neovim versions (e.g., v0.6).
   -- If you don't use defer_fn, the mode will be normal (not operator pending).
   -- Here we check for operator pending since it's possible that zf is part of
   -- some other mapping that doesn't enter operator pending mode.
   vim.defer_fn(function()
     if vim.startswith(fn.mode(1), 'no') and vim.v.operator == 'zf' then
-      api.nvim_set_option('operatorfunc', 'scrollview#ZfOperator')
+      api.nvim_set_option(
+        'operatorfunc', "v:lua.require'scrollview'.zf_operator")
       -- <esc> is used to cancel waiting for a motion (from having pressed zf).
       fn.feedkeys(t('<esc>' .. 'g@'), 'nt')
     end
@@ -2754,10 +2767,11 @@ end
 -- *************************************************
 
 return {
-  -- Functions called internally (by autocmds).
+  -- Functions called internally (by autocmds and operatorfunc).
   refresh_bars_async = refresh_bars_async,
   remove_bars = remove_bars,
   remove_if_command_line_window = remove_if_command_line_window,
+  zf_operator = zf_operator,
 
   -- Functions called by commands and mappings defined in
   -- plugin/scrollview.vim, and sign handlers.
