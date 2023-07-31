@@ -3,7 +3,7 @@
 " *************************************************
 
 " Converts 1 and 0 to v:true and v:false.
-function! s:ToBool(x)
+function! s:ToBool(x) abort
   if a:x
     return v:true
   else
@@ -244,7 +244,7 @@ endfunction
 " A helper for :ScrollViewEnable, :ScrollViewDisable, and :ScrollViewToggle to
 " call the underlying functions. Set state to v:true to enable, v:false to
 " disable, and v:null to toggle. Additional arguments specify sign groups.
-function! s:DispatchStateCommand(state, ...)
+function! s:DispatchStateCommand(state, ...) abort
   let s:module = luaeval('require("scrollview")')
   if empty(a:000)
     " The command had no arguments, so is for the plugin.
