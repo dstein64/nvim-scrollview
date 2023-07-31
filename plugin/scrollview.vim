@@ -1,3 +1,9 @@
+" The plugin should not be reloaded. #110
+if get(g:, 'loaded_scrollview', v:false)
+  finish
+endif
+let g:loaded_scrollview = v:true
+
 if !has('nvim-0.6')
   " Logging error with echomsg or echoerr interrupts Neovim's startup by
   " blocking. Fail silently.
