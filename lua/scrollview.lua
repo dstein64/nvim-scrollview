@@ -1379,6 +1379,10 @@ local show_scrollbar = function(winid, bar_winid)
     if is_hl_reversed(highlight) then
       winblend = 0
     end
+    -- Add a workaround for Neovim #24584 (nvim-scrollview #112).
+    if string.gsub(character, '%s', '') ~= '' then
+      winblend = 0
+    end
     set_window_option(bar_winid, 'winblend', winblend)
   end
   -- Set the Normal highlight to match the base window. It's not sufficient to
@@ -1638,6 +1642,11 @@ local show_signs = function(winid, sign_winids)
             end
             -- Add a workaround for Neovim #24159.
             if is_hl_reversed(highlight) then
+              winblend = 0
+            end
+            -- Add a workaround for Neovim #24584 (nvim-scrollview #112).
+            local bufline = fn.getbufline(sign_bufnr, sign_line_count)[1]
+            if string.gsub(bufline, '%s', '') ~= '' then
               winblend = 0
             end
             set_window_option(sign_winid, 'winblend', winblend)
