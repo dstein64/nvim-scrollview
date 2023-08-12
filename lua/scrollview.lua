@@ -1205,7 +1205,7 @@ local is_hl_reversed = function(group)
   if items[1] ~= 'cleared' then
     for _, item in ipairs(items) do
       local key, val = unpack(vim.split(item, '='))
-      local gui = fn.has('gui_running')
+      local gui = to_bool(fn.has('gui_running'))
       if (not gui and key == 'cterm')
           or (gui and key == 'gui') then
         local attrs = vim.split(val, ',')
