@@ -261,12 +261,13 @@ scrollview_winblend    |Number| specifying the level of transparency for
                        and `100` (transparent). This option is ignored for
                        scrollview windows whose highlight group has 'reverse'
                        or 'inverse' specified as a cterm attribute (or a gui
-                       attribute when a GUI is running); see |attr-list|. Such
+                       attribute when a GUI is running or 'termguicolors' is
+                       set); see |attr-list|. Such windows will have no
+                       transparency, as a workaround for Neovim #24159. This
+                       option is ignored for scrollview windows shown for
+                       floating windows; see |scrollview_floating_windows|. Such
                        windows will have no transparency, as a workaround for
-                       Neovim #24159. This option is ignored for scrollview
-                       windows shown for floating windows; see
-                       |scrollview_floating_windows|. Such windows will have no
-                       transparency, as a workaround for Neovim #14624.
+                       Neovim #14624.
 
 scrollview_zindex                          *scrollview_zindex*
                        |Number| specifying the scrollbar z-index. Defaults to

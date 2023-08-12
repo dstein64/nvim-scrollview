@@ -1188,7 +1188,7 @@ end
 
 -- Returns true if 'cterm' has a 'reverse' attribute for the specified
 -- highlight group, or false otherwise. Checks 'gui' instead of 'cterm' if a
--- GUI is running.
+-- GUI is running or termguicolors is set.
 local is_hl_reversed = function(group)
   local items
   while true do
@@ -1205,9 +1205,10 @@ local is_hl_reversed = function(group)
   if items[1] ~= 'cleared' then
     for _, item in ipairs(items) do
       local key, val = unpack(vim.split(item, '='))
-      local gui = to_bool(fn.has('gui_running'))
-      if (not gui and key == 'cterm')
-          or (gui and key == 'gui') then
+      local guicolors = to_bool(fn.has('gui_running'))
+        or vim.o.termguicolors
+      if (not guicolors and key == 'cterm')
+          or (guicolors and key == 'gui') then
         local attrs = vim.split(val, ',')
         for _, attr in ipairs(attrs) do
           if attr == 'reverse' or attr == 'inverse' then
