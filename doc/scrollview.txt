@@ -263,7 +263,7 @@ scrollview_winblend    |Number| specifying the level of transparency for
                        or 'inverse' specified as a cterm attribute (or a gui
                        attribute when a GUI is running); see |attr-list|. Such
                        windows will have no transparency, as a workaround for
-                       Neovim #24519. This option is ignored for scrollview
+                       Neovim #24159. This option is ignored for scrollview
                        windows shown for floating windows; see
                        |scrollview_floating_windows|. Such windows will have no
                        transparency, as a workaround for Neovim #14624.
