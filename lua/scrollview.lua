@@ -2467,9 +2467,9 @@ local handle_mouse = function(button)
           -- First check for a click on a sign and handle accordingly.
           for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
             if mouse_row == sign_props.row
-              and mouse_col >= sign_props.col
-              and mouse_col <= sign_props.col + sign_props.width - 1
-              and (not clicked_bar or sign_props.zindex > props.zindex) then
+                and mouse_col >= sign_props.col
+                and mouse_col <= sign_props.col + sign_props.width - 1
+                and (not clicked_bar or sign_props.zindex > props.zindex) then
               api.nvim_win_call(mouse_winid, function()
                 -- Go to the next sign_props line after the cursor.
                 local current = fn.line('.')
