@@ -1444,11 +1444,16 @@ end
 
 -- Show signs for the specified 'winid' window ID. A list of existing sign
 -- winids, 'sign_winids', is specified for possible reuse. Reused windows are
--- removed from the list.
-local show_signs = function(winid, sign_winids)
+-- removed from the list. The bar_winid is necessary so that signs can be
+-- properly highlighted when intersecting a scrollbar.
+local show_signs = function(winid, sign_winids, bar_winid)
   -- Neovim 0.8 has an issue with matchaddpos highlighting (similar type of
   -- issue reported in Neovim #22906).
   if not to_bool(fn.has('nvim-0.9')) then return end
+  local bar_props
+  if bar_winid ~= -1 then
+    bar_props = api.nvim_win_get_var(bar_winid, PROPS_VAR)
+  end
   local cur_winid = api.nvim_get_current_win()
   local wininfo = fn.getwininfo(winid)[1]
   local config = api.nvim_win_get_config(winid)
@@ -1677,8 +1682,18 @@ local show_signs = function(winid, sign_winids)
         -- Scroll to the inserted line.
         local args = sign_winid .. ', [' .. sign_line_count .. ', 0]'
         vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
-        -- Set the Normal highlight to match the base window.
-        local target = get_normal_highlight(winid)
+        -- Set the window's highlight to that of the scrollbar if intersecting,
+        -- or otherwise set the Normal highlight to match the base window.
+        local target
+        if bar_props ~= nil
+            and bar_props.col >= col
+            and bar_props.col <= col + sign_width - 1
+            and row >= bar_props.row
+            and row <= bar_props.row + bar_props.height - 1 then
+          target = 'ScrollView'
+        else
+          target = get_normal_highlight(winid)
+        end
         local winhighlight = string.format(
           'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
         set_window_option(sign_winid, 'winhighlight', winhighlight)
@@ -1717,9 +1732,9 @@ end
 -- Given a scrollbar properties dictionary and a target window row, the
 -- corresponding scrollbar is moved to that row.
 -- Where applicable, the height is adjusted if it would extend past the screen.
--- The row is adjusted (up in
--- value, down in visual position) such that the full height of the scrollbar
--- remains on screen. Returns the updated scrollbar properties.
+-- The row is adjusted (up in value, down in visual position) such that the
+-- full height of the scrollbar remains on screen. Returns the updated
+-- scrollbar properties.
 local move_scrollbar = function(props, row)
   props = copy(props)
   local max_height = get_window_height(props.parent_winid) - row + 1
@@ -2078,7 +2093,7 @@ local refresh_bars = function()
           table.remove(existing_barids)
         end
         -- Repeat a similar process for signs.
-        show_signs(winid, existing_signids)
+        show_signs(winid, existing_signids, bar_winid)
       end
     end
     local existing_wins = concat(existing_barids, existing_signids)
@@ -2566,6 +2581,10 @@ local handle_mouse = function(button)
               props = get_scrollview_bar_props(winid)
             end
             props = move_scrollbar(props, row)
+            -- Refresh since sign backgrounds might be stale, for signs that
+            -- switched intersection state with scrollbar. This is fast, from
+            -- caching.
+            refresh_bars()
             -- Window workspaces may still be present as a result of the
             -- earlier commands (e.g., set_topline). Remove prior to redrawing.
             reset_win_workspaces()
