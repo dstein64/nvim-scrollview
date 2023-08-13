@@ -222,26 +222,105 @@ end
 -- * Core
 -- *************************************************
 
+-- Return window height, subtracting 1 if there is a winbar.
+local get_window_height = function(winid)
+  if winid == 0 then
+    winid = api.nvim_get_current_win()
+  end
+  local height = api.nvim_win_get_height(winid)
+  if to_bool(tbl_get(fn.getwininfo(winid)[1], 'winbar', 0)) then
+    height = height - 1
+  end
+  return height
+end
+
+-- Returns the position of window edges, with borders considered part of the
+-- window.
+local get_window_edges = function(winid)
+  local top, left = unpack(fn.win_screenpos(winid))
+  local bottom = top + get_window_height(winid) - 1
+  local right = left + fn.winwidth(winid) - 1
+  -- Only edges have to be checked to determine if a border is present (i.e.,
+  -- corners don't have to be checked). Borders don't impact the top and left
+  -- positions calculated above; only the bottom and right positions.
+  local border = api.nvim_win_get_config(winid).border
+  if border ~= nil and vim.tbl_islist(border) and #border == 8 then
+    if border[2] ~= '' then
+      -- There is a top border.
+      bottom = bottom + 1
+    end
+    if border[4] ~= '' then
+      -- There is a right border.
+      right = right + 1
+    end
+    if border[6] ~= '' then
+      -- There is a bottom border.
+      bottom = bottom + 1
+    end
+    if border[8] ~= '' then
+      -- There is a left border.
+      right = right + 1
+    end
+  end
+  return top, bottom, left, right
+end
+
+-- Return the floating windows that overlap the region corresponding to the
+-- specified edges. Scrollview windows are included, but workspace windows are
+-- not.
+local get_float_overlaps = function(top, bottom, left, right)
+  local result = {}
+  for winnr = 1, fn.winnr('$') do
+    local winid = fn.win_getid(winnr)
+    local config = api.nvim_win_get_config(winid)
+    local floating = tbl_get(config, 'relative', '') ~= ''
+    local workspace_win = false
+    pcall(function()
+      api.nvim_win_get_var(winid, WIN_WORKSPACE_BASE_WINID_VAR)
+      workspace_win = true
+    end)
+    if not workspace_win and floating then
+      local top2, bottom2, left2, right2 = get_window_edges(winid)
+      if top <= bottom2
+          and bottom >= top2
+          and left <= right2
+          and right >= left2 then
+        table.insert(result, winid)
+      end
+    end
+  end
+  return result
+end
+
 local is_mouse_over_scrollview_win = function(winid)
-  -- WARN: This doesn't consider that there could be other floating windows
-  -- with higher z-index than that of 'winid' in the same position as the
-  -- mouse. This function would consider the mouse to be hovering both windows.
   -- WARN: We use the positioning from the scrollview props. This is so that
   -- clicking when hovering retains the hover highlight for scrollview windows
   -- when their parent winnr > 1. Otherwise, it appeared getwininfo,
   -- nvim_win_get_posiiton, and win_screenpos were not returning accurate info
   -- (may relate to Neovim #24078). Perhaps it's because the windows were just
   -- created and not yet in the necessary state. #100
+  local config = api.nvim_win_get_config(winid)
   local mousepos = fn.getmousepos()
+  -- Return false if there are any floating windows with higher zindex.
+  local float_overlaps = get_float_overlaps(
+    mousepos.screenrow, mousepos.screenrow,
+    mousepos.screencol, mousepos.screencol
+  )
+  for _, overlap_winid in ipairs(float_overlaps) do
+    local overlap_config = api.nvim_win_get_config(overlap_winid)
+    if overlap_winid ~= winid and overlap_config.zindex > config.zindex then
+      return false
+    end
+  end
   local props = api.nvim_win_get_var(winid, PROPS_VAR)
   local parent_pos = fn.win_screenpos(props.parent_winid)
   local row = props.row + parent_pos[1] - 1
   local col = props.col + parent_pos[2] - 1
   -- Adjust for floating window borders.
-  local config = api.nvim_win_get_config(props.parent_winid)
-  local is_float = tbl_get(config, 'relative', '') ~= ''
-  if is_float then
-    local border = config.border
+  local parent_config = api.nvim_win_get_config(props.parent_winid)
+  local parent_is_float = tbl_get(parent_config, 'relative', '') ~= ''
+  if parent_is_float then
+    local border = parent_config.border
     if border ~= nil and vim.tbl_islist(border) and #border == 8 then
       if border[2] ~= '' then
         -- There is a top border.
@@ -257,18 +336,6 @@ local is_mouse_over_scrollview_win = function(winid)
     and mousepos.screenrow < row + props.height
     and mousepos.screencol >= col
     and mousepos.screencol < col + props.width
-end
-
--- Return window height, subtracting 1 if there is a winbar.
-local get_window_height = function(winid)
-  if winid == 0 then
-    winid = api.nvim_get_current_win()
-  end
-  local height = api.nvim_win_get_height(winid)
-  if to_bool(tbl_get(fn.getwininfo(winid)[1], 'winbar', 0)) then
-    height = height - 1
-  end
-  return height
 end
 
 -- Set window option.
@@ -1068,58 +1135,6 @@ local is_scrollview_window = function(winid)
   return bufnr == bar_bufnr or bufnr == sign_bufnr
 end
 
--- Returns the position of window edges, with borders considered part of the
--- window.
-local get_window_edges = function(winid)
-  local top, left = unpack(fn.win_screenpos(winid))
-  local bottom = top + get_window_height(winid) - 1
-  local right = left + fn.winwidth(winid) - 1
-  -- Only edges have to be checked to determine if a border is present (i.e.,
-  -- corners don't have to be checked). Borders don't impact the top and left
-  -- positions calculated above; only the bottom and right positions.
-  local border = api.nvim_win_get_config(winid).border
-  if border ~= nil and vim.tbl_islist(border) and #border == 8 then
-    if border[2] ~= '' then
-      -- There is a top border.
-      bottom = bottom + 1
-    end
-    if border[4] ~= '' then
-      -- There is a right border.
-      right = right + 1
-    end
-    if border[6] ~= '' then
-      -- There is a bottom border.
-      bottom = bottom + 1
-    end
-    if border[8] ~= '' then
-      -- There is a left border.
-      right = right + 1
-    end
-  end
-  return top, bottom, left, right
-end
-
--- Return the floating windows that overlap the region corresponding to the
--- specified edges.
-local get_float_overlaps = function(top, bottom, left, right)
-  local result = {}
-  for winnr = 1, fn.winnr('$') do
-    local winid = fn.win_getid(winnr)
-    local config = api.nvim_win_get_config(winid)
-    local floating = tbl_get(config, 'relative', '') ~= ''
-    if floating and not is_scrollview_window(winid) then
-      local top2, bottom2, left2, right2 = get_window_edges(winid)
-      if top <= bottom2
-          and bottom >= top2
-          and left <= right2
-          and right >= left2 then
-        table.insert(result, winid)
-      end
-    end
-  end
-  return result
-end
-
 -- Whether scrollbar and signs should be shown. This is the first check; it
 -- only checks for conditions that apply to both the position bar and signs.
 local should_show = function(winid)
@@ -1286,6 +1301,9 @@ local show_scrollbar = function(winid, bar_winid)
       wincol0 + bar_position.col,
       wincol0 + bar_position.col
     )
+    float_overlaps = vim.tbl_filter(function(x)
+      return not is_scrollview_window(x)
+    end, float_overlaps)
     if not vim.tbl_isempty(float_overlaps) then
       if #float_overlaps > 1 or float_overlaps[1] ~= winid then
         return -1
@@ -1566,6 +1584,9 @@ local show_signs = function(winid, sign_winids)
           wincol0 + col,
           wincol0 + col + sign_width - 1
         )
+        float_overlaps = vim.tbl_filter(function(x)
+          return not is_scrollview_window(x)
+        end, float_overlaps)
         if not vim.tbl_isempty(float_overlaps) then
           if #float_overlaps > 1 or float_overlaps[1] ~= winid then
             show = false
