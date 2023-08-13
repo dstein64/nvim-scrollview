@@ -267,7 +267,10 @@ scrollview_winblend    |Number| specifying the level of transparency for
                        option is ignored for scrollview windows shown for
                        floating windows; see |scrollview_floating_windows|. Such
                        windows will have no transparency, as a workaround for
-                       Neovim #14624.
+                       Neovim #14624. This option can interact with highlight
+                       settings (|scrollview-color-customization|); careful
+                       adjustment of the winblend setting and highlighting may
+                       be necessary to achieve the desired result.
 
 scrollview_zindex                          *scrollview_zindex*
                        |Number| specifying the scrollbar z-index. Defaults to
