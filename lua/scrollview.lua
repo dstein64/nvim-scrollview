@@ -2585,6 +2585,14 @@ local handle_mouse = function(button)
             -- switched intersection state with scrollbar. This is fast, from
             -- caching.
             refresh_bars()
+            -- But be sure to keep the scrollbar highlighted when relevant.
+            if not vim.tbl_isempty(props)
+                and props.highlight_fn ~= nil
+                and mousemove_received
+                and to_bool(fn.exists('&mousemoveevent'))
+                and vim.o.mousemoveevent then
+              props.highlight_fn(true)
+            end
             -- Window workspaces may still be present as a result of the
             -- earlier commands (e.g., set_topline). Remove prior to redrawing.
             reset_win_workspaces()
