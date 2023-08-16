@@ -1322,7 +1322,11 @@ local show_scrollbar = function(winid, bar_winid)
     api.nvim_buf_set_option(bar_bufnr, 'swapfile', false)
     api.nvim_buf_set_option(bar_bufnr, 'bufhidden', 'hide')
     api.nvim_buf_set_option(bar_bufnr, 'buflisted', false)
-    api.nvim_buf_set_option(bar_bufnr, 'undolevels', -1)
+    -- Don't turn off undo for Neovim 0.9.0 and 0.9.1 since Neovim could crash,
+    -- presumably from Neovim #24289. #111, #115
+    if not to_bool(fn.has('nvim-0.9')) or to_bool(fn.has('nvim-0.9.2')) then
+      api.nvim_buf_set_option(bar_bufnr, 'undolevels', -1)
+    end
   end
   -- Make sure that a custom character is up-to-date and is repeated enough to
   -- cover the full height of the scrollbar.
@@ -1612,7 +1616,12 @@ local show_signs = function(winid, sign_winids, bar_winid)
           api.nvim_buf_set_option(sign_bufnr, 'swapfile', false)
           api.nvim_buf_set_option(sign_bufnr, 'bufhidden', 'hide')
           api.nvim_buf_set_option(sign_bufnr, 'buflisted', false)
-          api.nvim_buf_set_option(sign_bufnr, 'undolevels', -1)
+          -- Don't turn off undo for Neovim 0.9.0 and 0.9.1 since Neovim could
+          -- crash, presumably from Neovim #24289. #111, #115
+          if not to_bool(fn.has('nvim-0.9'))
+              or to_bool(fn.has('nvim-0.9.2')) then
+            api.nvim_buf_set_option(sign_bufnr, 'undolevels', -1)
+          end
         end
         local sign_line_count = api.nvim_buf_line_count(sign_bufnr)
         api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
