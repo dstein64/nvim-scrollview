@@ -332,6 +332,10 @@ local is_mouse_over_scrollview_win = function(winid)
       end
     end
   end
+  -- Adjust for winbar.
+  if to_bool(tbl_get(fn.getwininfo(props.parent_winid)[1], 'winbar', 0)) then
+    row = row + 1
+  end
   return mousepos.screenrow >= row
     and mousepos.screenrow < row + props.height
     and mousepos.screencol >= col
