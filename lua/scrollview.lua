@@ -332,7 +332,7 @@ local is_mouse_over_scrollview_win = function(winid)
       end
     end
   end
-  -- Adjust for winbar.
+  -- Adjust for winbar. #117
   if to_bool(tbl_get(fn.getwininfo(props.parent_winid)[1], 'winbar', 0)) then
     row = row + 1
   end
