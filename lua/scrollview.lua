@@ -1659,6 +1659,12 @@ local show_signs = function(winid, sign_winids, bar_winid)
           sign_winid = table.remove(sign_winids)
           api.nvim_win_set_config(sign_winid, sign_config)
         end
+        local over_scrollbar = bar_props ~= nil
+          and bar_props.col >= col
+          and bar_props.col <= col + sign_width - 1
+          and row >= bar_props.row
+          and row <= bar_props.row + bar_props.height - 1
+          and zindex > bar_props.zindex
         local highlight_fn = function(hover)
           hover = hover and get_variable('scrollview_hover', winid)
           local highlight
@@ -1685,11 +1691,22 @@ local show_signs = function(winid, sign_winids, bar_winid)
               winblend = 0
             end
             -- Add a workaround for Neovim #24584 (nvim-scrollview #112).
-            local bufline = fn.getbufline(sign_bufnr, sign_line_count)[1]
-            if string.gsub(bufline, '%s', '') ~= '' then
-              winblend = 0
+            if not over_scrollbar then
+              local bufline = fn.getbufline(sign_bufnr, sign_line_count)[1]
+              if string.gsub(bufline, '%s', '') ~= '' then
+                winblend = 0
+              end
             end
             set_window_option(sign_winid, 'winblend', winblend)
+            local target
+            if over_scrollbar then
+              target = 'ScrollView'
+            else
+              target = get_normal_highlight(winid)
+            end
+            local winhighlight = string.format(
+              'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
+            set_window_option(sign_winid, 'winhighlight', winhighlight)
           end
         end
         -- Scroll to the inserted line.
@@ -1697,19 +1714,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
         vim.cmd('keepjumps call nvim_win_set_cursor(' .. args .. ')')
         -- Set the window's highlight to that of the scrollbar if intersecting,
         -- or otherwise set the Normal highlight to match the base window.
-        local target
-        if bar_props ~= nil
-            and bar_props.col >= col
-            and bar_props.col <= col + sign_width - 1
-            and row >= bar_props.row
-            and row <= bar_props.row + bar_props.height - 1 then
-          target = 'ScrollView'
-        else
-          target = get_normal_highlight(winid)
-        end
-        local winhighlight = string.format(
-          'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
-        set_window_option(sign_winid, 'winhighlight', winhighlight)
         -- foldcolumn takes a string
         set_window_option(sign_winid, 'foldcolumn', '0')
         set_window_option(sign_winid, 'foldenable', false)
