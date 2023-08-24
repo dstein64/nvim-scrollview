@@ -199,7 +199,7 @@ scrollview_character   |String| specifying a character to display on scrollbars.
 
                                            *scrollview_column*
 scrollview_column      |Number| specifying the scrollbar column (relative to
-                       |scrollview_base|). Defaults to `2`. Must be an integer
+                       |scrollview_base|). Defaults to `1`. Must be an integer
                        greater than or equal to `1`.
 
 scrollview_current_only                    *scrollview_current_only*
@@ -257,7 +257,9 @@ scrollview_out_of_bounds_adjust            *scrollview_out_of_bounds_adjust*
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
-                       scrollbars. Defaults to `50`. Must be between `0` (opaque)
+(semi-experimental)    scrollbars. Defaults to `50` if 'termguicolors' is not
+                       set and `0` otherwise (the functionality is experimental
+                       when 'termguicolors' is set). Must be between `0` (opaque)
                        and `100` (transparent). This option is ignored for
                        scrollview windows whose highlight group has 'reverse'
                        or 'inverse' specified as a cterm attribute (or a gui
@@ -551,7 +553,6 @@ example.
  >
     let g:scrollview_excluded_filetypes = ['nerdtree']
     let g:scrollview_current_only = v:true
-    let g:scrollview_winblend = 75
     " Position the scrollbar at the 80th character of the buffer
     let g:scrollview_base = 'buffer'
     let g:scrollview_column = 80
@@ -566,7 +567,6 @@ options (the 'scrollview_' prefix is omitted). For example:
     require('scrollview').setup({
       excluded_filetypes = {'nerdtree'},
       current_only = true,
-      winblend = 75,
       -- Position the scrollbar at the 80th character of the buffer
       base = 'buffer',
       column = 80,
@@ -577,7 +577,6 @@ Alternatively, configuration variables can be set without calling `setup()`.
  >
     vim.g.scrollview_excluded_filetypes = {'nerdtree'},
     vim.g.scrollview_current_only = true,
-    vim.g.scrollview_winblend = 75,
     -- Position the scrollbar at the 80th character of the buffer
     vim.g.scrollview_base = 'buffer',
     vim.g.scrollview_column = 80,

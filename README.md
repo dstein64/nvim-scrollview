@@ -14,7 +14,6 @@ scrollview-configuration`).
 
 * Handling for folds
 * Scrollbars can be dragged with the mouse
-* Partially transparent scrollbars so that text is not covered
 * Signs (`diagnostics` and `search` enabled by default)
 
 ## Requirements
@@ -111,7 +110,6 @@ for details. The code below only shows a few of the possible settings.
 ```vim
 let g:scrollview_excluded_filetypes = ['nerdtree']
 let g:scrollview_current_only = v:true
-let g:scrollview_winblend = 75
 " Position the scrollbar at the 80th character of the buffer
 let g:scrollview_base = 'buffer'
 let g:scrollview_column = 80
@@ -132,7 +130,6 @@ options (the 'scrollview_' prefix is omitted).
 require('scrollview').setup({
   excluded_filetypes = {'nerdtree'},
   current_only = true,
-  winblend = 75,
   base = 'buffer',
   column = 80,
   signs_on_startup = {'all'},
@@ -145,7 +142,6 @@ Alternatively, configuration variables can be set without calling `setup()`.
 ```lua
 vim.g.scrollview_excluded_filetypes = {'nerdtree'},
 vim.g.scrollview_current_only = true,
-vim.g.scrollview_winblend = 75,
 vim.g.scrollview_base = 'buffer',
 vim.g.scrollview_column = 80,
 vim.g.scrollview_signs_on_startup = {'all'},
