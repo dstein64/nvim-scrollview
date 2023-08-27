@@ -1624,8 +1624,8 @@ local show_signs = function(winid, sign_winids, bar_winid)
           api.nvim_buf_set_option(sign_bufnr, 'buflisted', false)
           -- Don't turn off undo for Neovim 0.9.0 and 0.9.1 since Neovim could
           -- crash, presumably from Neovim #24289. #111, #115
-          -- TODO: Add back "or to_bool(fn.has('nvim-0.9.2'))" when Neovim
-          -- #24894 is resolved (the version may need to be adjusted).
+          -- TODO: Add back "or to_bool(fn.has('nvim-0.9.2'))" when Neovim #24894 is
+          -- resolved (the version may need to be adjusted).
           if not to_bool(fn.has('nvim-0.9')) then
             api.nvim_buf_set_option(sign_bufnr, 'undolevels', -1)
           end
