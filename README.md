@@ -14,7 +14,8 @@ scrollview-configuration`).
 
 * Handling for folds
 * Scrollbars can be dragged with the mouse
-* Signs (`diagnostics` and `search` enabled by default)
+* Signs (e.g., `diagnostics` and `search` enabled by default, and `marks` too
+  for `nvim>=0.10`)
 
 ## Requirements
 
@@ -89,11 +90,11 @@ with the same positioning logic as the scrollbar.
 * `trail`: trailing whitespace, when the `list` option is enabled and the
   `listchars` option includes "trail"
 
-`search` and `diagnostics` groups are enabled by default. To modify which sign
-groups are enabled, set `scrollview_signs_on_startup` accordingly in your
-Neovim configuation (see `:help scrollview_signs_on_startup`), or use
-`:ScrollViewEnable {group1} {group2} ...` to enable sign groups in the current
-Neovim session.
+`search` and `diagnostics` groups are enabled by default (`marks` too for
+`nvim>=0.10`). To modify which sign groups are enabled, set
+`scrollview_signs_on_startup` accordingly in your Neovim configuation (see
+`:help scrollview_signs_on_startup`), or use `:ScrollViewEnable {group1}
+{group2} ...` to enable sign groups in the current Neovim session.
 
 The plugin was written so that it's possible to extend the sign functionality
 in a Neovim configuration file or with a plugin. See the documentation for

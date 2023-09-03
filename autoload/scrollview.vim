@@ -63,6 +63,11 @@ let s:available_signs = filter(s:available_signs, 'v:val =~# "\\.lua$"')
 call map(s:available_signs, {_, val -> fnamemodify(val, ':r')})
 " Internal list of sign groups that are enabled on startup by default.
 let s:default_signs = ['diagnostics', 'search']
+" Enable mark signs by default, but only with nvim>=0.10, since :delmarks
+" doesn't persist on earlier versions (Neovim #4288, #4925, #24963).
+if has('nvim-0.10')
+  call add(s:default_signs, 'marks')
+endif
 
 " *** General sign settings ***
 " Sign column is relative to the scrollbar. It specifies the initial column

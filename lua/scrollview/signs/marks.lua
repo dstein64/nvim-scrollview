@@ -7,10 +7,10 @@ local to_bool = utils.to_bool
 
 local M = {}
 
--- WARN: The outcome of :delmarks does not persist across Neovim sessions
--- (Neovim #4288, #4925). Workaround: run :wshada! after deleting marks
--- (however, this could delete information, like the changelist for files
--- not edited in the current session).
+-- WARN: Prior to Neovim 0.10, the outcome of :delmarks does not persist across
+-- Neovim sessions (Neovim #4288, #4925, #24963). Workaround: run :wshada!
+-- after deleting marks (however, this could delete information, like the
+-- changelist for files not edited in the current session).
 
 function M.init(enable)
   if api.nvim_create_autocmd == nil then
