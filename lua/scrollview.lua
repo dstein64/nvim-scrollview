@@ -98,6 +98,12 @@ local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
 local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
 
+-- Maps window ID to a temporary highlight group name. This is reset on each
+-- refresh cycle.
+normal_highlight_lookup = {}
+-- Tracks the number of entries in the preceding table.
+normal_highlight_lookup_size = 0
+
 -- *************************************************
 -- * Memoization
 -- *************************************************
@@ -1240,11 +1246,10 @@ local is_hl_reversed = function(group)
   return false
 end
 
--- Returns the Normal highlight for the specified window.
+-- Returns the Normal highlight for the specified window, creating a new group
+-- if nvim_win_set_hl_ns was used.
 -- WARN: 'nvim_win_set_hl_ns' "takes precedence over the 'winhighlight'
--- option". However, it seems there's no way to retrieve what's been set with
--- that function (Neovim #24309). When that's implemented, this function may
--- have to create new groups in case the highlight doesn't have a group name.
+-- option".
 local get_normal_highlight = function(winid)
   local config = api.nvim_win_get_config(winid)
   local is_float = tbl_get(config, 'relative', '') ~= ''
@@ -1252,23 +1257,59 @@ local get_normal_highlight = function(winid)
   if is_float then
     highlight = 'NormalFloat'
   end
-  local base_winhighlight = api.nvim_win_get_option(winid, 'winhighlight')
-  if base_winhighlight ~= '' then
-    pcall(function()
-      for _, item in ipairs(fn.split(base_winhighlight, ',')) do
-        local from, to = unpack(fn.split(item, ':'))
-        if from == 'NormalFloat' and is_float then
-          -- NormalFloat takes precedence for floating windows, but if it's not
-          -- specified, Normal will be used if present.
-          highlight = to
-          break
-        end
-        if from == 'Normal' then
-          highlight = to
-          break
-        end
+  local hl_ns = -1
+  if api.nvim_get_hl_ns ~= nil then
+    hl_ns = api.nvim_get_hl_ns({winid = winid})
+  end
+  if hl_ns ~= -1 then
+    highlight = normal_highlight_lookup[winid]
+    if highlight == nil then
+      -- NormalFloat takes precedence for floating windows, but if it's not
+      -- specified, Normal will be used if present.
+      local hl_spec = {}
+      if is_float then
+        hl_spec = api.nvim_get_hl(
+          hl_ns, {name = 'NormalFloat', create = false, link = true})
       end
-    end)
+      if vim.tbl_isempty(hl_spec) then
+        hl_spec = api.nvim_get_hl(
+          hl_ns, {name = 'Normal', create = false, link = true})
+      end
+      local visited = {}
+      while not vim.tbl_isempty(hl_spec)
+          and hl_spec.link ~= nil
+          and not visited[hl_spec.link] do
+        visited[hl_spec.link] = true
+        hl_spec = api.nvim_get_hl(
+          hl_ns, {name = hl_spec.link, create = false, link = true})
+      end
+      if not vim.tbl_isempty(hl_spec) and hl_spec.link == nil then
+        -- Create a group with a matching specification.
+        highlight = 'ScrollViewNormalHighlight' .. normal_highlight_lookup_size
+        api.nvim_set_hl(0, highlight, hl_spec)
+        normal_highlight_lookup[winid] = highlight
+        normal_highlight_lookup_size = normal_highlight_lookup_size + 1
+      end
+    end
+  else
+    local base_winhighlight = api.nvim_win_get_option(winid, 'winhighlight')
+    if base_winhighlight ~= '' then
+      pcall(function()
+        for _, item in ipairs(fn.split(base_winhighlight, ',')) do
+          local from, to = unpack(fn.split(item, ':'))
+          if from == 'NormalFloat' and is_float then
+            -- NormalFloat takes precedence for floating windows, but if it's not
+            -- specified, Normal will be used if present.
+            highlight = to
+            break
+          end
+          if from == 'Normal' then
+            highlight = to
+            break
+          end
+        end
+      end)
+    end
   end
   return highlight
 end
@@ -2081,6 +2122,10 @@ local refresh_bars = function()
     api.nvim_set_option('eventignore', state.eventignore)
     vim.cmd('doautocmd <nomodeline> User ScrollViewRefresh')
     api.nvim_set_option('eventignore', eventignore)
+    -- Reset highlight group name mapping (and table size) for each refresh
+    -- cycle.
+    normal_highlight_lookup = {}
+    normal_highlight_lookup_size = 0
     -- Delete all signs and highlights in the sign buffer.
     if sign_bufnr ~= -1 and to_bool(fn.bufexists(sign_bufnr)) then
       api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)
