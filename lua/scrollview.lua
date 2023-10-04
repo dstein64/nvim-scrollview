@@ -100,9 +100,9 @@ local TOPLINE_LOOKUP_KEY_PREFIX = 2
 
 -- Maps window ID to a temporary highlight group name. This is reset on each
 -- refresh cycle.
-normal_highlight_lookup = {}
+local normal_highlight_lookup = {}
 -- Tracks the number of entries in the preceding table.
-normal_highlight_lookup_size = 0
+local normal_highlight_lookup_size = 0
 
 -- *************************************************
 -- * Memoization
