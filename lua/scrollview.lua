@@ -46,6 +46,9 @@ local sign_bufnr = -1
 -- Keep count of pending async refreshes.
 local pending_async_refresh_count = 0
 
+-- Keep count of pending mousemove callbacks.
+local pending_mousemove_callback_count = 0
+
 -- A window variable is set on each scrollview window, as a way to check for
 -- scrollview windows, in addition to matching the scrollview buffer number
 -- saved in bar_bufnr. This was preferable versus maintaining a list of window
@@ -2211,12 +2214,22 @@ if to_bool(fn.exists('&mousemoveevent')) then
   vim.on_key(function(str)
     if vim.o.mousemoveevent and string.find(str, MOUSEMOVE) then
       mousemove_received = true
-      for _, winid in ipairs(get_scrollview_windows()) do
-        local props = api.nvim_win_get_var(winid, PROPS_VAR)
-        if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
-          props.highlight_fn(is_mouse_over_scrollview_win(winid))
+      pending_mousemove_callback_count = pending_mousemove_callback_count + 1
+      vim.defer_fn(function()
+        pending_mousemove_callback_count =
+          math.max(0, pending_mousemove_callback_count - 1)
+        if pending_mousemove_callback_count > 0 then
+          -- If there are mousemove callbacks that will occur subsequently,
+          -- don't execute this one.
+          return
         end
-      end
+        for _, winid in ipairs(get_scrollview_windows()) do
+          local props = api.nvim_win_get_var(winid, PROPS_VAR)
+          if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
+            props.highlight_fn(is_mouse_over_scrollview_win(winid))
+          end
+        end
+      end, 0)
     end
   end)
 end
