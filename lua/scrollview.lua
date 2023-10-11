@@ -284,10 +284,7 @@ local get_float_overlaps = function(top, bottom, left, right)
     local config = api.nvim_win_get_config(winid)
     local floating = tbl_get(config, 'relative', '') ~= ''
     local workspace_win = false
-    pcall(function()
-      api.nvim_win_get_var(winid, WIN_WORKSPACE_BASE_WINID_VAR)
-      workspace_win = true
-    end)
+    workspace_win = fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1
     if not workspace_win and floating then
       local top2, bottom2, left2, right2 = get_window_edges(winid)
       if top <= bottom2
@@ -1139,10 +1136,7 @@ end
 
 local is_scrollview_window = function(winid)
   if is_ordinary_window(winid) then return false end
-  local has_attr = false
-  pcall(function()
-    has_attr = api.nvim_win_get_var(winid, WIN_VAR) == WIN_VAL
-  end)
+  local has_attr = fn.getwinvar(winid, WIN_VAR, '') == WIN_VAL
   if not has_attr then return false end
   local bufnr = api.nvim_win_get_buf(winid)
   return bufnr == bar_bufnr or bufnr == sign_bufnr
