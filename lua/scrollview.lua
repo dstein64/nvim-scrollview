@@ -100,6 +100,7 @@ local PROPER_MODE = 2   -- considers folds and wrapped lines
 local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
 local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
+local GET_WINDOW_EDGES = 3
 
 -- Maps window ID to a temporary highlight group name. This is reset on each
 -- refresh cycle.
@@ -246,6 +247,8 @@ end
 -- Returns the position of window edges, with borders considered part of the
 -- window.
 local get_window_edges = function(winid)
+  local memoize_key = table.concat({GET_WINDOW_EDGES, winid}, ':')
+  if memoize and cache[memoize_key] then return cache[memoize_key] end
   local top, left = unpack(fn.win_screenpos(winid))
   local bottom = top + get_window_height(winid) - 1
   local right = left + fn.winwidth(winid) - 1
@@ -271,7 +274,9 @@ local get_window_edges = function(winid)
       right = right + 1
     end
   end
-  return top, bottom, left, right
+  local result = {top, bottom, left, right}
+  if memoize then cache[memoize_key] = result end
+  return result
 end
 
 -- Return the floating windows that overlap the region corresponding to the
@@ -286,7 +291,7 @@ local get_float_overlaps = function(top, bottom, left, right)
     local workspace_win =
       fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1
     if not workspace_win and floating then
-      local top2, bottom2, left2, right2 = get_window_edges(winid)
+      local top2, bottom2, left2, right2 = unpack(get_window_edges(winid))
       if top <= bottom2
           and bottom >= top2
           and left <= right2
@@ -2210,18 +2215,26 @@ if to_bool(fn.exists('&mousemoveevent')) then
       mousemove_received = true
       pending_mousemove_callback_count = pending_mousemove_callback_count + 1
       vim.defer_fn(function()
-        pending_mousemove_callback_count =
+        local resume_memoize = memoize
+        start_memoize()
+        pcall(function()
+          pending_mousemove_callback_count =
           math.max(0, pending_mousemove_callback_count - 1)
-        if pending_mousemove_callback_count > 0 then
-          -- If there are mousemove callbacks that will occur subsequently,
-          -- don't execute this one.
-          return
-        end
-        for _, winid in ipairs(get_scrollview_windows()) do
-          local props = api.nvim_win_get_var(winid, PROPS_VAR)
-          if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
-            props.highlight_fn(is_mouse_over_scrollview_win(winid))
+          if pending_mousemove_callback_count > 0 then
+            -- If there are mousemove callbacks that will occur subsequently,
+            -- don't execute this one.
+            return
           end
+          for _, winid in ipairs(get_scrollview_windows()) do
+            local props = api.nvim_win_get_var(winid, PROPS_VAR)
+            if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
+              props.highlight_fn(is_mouse_over_scrollview_win(winid))
+            end
+          end
+        end)
+        if not resume_memoize then
+          stop_memoize()
+          reset_memoize()
         end
       end, 0)
     end
