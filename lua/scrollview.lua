@@ -283,8 +283,8 @@ local get_float_overlaps = function(top, bottom, left, right)
     local winid = fn.win_getid(winnr)
     local config = api.nvim_win_get_config(winid)
     local floating = tbl_get(config, 'relative', '') ~= ''
-    local workspace_win = false
-    workspace_win = fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1
+    local workspace_win =
+      fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1
     if not workspace_win and floating then
       local top2, bottom2, left2, right2 = get_window_edges(winid)
       if top <= bottom2
