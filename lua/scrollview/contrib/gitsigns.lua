@@ -101,18 +101,21 @@ function M.setup(config)
     group = group,
     highlight = config.add_highlight,
     symbol = config.add_symbol,
+    priority = config.priority
   }).name
 
   local change = scrollview.register_sign_spec({
     group = group,
     highlight = config.change_highlight,
     symbol = config.change_symbol,
+    priority = config.priority
   }).name
 
   local delete = scrollview.register_sign_spec({
     group = group,
     highlight = config.delete_highlight,
     symbol = config.delete_symbol,
+    priority = config.priority
   }).name
 
   scrollview.set_sign_group_state(group, config.enabled)
