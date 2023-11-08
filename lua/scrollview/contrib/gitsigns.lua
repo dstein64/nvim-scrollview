@@ -5,14 +5,20 @@
 --     {config} is an optional table with the following attributes:
 --       - add_highlight (string): Defaults to a value from gitsigns config
 --         when available, otherwise 'DiffAdd'.
+--       - add_priority (number): See ':help scrollview.register_sign_spec()'
+--         for the default value when not specified.
 --       - add_symbol (string): Defaults to a value from gitsigns config when
 --         available, otherwise box drawing heavy vertical.
 --       - change_highlight (string): Defaults to a value from gitsigns config
 --         when available, otherwise 'DiffChange'.
+--       - change_priority (number): See ':help scrollview.register_sign_spec()'
+--         for the default value when not specified.
 --       - change_symbol (string): Defaults to a value from gitsigns config
 --         when available, otherwise box drawing heavy vertical.
 --       - delete_highlight (string): Defaults to a value from gitsigns config
 --         when available, otherwise 'DiffDelete'.
+--       - delete_priority (number): See ':help scrollview.register_sign_spec()'
+--         for the default value when not specified.
 --       - delete_symbol (string): Defaults to a value from gitsigns config
 --         when available, otherwise lower one-eigth block.
 --       - enabled (boolean): Whether signs are enabled immediately. If false,
@@ -100,22 +106,22 @@ function M.setup(config)
   local add = scrollview.register_sign_spec({
     group = group,
     highlight = config.add_highlight,
+    priority = config.add_priority
     symbol = config.add_symbol,
-    priority = config.priority
   }).name
 
   local change = scrollview.register_sign_spec({
     group = group,
     highlight = config.change_highlight,
+    priority = config.change_priority
     symbol = config.change_symbol,
-    priority = config.priority
   }).name
 
   local delete = scrollview.register_sign_spec({
     group = group,
     highlight = config.delete_highlight,
+    priority = config.delete_priority
     symbol = config.delete_symbol,
-    priority = config.priority
   }).name
 
   scrollview.set_sign_group_state(group, config.enabled)
