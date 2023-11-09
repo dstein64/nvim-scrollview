@@ -32,17 +32,10 @@
 local api = vim.api
 local fn = vim.fn
 local scrollview = require('scrollview')
+local utils = require('scrollview.utils')
+local copy = utils.copy
 
 local M = {}
-
--- Create a shallow copy of a map-like table.
-local copy = function(table)
-  local result = {}
-  for key, val in pairs(table) do
-    result[key] = val
-  end
-  return result
-end
 
 function M.setup(config)
   config = config or {}
