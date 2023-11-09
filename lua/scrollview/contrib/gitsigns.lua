@@ -176,6 +176,13 @@ function M.setup(config)
       vim.cmd('silent! ScrollViewRefresh')
     end
   })
+
+  -- Refresh gitsigns to trigger GitSignsUpdate (otherwise existing signs
+  -- from gitsigns wouldn't be reflected on the scrollbar until the next
+  -- GitSignsUpdate).
+  pcall(function()
+    require('gitsigns').refresh()
+  end)
 end
 
 return M
