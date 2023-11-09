@@ -119,6 +119,10 @@ function M.setup(config)
 
   scrollview.set_sign_group_state(group, config.enabled)
 
+  -- The last updated buffers, reset on each GitSignsUpdate. This is a
+  -- dictionary used as a set.
+  local active_bufnrs = {}
+
   api.nvim_create_autocmd('User', {
     pattern = 'GitSignsUpdate',
     callback = function()
@@ -129,44 +133,61 @@ function M.setup(config)
       -- being covered (the ScrollViewRefresh User autocommand approach could
       -- result in brief occurrences of full coverage when hide_full_add=true).
       local gitsigns = require('gitsigns')
-      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
-        local bufnr = api.nvim_win_get_buf(winid)
-        local hunks = gitsigns.get_hunks(bufnr) or {}
-        local lines_add = {}
-        local lines_change = {}
-        local lines_delete = {}
-        for _, hunk in ipairs(hunks) do
-          if hunk.type == 'add' then
-            local full = hunk.added.count >= api.nvim_buf_line_count(bufnr)
-            if not config.hide_full_add or not full then
+      -- Clear gitsigns info for existing buffers.
+      for bufnr, _ in pairs(active_bufnrs) do
+        if vim.fn.bufexists(bufnr) then
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+          vim.b[bufnr][add] = {}
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+          vim.b[bufnr][change] = {}
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+          vim.b[bufnr][delete] = {}
+        end
+      end
+      for _, tabpage in ipairs(api.nvim_list_tabpages()) do
+        local tabwins = api.nvim_tabpage_list_wins(tabpage)
+        for _, winid in ipairs(tabwins) do
+          local bufnr = api.nvim_win_get_buf(winid)
+          local hunks = gitsigns.get_hunks(bufnr) or {}
+          if not vim.tbl_isempty(hunks) then
+            active_bufnrs[bufnr] = true
+          end
+          local lines_add = {}
+          local lines_change = {}
+          local lines_delete = {}
+          for _, hunk in ipairs(hunks) do
+            if hunk.type == 'add' then
+              local full = hunk.added.count >= api.nvim_buf_line_count(bufnr)
+              if not config.hide_full_add or not full then
+                local first = hunk.added.start
+                local last = hunk.added.start
+                if not config.only_first_line then
+                  last = last + hunk.added.count - 1
+                end
+                for line = first, last do
+                  table.insert(lines_add, line)
+                end
+              end
+            elseif hunk.type == 'change' then
               local first = hunk.added.start
               local last = hunk.added.start
               if not config.only_first_line then
                 last = last + hunk.added.count - 1
               end
               for line = first, last do
-                table.insert(lines_add, line)
+                table.insert(lines_change, line)
               end
+            elseif hunk.type == 'delete' then
+              table.insert(lines_delete, hunk.added.start)
             end
-          elseif hunk.type == 'change' then
-            local first = hunk.added.start
-            local last = hunk.added.start
-            if not config.only_first_line then
-              last = last + hunk.added.count - 1
-            end
-            for line = first, last do
-              table.insert(lines_change, line)
-            end
-          elseif hunk.type == 'delete' then
-            table.insert(lines_delete, hunk.added.start)
           end
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+          vim.b[bufnr][add] = lines_add
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+          vim.b[bufnr][change] = lines_change
+          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+          vim.b[bufnr][delete] = lines_delete
         end
-        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-        vim.b[bufnr][add] = lines_add
-        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-        vim.b[bufnr][change] = lines_change
-        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-        vim.b[bufnr][delete] = lines_delete
       end
       -- Checking whether the sign group is active is deferred to here so that
       -- the proper gitsigns state is maintained even when the sign group is
