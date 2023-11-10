@@ -155,7 +155,7 @@ function M.setup(config)
       -- nvim-scrollview, as CocActionAsync('diagnosticRefresh') is used
       -- instead, the possibility of the error elsewhere (e.g., other plugins,
       -- user configs) is avoided by using the asynchronous approach for
-      -- getting the diagnostic list.
+      -- getting the diagnostic list. coc.nvim #4806
       if to_bool(vim.fn.exists('*CocActionAsync')) then
         fn.CocActionAsync('diagnosticList', function(err, diagnostic_list)
           -- Clear diagnostic info for existing buffers.
