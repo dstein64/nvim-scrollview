@@ -149,6 +149,13 @@ function M.setup(config)
   api.nvim_create_autocmd('User', {
     pattern = 'CocDiagnosticChange',
     callback = function()
+      -- CocActionAsync('diagnosticList') is used intentionally instead of
+      -- CocAction('diagnosticList'). Using the latter results in an error when
+      -- CocAction('diagnosticRefresh') is called. Although that is not used by
+      -- nvim-scrollview, as CocActionAsync('diagnosticRefresh') is used
+      -- instead, the possibility of the error elsewhere (e.g., other plugins,
+      -- user configs) is avoided by using the asynchronous approach for
+      -- getting the diagnostic list.
       if to_bool(vim.fn.exists('*CocActionAsync')) then
         fn.CocActionAsync('diagnosticList', function(err, diagnostic_list)
           -- Clear diagnostic info for existing buffers.
