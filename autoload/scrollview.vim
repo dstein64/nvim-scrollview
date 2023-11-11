@@ -372,29 +372,32 @@ inoremap <silent> <plug>(ScrollViewToggle)  <cmd>ScrollViewToggle<cr>
 " * Sign Group Initialization
 " *************************************************
 
-" === Initialize built-in sign groups ===
-let s:lookup = {}  " maps sign groups to state (enabled/disabled)
-for s:group in s:available_signs
-  let s:lookup[s:group] = v:false
-endfor
-for s:group in g:scrollview_signs_on_startup
-  if s:group ==# 'all'
-    for s:group2 in s:available_signs
-      let s:lookup[s:group2] = v:true
-    endfor
-    break
-  elseif s:group ==# 'defaults'
-    for s:group2 in s:default_signs
-      let s:lookup[s:group2] = v:true
-    endfor
-  else
-    let s:lookup[s:group] = v:true
-  endif
-endfor
-for s:group in s:available_signs
-  let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
-  call s:module.init(s:lookup[s:group])
-endfor
+" === Initialize built-in sign groups (for nvim>=0.9) ===
+
+if has('nvim-0.9')
+  let s:lookup = {}  " maps sign groups to state (enabled/disabled)
+  for s:group in s:available_signs
+    let s:lookup[s:group] = v:false
+  endfor
+  for s:group in g:scrollview_signs_on_startup
+    if s:group ==# 'all'
+      for s:group2 in s:available_signs
+        let s:lookup[s:group2] = v:true
+      endfor
+      break
+    elseif s:group ==# 'defaults'
+      for s:group2 in s:default_signs
+        let s:lookup[s:group2] = v:true
+      endfor
+    else
+      let s:lookup[s:group] = v:true
+    endif
+  endfor
+  for s:group in s:available_signs
+    let s:module = luaeval('require("scrollview.signs.' .. s:group .. '")')
+    call s:module.init(s:lookup[s:group])
+  endfor
+endif
 
 " *************************************************
 " * Enable/Disable scrollview
