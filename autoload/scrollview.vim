@@ -40,10 +40,6 @@ let g:scrollview_include_end_region =
 let g:scrollview_line_limit = get(g:, 'scrollview_line_limit', 20000)
 let g:scrollview_mode = get(g:, 'scrollview_mode', 'auto')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', v:true)
-" Whether bars and signs beyond the window boundary (out-of-bounds) are
-" adjusted to be within the window.
-let g:scrollview_out_of_bounds_adjust =
-      \ get(g:, 'scrollview_out_of_bounds_adjust', v:true)
 " Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
 if !exists('g:scrollview_winblend')
   let g:scrollview_winblend = 50
@@ -70,9 +66,6 @@ if has('nvim-0.10')
 endif
 
 " *** General sign settings ***
-" Sign column is relative to the scrollbar. It specifies the initial column
-" for showing signs.
-let g:scrollview_signs_column = get(g:, 'scrollview_signs_column', -1)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =

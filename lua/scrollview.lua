@@ -1325,10 +1325,6 @@ local show_scrollbar = function(winid, bar_winid)
   local config = api.nvim_win_get_config(winid)
   local is_float = tbl_get(config, 'relative', '') ~= ''
   local bar_position = calculate_position(winid)
-  if to_bool(get_variable('scrollview_out_of_bounds_adjust', winid)) then
-    local winwidth = fn.winwidth(winid)
-    bar_position.col = math.max(1, math.min(winwidth, bar_position.col))
-  end
   local bar_width = 1
   if not is_valid_column(winid, bar_position.col, bar_width) then
     return -1
@@ -1514,7 +1510,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local topline_lookup = nil  -- only set when needed
   local base_col = calculate_scrollbar_column(winid)
-  base_col = base_col + get_variable('scrollview_signs_column', winid)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
   for _, sign_spec in ipairs(sign_specs) do
@@ -1608,8 +1603,16 @@ local show_signs = function(winid, sign_winids, bar_winid)
     end
     -- A set of columns, to prevent creating multiple signs in the same
     -- location.
-    local shown = {}
     local total_width = 0  -- running sum of sign widths
+    -- Treat the bar as if it were a sign, and position subsequent signs
+    -- accordingly. This only applies if a scrollbar is shown (e.g., not when
+    -- it is hidden from hide_on_intersect or not shown because of an invalid
+    -- column).
+    if bar_props ~= nil
+        and row >= bar_props.row
+        and row <= bar_props.row + bar_props.height - 1 then
+      total_width = total_width + 1
+    end
     for _, properties in ipairs(props_list) do
       local symbol = properties.symbol
       symbol = symbol:gsub('\n', '')
@@ -1624,12 +1627,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
         col = col + total_width
       end
       total_width = total_width + sign_width
-      if to_bool(get_variable('scrollview_out_of_bounds_adjust', winid)) then
-        local winwidth = fn.winwidth(winid)
-        col = math.max(1, math.min(winwidth - sign_width + 1, col))
-      end
       local show = is_valid_column(winid, col, sign_width)
-        and not shown[col]
       if to_bool(get_variable('scrollview_hide_on_intersect', winid))
           and show then
         local winrow0 = wininfo.winrow - 1
@@ -1650,7 +1648,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
         end
       end
       if show then
-        shown[col] = true
         if sign_bufnr == -1 or not to_bool(fn.bufloaded(sign_bufnr)) then
           if sign_bufnr == -1 then
             sign_bufnr = api.nvim_create_buf(false, true)

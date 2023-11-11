@@ -249,12 +249,6 @@ scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
                        startup. Defaults to |v:true|. Considered only at global
                        scope, when the plugin is loaded.
 
-scrollview_out_of_bounds_adjust            *scrollview_out_of_bounds_adjust*
-                       |Boolean| specifying whether scrollbars and signs beyond
-                       the window boundary (out-of-bounds) are adjusted to be
-                       within the window (as opposed to not showing). Defaults
-                       to |v:true|.
-
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
 (semi-experimental)    scrollbars. Defaults to `50` if 'termguicolors' is not
@@ -280,10 +274,6 @@ scrollview_zindex                          *scrollview_zindex*
 
                                            *scrollview-signs-configuration*
 Sign Configuration Variables ~
-
-scrollview_signs_column                    *scrollview_signs_column*
-                       |Number| specifying the root column for signs, relative
-                       to the scrollbar. Defaults to `-1`.
 
 scrollview_signs_max_per_row               *scrollview_signs_max_per_row*
                        |Number| specifying the maximum number of signs per row.
