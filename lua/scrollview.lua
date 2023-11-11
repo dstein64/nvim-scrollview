@@ -2664,13 +2664,25 @@ local handle_mouse = function(button)
             -- switched intersection state with scrollbar. This is fast, from
             -- caching.
             refresh_bars()
-            -- But be sure to keep the scrollbar highlighted when relevant.
-            if not vim.tbl_isempty(props)
-                and props.highlight_fn ~= nil
-                and mousemove_received
+            -- Apply appropriate highlighting where relevant.
+            if mousemove_received
                 and to_bool(fn.exists('&mousemoveevent'))
                 and vim.o.mousemoveevent then
-              props.highlight_fn(true)
+              -- But be sure to keep the scrollbar highlighted.
+              if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
+                props.highlight_fn(true)
+              end
+              -- Be sure that signs are not highlighted. Without this handling,
+              -- signs could be higlighted if a sign is moved to the same
+              -- position as the cursor while dragging a scrollbar.
+              for _, winid2 in ipairs(get_scrollview_windows()) do
+                local props2 = api.nvim_win_get_var(winid2, PROPS_VAR)
+                if not vim.tbl_isempty(props2)
+                    and props2.highlight_fn ~= nil
+                    and props2.type == SIGN_TYPE then
+                  props2.highlight_fn(false)
+                end
+              end
             end
             -- Window workspaces may still be present as a result of the
             -- earlier commands (e.g., set_topline). Remove prior to redrawing.
