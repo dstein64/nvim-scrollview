@@ -488,13 +488,14 @@ scrollview_search_priority                 *scrollview_search_priority*
                        the plugin is loaded.
 
 scrollview_search_symbol                   *scrollview_search_symbol*
-                       |String| specifying the symbol for search signs. Defaults
-                       to a small circle. A |List| of |String|s can also be used;
-                       the symbol is selected using the index equal to the
-                       number of lines corresponding to the sign, or the last
-                       element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       |String| specifying the symbol for search signs. A |List|
+                       of |String|s can also be used; the symbol is selected
+                       using the index equal to the number of lines
+                       corresponding to the sign, or the last element when the
+                       retrieval would be out-of-bounds. Defaults to ['=',
+                       '=', nr2char(0x2261)], where the third element is the
+                       triple bar. Considered only at global scope, when the
+                       plugin is loaded.
 
 scrollview_spell_priority                  *scrollview_spell_priority*
                        |Number| specifying the priority for spell signs.
