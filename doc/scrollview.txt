@@ -133,10 +133,18 @@ when using |vim.on_key()|.
 |nvim-scrollview| signs are similar to Neovim's built-in |signs|, but with
 positioning logic matching that of the scrollbar. The plugin includes a set
 of built-in sign groups (e.g., `search` signs show where in the document there
-are search matches). For configuring signs generally, and the built-in groups
-specifically, see |scrollview-signs-configuration|. For extending sign
-functionality (e.g., in a Neovim configuration file or with a plugin), see
+are search matches).
+
+For configuring signs generally, and the built-in groups specifically, see
+|scrollview-signs-configuration|. For extending sign functionality (e.g., in a
+Neovim configuration file or with a plugin), see
 |scrollview-signs-extensibility|.
+
+When there are multiple signs displayed on the same row, they will be
+positioned based on their priority. The higher the priority of a sign, which
+is configurable, the closer it will be to the scrollbar. When the number of
+signs exceeds the value specified by |scrollview_signs_max_per_row|, the lower
+priority signs will be dropped.
 
 Built-in Sign Groups ~
                                            *scrollview-signs-built-in*
