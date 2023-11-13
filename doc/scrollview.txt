@@ -173,11 +173,6 @@ can be set to control when restricted mode is entered.
 ============================================================================
 4. Configuration                           *scrollview-configuration*
 
-The following variables can be used to customize the behavior of
-|nvim-scrollview|. Variables can be set at the 1) window, 2) tab, 3) buffer,
-and/or 4) global scope, with that order of precedence (i.e., window variables
-have the highest precedence, and global variables have the lowest).
-
 Configuration Variables ~
                                            *scrollview_always_show*
 scrollview_always_show |Boolean| specifying whether scrollbars and signs are
@@ -186,8 +181,8 @@ scrollview_always_show |Boolean| specifying whether scrollbars and signs are
                                            *scrollview_auto_mouse*
 scrollview_auto_mouse  |Boolean| specifying whether a mapping is automatically
                        created for mouse support (without clobbering).
-                       Defaults to |v:true|. Considered only at global scope,
-                       when the plugin is loaded.
+                       Defaults to |v:true|. Considered only when the plugin is
+                       loaded.
 
                                            *scrollview_base*
 scrollview_base        |String| specifying where the scrollbar is anchored.
@@ -201,9 +196,9 @@ scrollview_byte_limit  |Number| specifying the buffer size threshold (in
 
                                            *scrollview_character*
 scrollview_character   |String| specifying a character to display on scrollbars.
-                       Defaults to `''`. Considered only at global scope.
-                       Scrollbar transparency (via |scrollview_winblend|) is not
-                       possible when a scrollbar character is used.
+                       Defaults to `''`. Scrollbar transparency (via
+                       |scrollview_winblend|) is not possible when a scrollbar
+                       character is used.
 
                                            *scrollview_column*
 scrollview_column      |Number| specifying the scrollbar column (relative to
@@ -213,7 +208,6 @@ scrollview_column      |Number| specifying the scrollbar column (relative to
 scrollview_current_only                    *scrollview_current_only*
                        |Boolean| specifying whether scrollbars should only be
                        displayed in the current window. Defaults to |v:false|.
-                       Considered only at tab and global scopes.
 
 scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
                        |List| of |String|s specifying optional file types for
@@ -239,8 +233,7 @@ scrollview_include_end_region              *scrollview_include_end_region*
                        |Boolean| specifying whether the region beyond the last
                        line is considered as containing ordinary lines for the
                        calculation of scrollbar height and positioning.
-                       Defaults to |v:false|. Considered only at global scope.
-                       See Issue #58 for details.
+                       Defaults to |v:false|. See Issue #58 for details.
 
                                            *scrollview_line_limit*
 scrollview_line_limit  |Number| specifying the buffer size threshold (in
@@ -254,8 +247,8 @@ scrollview_mode        |String| specifying what the scrollbar position and size
 
                                            *scrollview_on_startup*
 scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
-                       startup. Defaults to |v:true|. Considered only at global
-                       scope, when the plugin is loaded.
+                       startup. Defaults to |v:true|. Considered only when the
+                       plugin is loaded.
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
@@ -293,7 +286,7 @@ scrollview_signs_on_startup                *scrollview_signs_on_startup*
                        sign groups on startup. `['diagnostics', 'search']` is
                        the default for `nvim<0.10`. `['diagnostics', 'marks',`
                        `'search']` is the default for `nvim>=0.10`. Considered
-                       only at global scope, when the plugin is loaded.
+                       only when the plugin is loaded.
 
 scrollview_signs_overflow                  *scrollview_signs_overflow*
                        |String| specifying the sign overflow direction (when
@@ -315,8 +308,8 @@ Configuration Variables for Built-in Sign Groups ~
 
 scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority*
                        |Number| specifying the priority for conflict bottom
-                       signs. Defaults to `80`. Considered only at global scope,
-                       when the plugin is loaded.
+                       signs. Defaults to `80`. Considered only when the
+                       plugin is loaded.
 
 scrollview_conflicts_bottom_symbol         *scrollview_conflicts_bottom_symbol*
                        |String| specifying the symbol for conflict bottom signs.
@@ -324,13 +317,12 @@ scrollview_conflicts_bottom_symbol         *scrollview_conflicts_bottom_symbol*
                        used; the symbol is selected using the index equal to
                        the number of lines corresponding to the sign, or the
                        last element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Considered only when the plugin is loaded.
 
 scrollview_conflicts_middle_priority       *scrollview_conflicts_middle_priority*
                        |Number| specifying the priority for conflict middle
-                       signs. Defaults to `75`. Considered only at global scope,
-                       when the plugin is loaded.
+                       signs. Defaults to `75`. Considered only when the plugin
+                       is loaded.
 
 scrollview_conflicts_middle_symbol         *scrollview_conflicts_middle_symbol*
                        |String| specifying the symbol for conflict middle signs.
@@ -338,13 +330,12 @@ scrollview_conflicts_middle_symbol         *scrollview_conflicts_middle_symbol*
                        the symbol is selected using the index equal to the
                        number of lines corresponding to the sign, or the last
                        element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Considered only when the plugin is loaded.
 
 scrollview_conflicts_top_priority          *scrollview_conflicts_top_priority*
                        |Number| specifying the priority for conflict top signs.
-                       Defaults to `70`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `70`. Considered only when the plugin is
+                       loaded.
 
 scrollview_conflicts_top_symbol            *scrollview_conflicts_top_symbol*
                        |String| specifying the symbol for conflict top signs.
@@ -352,13 +343,12 @@ scrollview_conflicts_top_symbol            *scrollview_conflicts_top_symbol*
                        the symbol is selected using the index equal to the
                        number of lines corresponding to the sign, or the last
                        element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Considered only when the plugin is loaded.
 
 scrollview_cursor_priority                 *scrollview_cursor_priority*
                        |Number| specifying the priority for cursor signs.
-                       Defaults to `100`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `100`. Considered only when the plugin is
+                       loaded.
 
 scrollview_cursor_symbol                   *scrollview_cursor_symbol*
                        |String| specifying the symbol for cursor signs. Defaults
@@ -366,13 +356,13 @@ scrollview_cursor_symbol                   *scrollview_cursor_symbol*
                        |String|s can also be used; the symbol is selected using
                        the index equal to the number of lines corresponding to
                        the sign, or the last element when the retrieval would
-                       be out-of-bounds. Considered only at global scope, when
-                       the plugin is loaded.
+                       be out-of-bounds. Considered only when the plugin is
+                       loaded.
 
 scrollview_diagnostics_error_priority      *scrollview_diagnostics_error_priority*
                        |Number| specifying the priority for diagnostic error
-                       signs. Defaults to `60`. Considered only at global scope,
-                       when the plugin is loaded.
+                       signs. Defaults to `60`. Considered only when the plugin
+                       is loaded.
 
 scrollview_diagnostics_error_symbol        *scrollview_diagnostics_error_symbol*
                        |String| specifying the symbol for diagnostic error
@@ -381,13 +371,13 @@ scrollview_diagnostics_error_symbol        *scrollview_diagnostics_error_symbol*
                        |List| of |String|s can also be used; the symbol is
                        selected using the index equal to the number of lines
                        corresponding to the sign, or the last element when the
-                       retrieval would be out-of-bounds. Considered only at
-                       global scope, when the plugin is loaded.
+                       retrieval would be out-of-bounds. Considered only when
+                       the plugin is loaded.
 
 scrollview_diagnostics_hint_priority       *scrollview_diagnostics_hint_priority*
                        |Number| specifying the priority for diagnostic hint
-                       signs. Defaults to `30`. Considered only at global scope,
-                       when the plugin is loaded.
+                       signs. Defaults to `30`. Considered only when the
+                       plugin is loaded.
 
 scrollview_diagnostics_hint_symbol         *scrollview_diagnostics_hint_symbol*
                        |String| specifying the symbol for diagnostic hint signs.
@@ -396,13 +386,13 @@ scrollview_diagnostics_hint_symbol         *scrollview_diagnostics_hint_symbol*
                        also be used; the symbol is selected using the index
                        equal to the number of lines corresponding to the sign,
                        or the last element when the retrieval would be
-                       out-of-bounds. Considered only at global scope, when
-                       the plugin is loaded.
+                       out-of-bounds. Considered only when the plugin is
+                       loaded.
 
 scrollview_diagnostics_info_priority       *scrollview_diagnostics_info_priority*
                        |Number| specifying the priority for diagnostic info
-                       signs. Defaults to `40`. Considered only at global scope,
-                       when the plugin is loaded.
+                       signs. Defaults to `40`. Considered only when the plugin
+                       is loaded.
 
 scrollview_diagnostics_info_symbol         *scrollview_diagnostics_info_symbol*
                        |String| specifying the symbol for diagnostic info signs.
@@ -411,21 +401,20 @@ scrollview_diagnostics_info_symbol         *scrollview_diagnostics_info_symbol*
                        also be used; the symbol is selected using the index
                        equal to the number of lines corresponding to the sign,
                        or the last element when the retrieval would be
-                       out-of-bounds. Considered only at global scope, when
-                       the plugin is loaded.
+                       out-of-bounds. Considered only when the plugin is
+                       loaded.
 
 scrollview_diagnostics_severities          *scrollview_diagnostics_severities*
                        |List| of |Number|s specifying the diagnostic severities
                        for which signs will be shown. The default includes
                        |vim.diagnostic.severity.ERROR|, |vim.diagnostic.severity.HINT|,
                        |vim.diagnostic.severity.INFO|, and |vim.diagnostic.severity.WARN|.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Considered only when the plugin is loaded.
 
 scrollview_diagnostics_warn_priority       *scrollview_diagnostics_warn_priority*
                        |Number| specifying the priority for diagnostic warn
-                       signs. Defaults to `50`. Considered only at global scope,
-                       when the plugin is loaded.
+                       signs. Defaults to `50`. Considered only when the plugin
+                       is loaded.
 
 scrollview_diagnostics_warn_symbol         *scrollview_diagnostics_warn_symbol*
                        |String| specifying the symbol for diagnostic warn signs.
@@ -434,13 +423,12 @@ scrollview_diagnostics_warn_symbol         *scrollview_diagnostics_warn_symbol*
                        also be used; the symbol is selected using the index
                        equal to the number of lines corresponding to the sign,
                        or the last element when the retrieval would be
-                       out-of-bounds. Considered only at global scope, when
-                       the plugin is loaded.
+                       out-of-bounds. Considered only when the plugin is
+                       loaded.
 
 scrollview_folds_priority                  *scrollview_folds_priority*
                        |Number| specifying the priority for fold signs. Defaults
-                       to `30`. Considered only at global scope, when the plugin
-                       is loaded.
+                       to `30`. Considered only when the plugin is loaded.
 
 scrollview_folds_symbol                    *scrollview_folds_symbol*
                        |String| specifying the symbol for fold signs. Defaults
@@ -448,13 +436,13 @@ scrollview_folds_symbol                    *scrollview_folds_symbol*
                        also be used; the symbol is selected using the index
                        equal to the number of lines corresponding to the sign,
                        or the last element when the retrieval would be
-                       out-of-bounds. Considered only at global scope, when
-                       the plugin is loaded.
+                       out-of-bounds. Considered only when the plugin is
+                       loaded.
 
 scrollview_loclist_priority                *scrollview_loclist_priority*
                        |Number| specifying the priority for loclist signs.
-                       Defaults to `45`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `45`. Considered only when the plugin is
+                       loaded.
 
 scrollview_loclist_symbol                  *scrollview_loclist_symbol*
                        |String| specifying the symbol for loclist signs.
@@ -462,24 +450,22 @@ scrollview_loclist_symbol                  *scrollview_loclist_symbol*
                        be used; the symbol is selected using the index equal
                        to the number of lines corresponding to the sign, or
                        the last element when the retrieval would be
-                       out-of-bounds. Considered only at global scope, when
-                       the plugin is loaded.
+                       out-of-bounds. Considered only when the plugin is
+                       loaded.
 
 scrollview_marks_characters                *scrollview_marks_characters*
                        |List| of |String|s specifying characters for which mark
                        signs will be shown. Defaults to characters `a-z` and
-                       `A-Z`. Considered only at global scope, when the plugin
-                       is loaded.
+                       `A-Z`. Considered only when the plugin is loaded.
 
 scrollview_marks_priority                  *scrollview_marks_priority*
                        |List| specifying the priority for mark signs. Defaults
-                       to `50`. Considered only at global scope, when the plugin
-                       is loaded.
+                       to `50`. Considered only when the plugin is loaded.
 
 scrollview_quickfix_priority               *scrollview_quickfix_priority*
                        |Number| specifying the priority for quickfix signs.
-                       Defaults to `45`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `45`. Considered only when the plugin is
+                       loaded.
 
 scrollview_quickfix_symbol                 *scrollview_quickfix_symbol*
                        |String| specifying the symbol for quickfix signs.
@@ -487,13 +473,13 @@ scrollview_quickfix_symbol                 *scrollview_quickfix_symbol*
                        be used; the symbol is selected using the index equal
                        to the number of lines corresponding to the sign, or
                        the last element when the retrieval would be
-                       out-of-bounds. Considered only at global scope, when
-                       the plugin is loaded.
+                       out-of-bounds. Considered only when the plugin is
+                       loaded.
 
 scrollview_search_priority                 *scrollview_search_priority*
                        |Number| specifying the priority for search signs.
-                       Defaults to `70`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `70`. Considered only when the plugin is
+                       loaded.
 
 scrollview_search_symbol                   *scrollview_search_symbol*
                        |String| specifying the symbol for search signs. A |List|
@@ -502,13 +488,12 @@ scrollview_search_symbol                   *scrollview_search_symbol*
                        corresponding to the sign, or the last element when the
                        retrieval would be out-of-bounds. Defaults to ['=',
                        '=', nr2char(0x2261)], where the third element is the
-                       triple bar. Considered only at global scope, when the
-                       plugin is loaded.
+                       triple bar. Considered only when the plugin is loaded.
 
 scrollview_spell_priority                  *scrollview_spell_priority*
                        |Number| specifying the priority for spell signs.
-                       Defaults to `20`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
 
 scrollview_spell_symbol                    *scrollview_spell_symbol*
                        |String| specifying the symbol for spell signs. Defaults
@@ -516,12 +501,12 @@ scrollview_spell_symbol                    *scrollview_spell_symbol*
                        is selected using the index equal to the number of
                        lines corresponding to the sign, or the last element
                        when the retrieval would be out-of-bounds. Considered
-                       only at global scope, when the plugin is loaded.
+                       only when the plugin is loaded.
 
 scrollview_textwidth_priority              *scrollview_textwidth_priority*
                        |Number| specifying the priority for textwidth signs.
-                       Defaults to `20`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
 
 scrollview_textwidth_symbol                *scrollview_textwidth_symbol*
                        |String| specifying the symbol for textwidth signs.
@@ -529,13 +514,13 @@ scrollview_textwidth_symbol                *scrollview_textwidth_symbol*
                        mark. A |List| of |String|s can also be used; the symbol is
                        selected using the index equal to the number of lines
                        corresponding to the sign, or the last element when the
-                       retrieval would be out-of-bounds. Considered only at
-                       global scope, when the plugin is loaded.
+                       retrieval would be out-of-bounds. Considered only when
+                       the plugin is loaded.
 
 scrollview_trail_priority                  *scrollview_trail_priority*
                        |Number| specifying the priority for trail signs.
-                       Defaults to `50`. Considered only at global scope, when
-                       the plugin is loaded.
+                       Defaults to `50`. Considered only when the plugin is
+                       loaded.
 
 scrollview_trail_symbol                    *scrollview_trail_symbol*
                        |String| specifying the symbol for trail signs. Defaults
@@ -543,8 +528,7 @@ scrollview_trail_symbol                    *scrollview_trail_symbol*
                        used; the symbol is selected using the index equal to
                        the number of lines corresponding to the sign, or the
                        last element when the retrieval would be out-of-bounds.
-                       Considered only at global scope, when the plugin is
-                       loaded.
+                       Considered only when the plugin is loaded.
 
 Configuration Example ~
                                            *scrollview-configuration-example*

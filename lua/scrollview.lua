@@ -506,47 +506,6 @@ local buf_view_begins_col = function(winid)
   end)
 end
 
--- Returns the specified variable. There are two optional arguments, for
--- specifying precedence and a default value. Without specifying precedence,
--- highest precedence is given to window variables, then tab page variables,
--- then buffer variables, then global variables. Without specifying a default
--- value, 0 will be used.
-local get_variable = function(name, winid, precedence, default)
-  if precedence == nil then precedence = 'wtbg' end
-  if default == nil then default = 0 end
-  -- WARN: This function was originally using getbufvar(., ''),
-  -- getwinvar(., ''), and gettabvar(., ''). For example:
-  --   local bufvars = fn.getbufvar(bufnr, '')
-  --   if bufvars[name] ~= nil then return bufvars[name] end
-  -- However, this was slow when the dictionaries were large (e.g., many items
-  -- in the b: dictionary for some NERDTree buffers), which you noticed after
-  -- adding signs for marks (in such a case, getbufvar(., '') was called many
-  -- times, for each mark sign registration). Switching to nvim_buf_get_var
-  -- resolves the issue.
-  for idx = 1, #precedence do
-    local c = precedence:sub(idx, idx)
-    if c == 'w' then
-      if vim.w[winid][name] ~= nil then return vim.w[winid][name] end
-    elseif c == 't' then
-      -- The tab number can differ from the tab id (similar to winnr and
-      -- winid). For example, if you open Neovim, and create a new tab, it will
-      -- have number 2 and ID 2. If you then create another, it will have
-      -- number 3 and ID 3. But if you delete tab 2, there will then be a tab
-      -- with number 2 and ID 3.
-      local tabid = api.nvim_win_call(winid, api.nvim_get_current_tabpage)
-      if vim.t[tabid][name] ~= nil then return vim.t[tabid][name] end
-    elseif c == 'b' then
-      local bufnr = fn.winbufnr(winid)
-      if vim.b[bufnr][name] ~= nil then return vim.b[bufnr][name] end
-    elseif c == 'g' then
-      if vim.g[name] ~= nil then return vim.g[name] end
-    else
-      error('Unknown variable type ' .. c)
-    end
-  end
-  return default
-end
-
 local get_byte_count = function(winid)
   return api.nvim_win_call(winid, function()
     return fn.line2byte(fn.line('$') + 1) - 1
@@ -554,32 +513,27 @@ local get_byte_count = function(winid)
 end
 
 -- Returns a boolean indicating whether a restricted state should be used.
--- The function signature matches s:GetVariable, without the 'name' argument.
-local is_restricted = function(winid, precedence, default)
+local is_restricted = function(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
-  local line_limit
-    = get_variable('scrollview_line_limit', winid, precedence, default)
+  local line_limit = vim.g.scrollview_line_limit
   if line_limit ~= -1 and line_count > line_limit then
     return true
   end
   local byte_count = get_byte_count(winid)
-  local byte_limit
-    = get_variable('scrollview_byte_limit', winid, precedence, default)
+  local byte_limit = vim.g.scrollview_byte_limit
   if byte_limit ~= -1 and byte_count > byte_limit then
     return true
   end
   return false
 end
 
--- Returns the scrollview mode. The function signature matches s:GetVariable,
--- without the 'name' argument.
-local scrollview_mode = function(winid, precedence, default)
-  if is_restricted(winid, precedence, default) then
+-- Returns the scrollview mode.
+local scrollview_mode = function(winid)
+  if is_restricted(winid) then
     return SIMPLE_MODE
   end
-  local specified_mode =
-    get_variable('scrollview_mode', winid, precedence, default)
+  local specified_mode = vim.g.scrollview_mode
   if specified_mode == 'simple' then
     return SIMPLE_MODE
   elseif specified_mode == 'virtual' then
@@ -1093,8 +1047,8 @@ local calculate_scrollbar_column = function(winid)
   -- left is the position for the left of the scrollbar, relative to the
   -- window, and 0-indexed.
   local left = 0
-  local column = get_variable('scrollview_column', winid)
-  local base = get_variable('scrollview_base', winid)
+  local column = vim.g.scrollview_column
+  local base = vim.g.scrollview_base
   if base == 'left' then
     left = left + column - 1
   elseif base == 'right' then
@@ -1162,7 +1116,7 @@ local should_show = function(winid)
   local is_float = tbl_get(config, 'relative', '') ~= ''
   -- Skip if the window is a floating window and scrollview_floating_windows is
   -- false.
-  if not to_bool(get_variable('scrollview_floating_windows', winid))
+  if not to_bool(vim.g.scrollview_floating_windows)
       and is_float then
     return false
   end
@@ -1171,7 +1125,7 @@ local should_show = function(winid)
     return false
   end
   -- Skip if the filetype is on the list of exclusions.
-  local excluded_filetypes = get_variable('scrollview_excluded_filetypes', winid)
+  local excluded_filetypes = vim.g.scrollview_excluded_filetypes
   if vim.tbl_contains(excluded_filetypes, buf_filetype) then
     return false
   end
@@ -1183,7 +1137,7 @@ local should_show = function(winid)
   if winheight == 0 or winwidth == 0 then
     return false
   end
-  local always_show = to_bool(get_variable('scrollview_always_show', winid))
+  local always_show = to_bool(vim.g.scrollview_always_show)
   if not always_show then
     -- Don't show when all lines are on screen.
     local topline, botline = line_range(winid)
@@ -1200,7 +1154,7 @@ local is_valid_column = function(winid, col, width)
   local winwidth = fn.winwidth(winid)
   local min_valid_col = 1
   local max_valid_col = winwidth - width + 1
-  local base = get_variable('scrollview_base', winid)
+  local base = vim.g.scrollview_base
   if base == 'buffer' then
     min_valid_col = buf_view_begins_col(winid)
   end
@@ -1335,7 +1289,7 @@ local show_scrollbar = function(winid, bar_winid)
   if bar_position.height <= 0 then
     return -1
   end
-  if to_bool(get_variable('scrollview_hide_on_intersect', winid)) then
+  if to_bool(vim.g.scrollview_hide_on_intersect) then
     local winrow0 = wininfo.winrow - 1
     local wincol0 = wininfo.wincol - 1
     local float_overlaps = get_float_overlaps(
@@ -1386,7 +1340,7 @@ local show_scrollbar = function(winid, bar_winid)
       fn['repeat']({character}, bar_position.height))
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
   end
-  local zindex = get_variable('scrollview_zindex', winid)
+  local zindex = vim.g.scrollview_zindex
   if is_float then
     zindex = zindex + config.zindex
   end
@@ -1413,7 +1367,7 @@ local show_scrollbar = function(winid, bar_winid)
   -- Scroll to top so that the custom character spans full scrollbar height.
   vim.cmd('keepjumps call nvim_win_set_cursor(' .. bar_winid .. ', [1, 0])')
   local highlight_fn = function(hover)
-    hover = hover and get_variable('scrollview_hover', winid)
+    hover = hover and vim.g.scrollview_hover
     local highlight
     if hover then
       highlight = 'ScrollViewHover'
@@ -1434,7 +1388,7 @@ local show_scrollbar = function(winid, bar_winid)
         fn.matchaddpos(highlight, fn.range(pos_start, pos_end))
       end
     end)
-    local winblend = get_variable('scrollview_winblend', winid)
+    local winblend = vim.g.scrollview_winblend
     -- Add a workaround for Neovim #14624.
     if is_float then
       -- Disable winblend for base windows that are floating. The scrollbar would
@@ -1530,8 +1484,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
     local show = sign_group_state[sign_spec.group] and satisfied_current_only
     if show then
       local lines_to_show = sorted(lines_as_given)
-      local show_in_folds
-        = to_bool(get_variable('scrollview_signs_show_in_folds', winid))
+      local show_in_folds = to_bool(vim.g.scrollview_signs_show_in_folds)
       if sign_spec.show_in_folds ~= nil then
         show_in_folds = sign_spec.show_in_folds
       end
@@ -1597,7 +1550,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
     table.sort(props_list, function(a, b)
       return a.priority > b.priority
     end)
-    local max_signs_per_row = get_variable('scrollview_signs_max_per_row', winid)
+    local max_signs_per_row = vim.g.scrollview_signs_max_per_row
     if max_signs_per_row >= 0 then
       props_list = vim.list_slice(props_list, 1, max_signs_per_row)
     end
@@ -1620,7 +1573,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
       if #symbol < 1 then symbol = ' ' end
       local sign_width = fn.strdisplaywidth(symbol)
       local col = base_col
-      if get_variable('scrollview_signs_overflow', winid) == 'left' then
+      if vim.g.scrollview_signs_overflow == 'left' then
         col = col - total_width
         col = col - sign_width + 1
       else
@@ -1628,7 +1581,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
       end
       total_width = total_width + sign_width
       local show = is_valid_column(winid, col, sign_width)
-      if to_bool(get_variable('scrollview_hide_on_intersect', winid))
+      if to_bool(vim.g.scrollview_hide_on_intersect)
           and show then
         local winrow0 = wininfo.winrow - 1
         local wincol0 = wininfo.wincol - 1
@@ -1678,7 +1631,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
         )
         api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
         local sign_winid
-        local zindex = get_variable('scrollview_signs_zindex', winid)
+        local zindex = vim.g.scrollview_signs_zindex
         if is_float then
           zindex = zindex + config.zindex
         end
@@ -1706,7 +1659,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
           and row <= bar_props.row + bar_props.height - 1
           and zindex > bar_props.zindex
         local highlight_fn = function(hover)
-          hover = hover and get_variable('scrollview_hover', winid)
+          hover = hover and vim.g.scrollview_hover
           local highlight
           if hover then
             highlight = 'ScrollViewHover'
@@ -1718,7 +1671,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
               fn.clearmatches()
               fn.matchaddpos(highlight, {sign_line_count})
             end)
-            local winblend = get_variable('scrollview_winblend', winid)
+            local winblend = vim.g.scrollview_winblend
             -- Add a workaround for Neovim #14624.
             if is_float then
               -- Disable winblend for base windows that are floating. The sign
@@ -2109,7 +2062,7 @@ local refresh_bars = function()
     end
     local target_wins = {}
     local current_winid = api.nvim_get_current_win()
-    if to_bool(get_variable('scrollview_current_only', current_winid, 'tg')) then
+    if to_bool(vim.g.scrollview_current_only) then
       table.insert(target_wins, api.nvim_get_current_win())
     else
       for winnr = 1, fn.winnr('$') do
