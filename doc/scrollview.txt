@@ -289,9 +289,10 @@ scrollview_signs_on_startup                *scrollview_signs_on_startup*
                        only when the plugin is loaded.
 
 scrollview_signs_overflow                  *scrollview_signs_overflow*
-                       |String| specifying the sign overflow direction (when
-                       there are multiple signs on a screen row). Possible
-                       values are `'left'` or `'right'`. Defaults to `'left'`.
+                       |String| specifying the sign overflow direction (to
+                       avoid overlapping the scrollbar or other signs).
+                       Possible values are `'left'` or `'right'`. Defaults to
+                       `'left'`.
 
 scrollview_signs_show_in_folds             *scrollview_signs_show_in_folds*
                        |Boolean| specifying whether signs on lines within hidden
