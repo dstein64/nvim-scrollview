@@ -2061,7 +2061,6 @@ local refresh_bars = function()
       end
     end
     local target_wins = {}
-    local current_winid = api.nvim_get_current_win()
     if to_bool(vim.g.scrollview_current_only) then
       table.insert(target_wins, api.nvim_get_current_win())
     else
