@@ -1631,7 +1631,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
         )
         api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
         local sign_winid
-        local zindex = vim.g.scrollview_signs_zindex
+        local zindex = vim.g.scrollview_zindex
         if is_float then
           zindex = zindex + config.zindex
         end

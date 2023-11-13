@@ -80,7 +80,6 @@ let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
 " Whether signs in folds should be shown or hidden.
 let g:scrollview_signs_show_in_folds =
       \ get(g:, 'scrollview_signs_show_in_folds', v:false)
-let g:scrollview_signs_zindex = get(g:, 'scrollview_signs_zindex', 45)
 
 " *** Conflict signs ***
 let g:scrollview_conflicts_bottom_priority =
