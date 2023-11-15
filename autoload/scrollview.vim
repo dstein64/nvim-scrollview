@@ -204,11 +204,15 @@ let g:scrollview_trail_symbol =
 " *************************************************
 
 " External global state is specified here.
-" Internal global state is represented with local variables in
-" autoload/scrollview.vim and lua/scrollview.lua.
+" Internal global state is primarily represented with local variables in
+" lua/scrollview.lua, but specified here when more convenient.
 
 " A flag that gets set to true while scrollbars are being refreshed. #88
 let g:scrollview_refreshing = v:false
+
+" Tracks buffer line count in insert mode, so scrollbars can be refreshed when
+" the line count changes.
+let g:scrollview_ins_mode_buf_lines = 0
 
 " *************************************************
 " * Versioning

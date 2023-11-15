@@ -2253,10 +2253,22 @@ local enable = function()
         autocmd WinResized * lua require('scrollview').refresh_bars_async()
       endif
 
-      " The following handles the case where text is pasted. TextChangedI is not
-      " necessary since WinScrolled will be triggered if there is corresponding
-      " scrolling.
+      " The following handles the case where text is pasted. Handling for
+      " TextChangedI is not necessary since WinScrolled will be triggered if
+      " there is corresponding scrolling when pasting.
       autocmd TextChanged * lua require('scrollview').refresh_bars_async()
+
+      " Refresh in insert mode if the number of lines changes. This handles the
+      " case where lines are deleted in insert mode. This is also used as a
+      " precaution, as there may be other possible scenarios where WinScrolled
+      " does not fire when the number of lines changes in insert mode.
+      autocmd InsertEnter *
+            \ let g:scrollview_ins_mode_buf_lines = nvim_buf_line_count(0)
+      autocmd TextChangedI,TextChangedP *
+            \   if g:scrollview_ins_mode_buf_lines !=# nvim_buf_line_count(0)
+            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ | endif
+            \ | let g:scrollview_ins_mode_buf_lines = nvim_buf_line_count(0)
 
       " The following handles when :e is used to load a file. The asynchronous
       " version handles a case where :e is used to reload an existing file, that
