@@ -2215,7 +2215,7 @@ local enable = function()
       " CmdwinEnter, since the removal has to occur prior to that event. Rather,
       " this is triggered by the WinEnter event, just prior to the relevant
       " funcionality becoming unavailable.
-      autocmd WinEnter * :lua require('scrollview').remove_if_command_line_window()
+      autocmd WinEnter * lua require('scrollview').remove_if_command_line_window()
 
       " The following error can arise when the last window in a tab is going to
       " be closed, but there are still open floating windows, and at least one
@@ -2229,54 +2229,54 @@ local enable = function()
       " <ctrl-w>o can be used to first close the floating windows, or
       " alternatively :tabclose can be used (or one of the alternatives handled
       " with the autocmd, like ZQ).
-      autocmd QuitPre * :lua require('scrollview').remove_bars()
+      autocmd QuitPre * lua require('scrollview').remove_bars()
 
       " === Scrollbar Refreshing ===
 
       " The following handles bar refreshing when changing the current window.
-      autocmd WinEnter,TermEnter * :lua require('scrollview').refresh_bars_async()
+      autocmd WinEnter,TermEnter * lua require('scrollview').refresh_bars_async()
 
       " The following restores bars after leaving the command-line window.
       " Refreshing must be asynchronous, since the command line window is still
       " in an intermediate state when the CmdwinLeave event is triggered.
-      autocmd CmdwinLeave * :lua require('scrollview').refresh_bars_async()
+      autocmd CmdwinLeave * lua require('scrollview').refresh_bars_async()
 
       " The following handles scrolling events, which could arise from various
       " actions, including resizing windows, movements (e.g., j, k), or
       " scrolling (e.g., <ctrl-e>, zz).
-      autocmd WinScrolled * :lua require('scrollview').refresh_bars_async()
+      autocmd WinScrolled * lua require('scrollview').refresh_bars_async()
 
       " The following handles window resizes that don't trigger WinScrolled
       " (e.g., leaving the command line window). This was added in Neovim 0.9,
       " so its presence needs to be tested.
       if exists('##WinResized')
-        autocmd WinResized * :lua require('scrollview').refresh_bars_async()
+        autocmd WinResized * lua require('scrollview').refresh_bars_async()
       endif
 
       " The following handles the case where text is pasted. TextChangedI is not
       " necessary since WinScrolled will be triggered if there is corresponding
       " scrolling.
-      autocmd TextChanged * :lua require('scrollview').refresh_bars_async()
+      autocmd TextChanged * lua require('scrollview').refresh_bars_async()
 
       " The following handles when :e is used to load a file. The asynchronous
       " version handles a case where :e is used to reload an existing file, that
       " is already scrolled. This avoids a scenario where the scrollbar is
       " refreshed while the window is an intermediate state, resulting in the
       " scrollbar moving to the top of the window.
-      autocmd BufWinEnter * :lua require('scrollview').refresh_bars_async()
+      autocmd BufWinEnter * lua require('scrollview').refresh_bars_async()
 
       " The following is used so that bars are shown when cycling through tabs.
-      autocmd TabEnter * :lua require('scrollview').refresh_bars_async()
+      autocmd TabEnter * lua require('scrollview').refresh_bars_async()
 
-      autocmd VimResized * :lua require('scrollview').refresh_bars_async()
+      autocmd VimResized * lua require('scrollview').refresh_bars_async()
 
       " Scrollbar positions can become stale after adding or removing winbars.
-      autocmd OptionSet winbar :lua require('scrollview').refresh_bars_async()
+      autocmd OptionSet winbar lua require('scrollview').refresh_bars_async()
 
       " Scrollbar positions can become stale when the number column or sign
       " column is added or removed (when scrollview_base=buffer).
       autocmd OptionSet number,relativenumber,signcolumn
-            \ :lua require('scrollview').refresh_bars_async()
+            \ lua require('scrollview').refresh_bars_async()
     augroup END
   ]])
   -- The initial refresh is asynchronous, since :ScrollViewEnable can be used
