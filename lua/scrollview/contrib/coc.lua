@@ -6,20 +6,16 @@
 --       - enabled (boolean): Whether signs are enabled immediately. If false,
 --         use ':ScrollViewEnable coc' to enable later. Defaults to true.
 --       - error_highlight (string): Defaults to 'CocErrorSign'.
---       - error_priority (number): See ':help scrollview.register_sign_spec()'
---         for the default value when not specified.
+--       - error_priority (number): Defaults to 60.
 --       - error_symbol (string): Defaults to 'E'.
 --       - hint_highlight (string): Defaults to 'CocHintSign'.
---       - hint_priority (number): See ':help scrollview.register_sign_spec()'
---         for the default value when not specified.
+--       - hint_priority (number): Defaults to 30.
 --       - hint_symbol (string): Defaults to 'H'.
 --       - info_highlight (string): Defaults to 'CocInfoSign'.
---       - info_priority (number): See ':help scrollview.register_sign_spec()'
---         for the default value when not specified.
+--       - info_priority (number): Defaults to 40.
 --       - info_symbol (string): Defaults to 'I'.
 --       - warn_highlight (string): Defaults to 'CocWarningSign'.
---       - warn_priority (number): See ':help scrollview.register_sign_spec()'
---         for the default value when not specified.
+--       - warn_priority (number): Defaults to 50.
 --       - warn_symbol (string): Defaults to 'W'.
 --       - severities (string[]): A list of severities for which diagnostic
 --         signs will be shown. Defaults to {'error', 'hint', 'info', 'warn'}.
@@ -44,32 +40,25 @@ function M.setup(config)
   local defaults = {
     enabled = true,
     error_highlight = 'CocErrorSign',
+    error_priority = 60,
     error_symbol = 'E',
     hint_highlight = 'CocHintSign',
+    hint_priority = 30,
     hint_symbol = 'H',
     info_highlight = 'CocInfoSign',
+    info_priority = 40,
     info_symbol = 'I',
     warn_highlight = 'CocWarningSign',
+    warn_priority = 50,
     warn_symbol = 'W',
     severities = {'error', 'hint', 'info', 'warn'},
   }
 
-  if config.enabled == nil then
-    config.enabled = defaults.enabled
+  for key, val in pairs(defaults) do
+    if config[key] == nil then
+      config[key] = defaults[key]
+    end
   end
-  config.error_highlight = config.error_highlight or defaults.error_highlight
-  config.error_priority = config.error_priority or defaults.error_priority
-  config.error_symbol = config.error_symbol or defaults.error_symbol
-  config.hint_highlight = config.hint_highlight or defaults.hint_highlight
-  config.hint_priority = config.hint_priority or defaults.hint_priority
-  config.hint_symbol = config.hint_symbol or defaults.hint_symbol
-  config.info_highlight = config.info_highlight or defaults.info_highlight
-  config.info_priority = config.info_priority or defaults.info_priority
-  config.info_symbol = config.info_symbol or defaults.info_symbol
-  config.warn_highlight = config.warn_highlight or defaults.warn_highlight
-  config.warn_priority = config.warn_priority or defaults.warn_priority
-  config.warn_symbol = config.warn_symbol or defaults.warn_symbol
-  config.severities = config.severities or defaults.severities
 
   local group = 'coc'
 
