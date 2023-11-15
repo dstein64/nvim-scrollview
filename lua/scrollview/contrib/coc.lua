@@ -56,7 +56,7 @@ function M.setup(config)
 
   for key, val in pairs(defaults) do
     if config[key] == nil then
-      config[key] = defaults[key]
+      config[key] = val
     end
   end
 
