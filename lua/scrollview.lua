@@ -1548,7 +1548,13 @@ local show_signs = function(winid, sign_winids, bar_winid)
     end
     -- Sort descending by priority.
     table.sort(props_list, function(a, b)
-      return a.priority > b.priority
+      if a.priority ~= b.priority then
+        return a.priority > b.priority
+      else
+        -- Resolve ties based on specification ID (earlier registrations are
+        -- given higher priority).
+        return a.sign_spec_id < b.sign_spec_id
+      end
     end)
     local max_signs_per_row = vim.g.scrollview_signs_max_per_row
     if max_signs_per_row >= 0 then
