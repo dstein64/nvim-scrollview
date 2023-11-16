@@ -5,20 +5,17 @@
 --     {config} is an optional table with the following attributes:
 --       - add_highlight (string): Defaults to a value from gitsigns config
 --         when available, otherwise 'DiffAdd'.
---       - add_priority (number): See ':help scrollview.register_sign_spec()'
---         for the default value when not specified.
+--       - add_priority (number): Defaults to 90.
 --       - add_symbol (string): Defaults to a value from gitsigns config when
 --         available, otherwise box drawing heavy vertical.
 --       - change_highlight (string): Defaults to a value from gitsigns config
 --         when available, otherwise 'DiffChange'.
---       - change_priority (number): See ':help scrollview.register_sign_spec()'
---         for the default value when not specified.
+--       - change_priority (number): Defaults to 90.
 --       - change_symbol (string): Defaults to a value from gitsigns config
 --         when available, otherwise box drawing heavy vertical.
 --       - delete_highlight (string): Defaults to a value from gitsigns config
 --         when available, otherwise 'DiffDelete'.
---       - delete_priority (number): See ':help scrollview.register_sign_spec()'
---         for the default value when not specified.
+--       - delete_priority (number): Defaults to 90.
 --       - delete_symbol (string): Defaults to a value from gitsigns config
 --         when available, otherwise lower one-eigth block.
 --       - enabled (boolean): Whether signs are enabled immediately. If false,
@@ -45,6 +42,9 @@ function M.setup(config)
     enabled = true,
     hide_full_add = true,
     only_first_line = false,
+    add_priority = 90,
+    change_priority = 90,
+    delete_priority = 90,
   }
 
   -- Try setting highlight and symbol defaults from gitsigns config.
@@ -78,21 +78,11 @@ function M.setup(config)
   defaults.delete_symbol = defaults.delete_symbol or fn.nr2char(0x2581)
 
   -- Set missing config values with defaults.
-  if config.enabled == nil then
-    config.enabled = defaults.enabled
+  for key, val in pairs(defaults) do
+    if config[key] == nil then
+      config[key] = val
+    end
   end
-  if config.hide_full_add == nil then
-    config.hide_full_add = defaults.hide_full_add
-  end
-  config.add_highlight = config.add_highlight or defaults.add_highlight
-  config.change_highlight = config.change_highlight or defaults.change_highlight
-  config.delete_highlight = config.delete_highlight or defaults.delete_highlight
-  if config.only_first_line == nil then
-    config.only_first_line = defaults.only_first_line
-  end
-  config.add_symbol = config.add_symbol or defaults.add_symbol
-  config.change_symbol = config.change_symbol or defaults.change_symbol
-  config.delete_symbol = config.delete_symbol or defaults.delete_symbol
 
   local group = 'gitsigns'
 
