@@ -2268,9 +2268,9 @@ local enable = function()
       " case where lines are deleted in insert mode. This is also used as a
       " precaution, as there may be other possible scenarios where WinScrolled
       " does not fire when the number of lines changes in insert mode.
-      " WARN: This does not handle the scenario where the number of displayed
-      " lines changes (e.g., from diff filler, virtual text lines, folds,
-      " and/or line wrapping).
+      " WARN: This does not handle a change to the number of displayed lines
+      " (e.g., from diff filler, virtual text lines, folds, and/or line
+      " wrapping).
       " TODO: If you switch to using nvim_create_autocmd (requires nvim>=0.7),
       " you can avoid using the Vim variable g:scrollview_ins_mode_buf_lines,
       " instead using a Lua variable (defined under "Globals" above). The Vim
