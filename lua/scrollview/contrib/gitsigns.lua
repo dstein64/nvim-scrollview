@@ -125,7 +125,7 @@ function M.setup(config)
       local gitsigns = require('gitsigns')
       -- Clear gitsigns info for existing buffers.
       for bufnr, _ in pairs(active_bufnrs) do
-        if vim.fn.bufexists(bufnr) then
+        if vim.fn.bufexists(bufnr) == 1 then
           -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
           vim.b[bufnr][add] = {}
           -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
