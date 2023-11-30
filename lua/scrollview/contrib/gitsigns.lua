@@ -31,6 +31,7 @@ local fn = vim.fn
 local scrollview = require('scrollview')
 local utils = require('scrollview.utils')
 local copy = utils.copy
+local to_bool = utils.to_bool
 
 local M = {}
 
@@ -125,7 +126,7 @@ function M.setup(config)
       local gitsigns = require('gitsigns')
       -- Clear gitsigns info for existing buffers.
       for bufnr, _ in pairs(active_bufnrs) do
-        if vim.fn.bufexists(bufnr) == 1 then
+        if to_bool(vim.fn.bufexists(bufnr)) then
           -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
           vim.b[bufnr][add] = {}
           -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
