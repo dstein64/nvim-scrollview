@@ -150,7 +150,7 @@ function M.setup(config)
           -- Clear diagnostic info for existing buffers.
           for bufnr, _ in pairs(active_bufnrs) do
             for _, name in pairs(names) do
-              if vim.fn.bufexists(bufnr) then
+              if to_bool(vim.fn.bufexists(bufnr)) then
                 -- luacheck: ignore 122 (setting read-only field b.?.? of
                 -- global vim)
                 vim.b[bufnr][name] = {}
