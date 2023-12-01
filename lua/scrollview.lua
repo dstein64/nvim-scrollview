@@ -100,7 +100,7 @@ local PROPER_MODE = 2   -- considers folds and wrapped lines
 local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
 local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
-local GET_WINDOW_EDGES = 3
+local GET_WINDOW_EDGES_KEY_PREFIX = 3
 
 -- Maps window ID to a temporary highlight group name. This is reset on each
 -- refresh cycle.
@@ -247,7 +247,7 @@ end
 -- Returns the position of window edges, with borders considered part of the
 -- window.
 local get_window_edges = function(winid)
-  local memoize_key = table.concat({GET_WINDOW_EDGES, winid}, ':')
+  local memoize_key = table.concat({GET_WINDOW_EDGES_KEY_PREFIX, winid}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local top, left = unpack(fn.win_screenpos(winid))
   local bottom = top + get_window_height(winid) - 1
