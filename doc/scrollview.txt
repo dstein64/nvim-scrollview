@@ -727,10 +727,16 @@ is_sign_group_active({group})              *scrollview.is_sign_group_active()*
     `nvim-scrollview` is enabled and the sign group is enabled.
 
     Parameters: ~
-      * {group}   (string) Group name.
+      * {group}  (string) Group name.
 
     Return: ~
         (boolean) `true` if active, else `false`.
+
+deregister_sign_spec({spec_id})            *scrollview.deregister_sign_spec()*
+    Deregister a sign specification.
+
+    Parameters: ~
+      * {spec_id}  (integer) Specification identifier.
 
 register_sign_spec({spec})                 *scrollview.register_sign_spec()*
     Register a sign specification.

@@ -70,9 +70,14 @@ local SIGN_TYPE = 1
 local PROPS_VAR = 'scrollview_props'
 
 -- Stores registered sign specifications.
--- WARN: There is an assumption in the code that signs specs cannot be
--- unregistered. For example, the ID is currently the position in this array.
 local sign_specs = {}
+-- Keep track of how many sign specifications were registered. This is used for
+-- ID assignment, and is not adjusted for deregistrations.
+local sign_spec_counter = 0
+-- Keep a mapping of sign spec ID to corresponding sign winids, updated during
+-- each call to show_signs. This readily permits removing those windows when
+-- deregistering a sign specification.
+local sign_spec_winids = {}
 
 -- Maps sign groups to state (enabled or disabled).
 local sign_group_state = {}
@@ -1451,6 +1456,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
   -- Neovim 0.8 has an issue with matchaddpos highlighting (similar type of
   -- issue reported in Neovim #22906).
   if not to_bool(fn.has('nvim-0.9')) then return end
+  sign_spec_winids = {}
   local bar_props
   if bar_winid ~= -1 then
     bar_props = api.nvim_win_get_var(bar_winid, PROPS_VAR)
@@ -1466,7 +1472,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
   local base_col = calculate_scrollbar_column(winid)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
-  for _, sign_spec in ipairs(sign_specs) do
+  for _, sign_spec in pairs(sign_specs) do
     local name = sign_spec.name
     local lines = {}
     local lines_as_given = {}
@@ -1740,6 +1746,10 @@ local show_signs = function(winid, sign_winids, bar_winid)
           and vim.o.mousemoveevent
           and is_mouse_over_scrollview_win(sign_winid)
         highlight_fn(hover)
+        if sign_spec_winids[props.sign_spec_id] == nil then
+          sign_spec_winids[props.sign_spec_id] = {}
+        end
+        table.insert(sign_spec_winids[props.sign_spec_id], sign_winid)
       end
     end
   end
@@ -2690,7 +2700,7 @@ local setup = function(opts)
 end
 
 local register_sign_spec = function(specification)
-  local id = #sign_specs + 1
+  local id = sign_spec_counter + 1
   specification = copy(specification)
   specification.id = id
   local defaults = {
@@ -2729,15 +2739,31 @@ local register_sign_spec = function(specification)
       specification[key] = copy(specification[key])
     end
   end
-  table.insert(sign_specs, specification)
+  sign_specs[id] = specification
   if sign_group_state[specification.group] == nil then
     sign_group_state[specification.group] = false
   end
+  sign_spec_counter = id
   local registration = {
     id = id,
     name = name,
   }
   return registration
+end
+
+-- Deregister a sign specification and remove corresponding signs.
+-- WARN: Signs are not repositioned. If there are multiple signs on the same
+-- row, the removal of some may result in a gap between the scrollbar and the
+-- other remaining signs. This will be corrected at the next scrollview
+-- refresh.
+local deregister_sign_spec = function(id)
+  sign_specs[id] = nil
+  local winids = sign_spec_winids[id]
+  if winids ~= nil then
+    for _, winid in ipairs(winids) do
+      close_scrollview_window(winid)
+    end
+  end
 end
 
 -- state can be true, false, or nil to toggle.
@@ -2913,6 +2939,7 @@ return {
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
+  deregister_sign_spec = deregister_sign_spec,
   get_sign_groups = get_sign_groups,
   is_sign_group_active = is_sign_group_active,
   register_sign_spec = register_sign_spec,
