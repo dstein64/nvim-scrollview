@@ -36,11 +36,15 @@ let s:diagnostics_highlight_data = [
   \   ['ScrollViewDiagnosticsWarn', 'DiagnosticWarn', 'DiagnosticSignWarn'],
   \ ]
 for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
-  try
-    let s:highlight = sign_getdefined(s:sign)[0].texthl
-  catch
-    let s:highlight = s:fallback
-  endtry
+  if has('nvim-0.10')
+    let s:highlight = s:sign
+  else
+    try
+      let s:highlight = sign_getdefined(s:sign)[0].texthl
+    catch
+      let s:highlight = s:fallback
+    endtry
+  endif
   execute 'highlight default link ' .. s:key .. ' ' .. s:highlight
 endfor
 highlight default link ScrollViewFolds Directory
