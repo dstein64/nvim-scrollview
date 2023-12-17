@@ -109,32 +109,66 @@ let g:scrollview_diagnostics_hint_priority =
 let g:scrollview_diagnostics_info_priority =
       \ get(g:, 'scrollview_diagnostics_info_priority', 40)
 if !has_key(g:, 'scrollview_diagnostics_severities')
-  try
-    let g:scrollview_diagnostics_severities = [
-          \   luaeval('vim.diagnostic.severity.ERROR'),
-          \   luaeval('vim.diagnostic.severity.HINT'),
-          \   luaeval('vim.diagnostic.severity.INFO'),
-          \   luaeval('vim.diagnostic.severity.WARN'),
-          \ ]
-  catch
-    " vim.diagnostic is not available on earlier versions of Neovim.
-    let g:scrollview_diagnostics_severities = []
-  endtry
+  let g:scrollview_diagnostics_severities = [
+        \   luaeval('vim.diagnostic.severity.ERROR'),
+        \   luaeval('vim.diagnostic.severity.HINT'),
+        \   luaeval('vim.diagnostic.severity.INFO'),
+        \   luaeval('vim.diagnostic.severity.WARN'),
+        \ ]
 endif
 let g:scrollview_diagnostics_warn_priority =
       \ get(g:, 'scrollview_diagnostics_warn_priority', 50)
 " Set the diagnostic symbol to the corresponding Neovim sign text if defined,
 " or the default otherwise.
 let s:diagnostics_symbol_data = [
-      \   ['scrollview_diagnostics_error_symbol', 'E', 'DiagnosticSignError'],
-      \   ['scrollview_diagnostics_hint_symbol', 'H', 'DiagnosticSignHint'],
-      \   ['scrollview_diagnostics_info_symbol', 'I', 'DiagnosticSignInfo'],
-      \   ['scrollview_diagnostics_warn_symbol', 'W', 'DiagnosticSignWarn'],
+      \   [
+      \     'scrollview_diagnostics_error_symbol',
+      \     'E',
+      \     'DiagnosticSignError',
+      \     luaeval('vim.diagnostic.severity.ERROR'),
+      \     'ERROR',
+      \   ],
+      \   [
+      \     'scrollview_diagnostics_hint_symbol',
+      \     'H',
+      \     'DiagnosticSignHint',
+      \     luaeval('vim.diagnostic.severity.HINT'),
+      \     'HINT',
+      \   ],
+      \   [
+      \     'scrollview_diagnostics_info_symbol',
+      \     'I',
+      \     'DiagnosticSignInfo',
+      \     luaeval('vim.diagnostic.severity.INFO'),
+      \     'INFO',
+      \   ],
+      \   [
+      \     'scrollview_diagnostics_warn_symbol',
+      \     'W',
+      \     'DiagnosticSignWarn',
+      \     luaeval('vim.diagnostic.severity.WARN'),
+      \     'WARN',
+      \   ],
       \ ]
-for [s:key, s:fallback, s:sign] in s:diagnostics_symbol_data
+for [s:key, s:fallback, s:sign, s:severity, s:name] in s:diagnostics_symbol_data
   if !has_key(g:, s:key)
     try
-      let g:[s:key] = trim(sign_getdefined(s:sign)[0].text)
+      if has('nvim-0.10')
+        " The key for configuring text can be a severity code (e.g.,
+        " vim.diagnostic.severity.ERROR) or a severity name (e.g., 'ERROR').
+        " https://github.com/neovim/neovim/pull/26193#issue-2009346914
+        let g:[s:key] = luaeval(
+              \ printf('vim.diagnostic.config().signs.text[%d]', s:severity))
+        if g:[s:key] ==# v:null
+          let g:[s:key] = luaeval(
+                \ printf('vim.diagnostic.config().signs.text["%s"]', s:name))
+        endif
+        if g:[s:key] ==# v:null
+          let g:[s:key] = s:fallback
+        endif
+      else
+        let g:[s:key] = trim(sign_getdefined(s:sign)[0].text)
+      endif
     catch
       let g:[s:key] = s:fallback
     endtry
