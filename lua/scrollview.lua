@@ -2745,12 +2745,12 @@ end
 -- Deregister a sign specification and remove corresponding signs. 'refresh' is
 -- an optional argument that specifies whether scrollview will refresh
 -- afterwards. It defaults to true.
-local deregister_sign_spec = function(id, refresh)
-  if refresh == nil then
-    refresh = true
+local deregister_sign_spec = function(id, refresh_)
+  if refresh_ == nil then
+    refresh_ = true
   end
   sign_specs[id] = nil
-  if refresh and scrollview_enabled then
+  if refresh_ and scrollview_enabled then
     refresh_bars()
   end
 end
