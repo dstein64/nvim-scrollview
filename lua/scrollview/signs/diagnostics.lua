@@ -75,9 +75,15 @@ function M.init(enable)
             lookup[severity] = {}
           end
           local diagnostics = vim.diagnostic.get(bufnr)
+          local line_count = vim.api.nvim_buf_line_count(bufnr)
           for _, x in ipairs(diagnostics) do
             if lookup[x.severity] ~= nil then
-              table.insert(lookup[x.severity], x.lnum + 1)
+              -- Diagnostics can be reported for lines beyond the last line in
+              -- the buffer. Treat these as if they were reported for the last
+              -- line, matching what Neovim does for displaying diagnostic
+              -- signs in the sign column.
+              local lnum = math.min(x.lnum + 1, line_count)
+              table.insert(lookup[x.severity], lnum)
             end
           end
           for severity, lines in pairs(lookup) do
