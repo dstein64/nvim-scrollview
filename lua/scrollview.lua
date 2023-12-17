@@ -70,9 +70,10 @@ local SIGN_TYPE = 1
 local PROPS_VAR = 'scrollview_props'
 
 -- Stores registered sign specifications.
--- WARN: There is an assumption in the code that signs specs cannot be
--- unregistered. For example, the ID is currently the position in this array.
 local sign_specs = {}
+-- Keep track of how many sign specifications were registered. This is used for
+-- ID assignment, and is not adjusted for deregistrations.
+local sign_spec_counter = 0
 
 -- Maps sign groups to state (enabled or disabled).
 local sign_group_state = {}
@@ -1466,7 +1467,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
   local base_col = calculate_scrollbar_column(winid)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
-  for _, sign_spec in ipairs(sign_specs) do
+  for _, sign_spec in pairs(sign_specs) do
     local name = sign_spec.name
     local lines = {}
     local lines_as_given = {}
@@ -2690,7 +2691,7 @@ local setup = function(opts)
 end
 
 local register_sign_spec = function(specification)
-  local id = #sign_specs + 1
+  local id = sign_spec_counter + 1
   specification = copy(specification)
   specification.id = id
   local defaults = {
@@ -2729,15 +2730,29 @@ local register_sign_spec = function(specification)
       specification[key] = copy(specification[key])
     end
   end
-  table.insert(sign_specs, specification)
+  sign_specs[id] = specification
   if sign_group_state[specification.group] == nil then
     sign_group_state[specification.group] = false
   end
+  sign_spec_counter = id
   local registration = {
     id = id,
     name = name,
   }
   return registration
+end
+
+-- Deregister a sign specification and remove corresponding signs. 'refresh' is
+-- an optional argument that specifies whether scrollview will refresh
+-- afterwards. It defaults to true.
+local deregister_sign_spec = function(id, refresh)
+  if refresh == nil then
+    refresh = true
+  end
+  sign_specs[id] = nil
+  if refresh and scrollview_enabled then
+    refresh_bars()
+  end
 end
 
 -- state can be true, false, or nil to toggle.
@@ -2913,6 +2928,7 @@ return {
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
+  deregister_sign_spec = deregister_sign_spec,
   get_sign_groups = get_sign_groups,
   is_sign_group_active = is_sign_group_active,
   register_sign_spec = register_sign_spec,

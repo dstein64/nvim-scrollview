@@ -33,6 +33,7 @@ scrollview-signs-functions	scrollview.txt	/*scrollview-signs-functions*
 scrollview-signs-version-global	scrollview.txt	/*scrollview-signs-version-global*
 scrollview-synchronization-issues	scrollview.txt	/*scrollview-synchronization-issues*
 scrollview-usage	scrollview.txt	/*scrollview-usage*
+scrollview.deregister_sign_spec()	scrollview.txt	/*scrollview.deregister_sign_spec()*
 scrollview.get_sign_eligible_windows()	scrollview.txt	/*scrollview.get_sign_eligible_windows()*
 scrollview.is_sign_group_active()	scrollview.txt	/*scrollview.is_sign_group_active()*
 scrollview.register_sign_spec()	scrollview.txt	/*scrollview.register_sign_spec()*
