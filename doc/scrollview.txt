@@ -344,7 +344,7 @@ scrollview_conflicts_top_symbol            *scrollview_conflicts_top_symbol*
 
 scrollview_cursor_priority                 *scrollview_cursor_priority*
                        |Number| specifying the priority for cursor signs.
-                       Defaults to `100`. Considered only when the plugin is
+                       Defaults to `0`. Considered only when the plugin is
                        loaded.
 
 scrollview_cursor_symbol                   *scrollview_cursor_symbol*

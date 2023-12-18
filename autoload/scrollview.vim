@@ -96,7 +96,7 @@ let g:scrollview_conflicts_top_symbol =
       \ get(g:, 'scrollview_conflicts_top_symbol', '<')
 
 " *** Cursor signs ***
-let g:scrollview_cursor_priority = get(g:, 'scrollview_cursor_priority', 100)
+let g:scrollview_cursor_priority = get(g:, 'scrollview_cursor_priority', 0)
 " Use a small square, resembling a block cursor, for the default symbol.
 let g:scrollview_cursor_symbol =
       \ get(g:, 'scrollview_cursor_symbol', nr2char(0x25aa))
