@@ -156,6 +156,11 @@ for [s:key, s:fallback, s:sign, s:severity, s:name] in s:diagnostics_symbol_data
       if has('nvim-0.10')
         " The key for configuring text can be a severity code (e.g.,
         " vim.diagnostic.severity.ERROR) or a severity name (e.g., 'ERROR').
+        " Code and name keys can both be used in the same table, so we can't
+        " use luaeval() directly on the table ("E5100: Cannot convert given
+        " lua table: table should either have a sequence of positive integer
+        " keys or contain only string key"). When the same type of diagnostic
+        " has both a code and name key, the code key takes precedence.
         " https://github.com/neovim/neovim/pull/26193#issue-2009346914
         let g:[s:key] = luaeval(
               \ printf('vim.diagnostic.config().signs.text[%d]', s:severity))
