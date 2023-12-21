@@ -2663,7 +2663,7 @@ local handle_mouse = function(button)
               end
             end
             -- Window workspaces may still be present as a result of the
-            -- earlier commands (e.g., set_topline). Remove prior to redrawing.
+            -- earlier commands. Remove prior to redrawing.
             reset_win_workspaces()
             vim.cmd('redraw')
             previous_row = row
