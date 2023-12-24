@@ -64,7 +64,7 @@ A package manager can be used to install `nvim-scrollview`.
   when the scrollbars or signs are out-of-sync, which can occur as a result of
   some window arrangement actions.
 * `:ScrollViewNext`, `:ScrollViewPrev`, `:ScrollViewFirst`, and
-  `ScrollViewLast` move the cursor to lines with signs. Arguments can specify
+  `:ScrollViewLast` move the cursor to lines with signs. Arguments can specify
   which sign groups are considered.
 * The scrollbars can be dragged and signs can be clicked. This requires a
   corresponding mapping, which is automatically configured when
