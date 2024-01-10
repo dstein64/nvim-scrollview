@@ -636,15 +636,15 @@ colors.
 `ScrollViewFolds`               fold signs
   Directory
 `ScrollViewHover`               scrollbar and signs on hover
-  SpellCap
+  CurSearch
 `ScrollViewLocList`             loclist signs
   LineNr
 `ScrollViewMarks`               mark signs
-  ColorColumn
+  Identifier
 `ScrollViewQuickFix`            quickfix signs
   Constant
 `ScrollViewRestricted`          |scrollview-restricted| scrollbar
-  SpellLocal
+  CurSearch
 `ScrollViewSearch`              search signs
   NonText
 `ScrollViewSpell`               spell signs
