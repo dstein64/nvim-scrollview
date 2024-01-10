@@ -1108,6 +1108,9 @@ local should_show = function(winid)
   if is_scrollview_window(winid) then
     return false
   end
+  if vim.g.scrollview_zindex <= 0 then
+    return false
+  end
   local bufnr = api.nvim_win_get_buf(winid)
   local buf_filetype = api.nvim_buf_get_option(bufnr, 'filetype')
   local winheight = get_window_height(winid)

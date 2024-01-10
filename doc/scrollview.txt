@@ -271,7 +271,7 @@ scrollview_winblend    |Number| specifying the level of transparency for
 
 scrollview_zindex                          *scrollview_zindex*
                        |Number| specifying the z-index for scrollbars and signs.
-                       Defaults to `40`.
+                       Must be larger than zero. Defaults to `40`.
 
                                            *scrollview-signs-configuration*
 Sign Configuration Variables ~
