@@ -1238,10 +1238,19 @@ local get_normal_highlight = function(winid)
       local visited = {}
       while not vim.tbl_isempty(hl_spec)
           and hl_spec.link ~= nil
-          and not visited[hl_spec.link] do
-        visited[hl_spec.link] = true
+          and not visited[hl_ns .. '_' .. hl_spec.link] do
+        local link = hl_spec.link
+        visited[hl_ns .. '_' .. link] = true
         hl_spec = api.nvim_get_hl(
-          hl_ns, {name = hl_spec.link, create = false, link = true})
+          hl_ns, {name = link, create = false, link = true})
+        -- If the link is to a highlight specification that doesn't exist in
+        -- the current namespace, switch to the global namespace and try again.
+        if hl_ns ~= 0 and vim.tbl_isempty(hl_spec) then
+          hl_ns = 0
+          visited[hl_ns .. '_' .. link] = true
+          hl_spec = api.nvim_get_hl(
+            hl_ns, {name = link, create = false, link = true})
+        end
       end
       if not vim.tbl_isempty(hl_spec) and hl_spec.link == nil then
         -- Create a group with a matching specification.
