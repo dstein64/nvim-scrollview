@@ -1265,7 +1265,9 @@ local get_normal_highlight = function(winid)
           end
           if from == 'Normal' then
             highlight = to
-            break
+            if not is_float then
+              break
+            end
           end
         end
       end)
