@@ -100,6 +100,12 @@ The plugin was written so that it's possible to extend the sign functionality
 in a Neovim configuration file or with a plugin. See the documentation for
 details.
 
+The [contrib](lua/scrollview/contrib) directory contains sign group
+implementations that are not built-in (e.g., `coc`, `gitsigns`), but may be
+useful to some users. The code there does not receive the same level of support
+as the main source code, and may be less stable. Use at your own risk. For
+installation instructions and other documentation, see the source code files.
+
 ## Configuration
 
 There are various settings that can be configured. Please see the documentation
