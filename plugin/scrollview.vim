@@ -26,7 +26,7 @@ highlight default link ScrollView Visual
 highlight default link ScrollViewConflictsTop DiffAdd
 highlight default link ScrollViewConflictsMiddle DiffAdd
 highlight default link ScrollViewConflictsBottom DiffAdd
-highlight default link ScrollViewCursor Identifier
+highlight default link ScrollViewCursor WarningMsg
 " Set the diagnostic highlights to the corresponding Neovim sign text
 " highlight if defined, or the default otherwise.
 let s:diagnostics_highlight_data = [
