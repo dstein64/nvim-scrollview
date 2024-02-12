@@ -2000,6 +2000,9 @@ local set_topline = function(winid, linenr, wincol, winline)
     winline = fn.winline()
 
     -- Set the specified window column.
+    -- WARN: The calculations below don't properly account for concealed text.
+    -- It appears that the application of 'concealcursor' occurs after this
+    -- code runs.
     vim.cmd('keepjumps normal! g0')
     if fn.winline() < winline then
       -- g0 may move to the preceding line (e.g., if a character that can't be
