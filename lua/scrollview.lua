@@ -1959,40 +1959,73 @@ local read_input_stream = function()
 end
 
 -- Scrolls the window so that the specified line number is at the top.
-local set_topline = function(winid, linenr)
+local set_topline = function(winid, linenr, wincol, winline)
   -- WARN: Unlike other functions that move the cursor (e.g., VirtualLineCount,
   -- VirtualProportionLine), a window workspace should not be used, as the
   -- cursor and viewport changes here are intended to persist.
   api.nvim_win_call(winid, function()
-    local init_line = fn.line('.')
-    vim.cmd('keepjumps normal! ' .. linenr .. 'G')
+    -- Make sure that h and l don't change lines.
+    local whichwrap = api.nvim_get_option('whichwrap')
+    vim.cmd('set whichwrap-=h')
+    vim.cmd('set whichwrap-=l')
+
+    vim.cmd('keepjumps normal! ' .. linenr .. 'G0')
     local topline, _ = line_range(winid)
     -- Use virtual lines to figure out how much to scroll up. winline() doesn't
-    -- accommodate wrapped lines.
+    -- accommodate wrapped lines for this action.
     local virtual_line = virtual_line_count(winid, topline, fn.line('.'))
     if virtual_line > 1 then
       vim.cmd('keepjumps normal! ' .. (virtual_line - 1) .. t'<c-e>')
     end
-    -- Make sure 'topline' is not incorrect, as a precaution.
-    topline = nil  -- luacheck: no unused
-    -- Position the cursor as if all scrolling was conducted with <ctrl-e>
-    -- and/or <ctrl-y>. H and L are used to get topline and botline instead of
-    -- getwininfo, to prevent jumping to a line that could result in a scroll if
-    -- scrolloff>0.
-    vim.cmd('keepjumps normal! H')
-    local effective_top = fn.line('.')
-    vim.cmd('keepjumps normal! L')
-    local effective_bottom = fn.line('.')
-    if init_line < effective_top then
-      -- User scrolled down.
-      vim.cmd('keepjumps normal! H')
-    elseif init_line > effective_bottom then
-      -- User scrolled up.
-      vim.cmd('keepjumps normal! L')
-    else
-      -- The initial line is still on-screen.
-      vim.cmd('keepjumps normal! ' .. init_line .. 'G')
+
+    -- Set the specified window line.
+    local prior
+    local max_steps = fn.winheight(0) * 2  -- limit steps as a precaution
+    local steps = 0
+    while fn.winline() < winline
+        and prior ~= fn.winline()
+        and steps < max_steps do
+      steps = steps + 1
+      prior = fn.winline()
+      vim.cmd('keepjumps normal! gj')
+      if fn.winline() == prior then
+        -- gj may not move to the next screen line (e.g., if a character that
+        -- can't be displayed, like <99>, spans screen lines).
+        vim.cmd('keepjumps normal! l')
+      end
     end
+    -- Update winline for the purpose of setting window column. It may not have
+    -- been possible to properly set the window line, but we still want to try
+    -- to set the window column. The procedure utilizes the winline value.
+    winline = fn.winline()
+
+    -- Set the specified window column.
+    vim.cmd('keepjumps normal! g0')
+    if fn.winline() < winline then
+      -- g0 may move to the preceding line (e.g., if a character that can't be
+      -- displayed, like <99>, spans screen lines).
+      vim.cmd('keepjumps normal! l')
+    end
+    -- We use col() here for tracking movement, instead of wincol(), since the
+    -- cursor sometimes doesn't move (e.g., when there is concealed text).
+    prior = nil
+    max_steps = fn.winwidth(0) * 2  -- limit steps as a precaution
+    steps = 0
+    while fn.wincol() < wincol
+        and prior ~= fn.col('.')
+        and steps < max_steps do
+      steps = steps + 1
+      prior = fn.col('.')
+      vim.cmd('keepjumps normal! l')
+      -- If we moved to the next screen line (e.g., with 'wrap' set), move back
+      -- and break.
+      if fn.winline() > winline then
+        vim.cmd('keepjumps normal! h')
+        break
+      end
+    end
+
+    api.nvim_set_option('whichwrap', whichwrap)
   end)
 end
 
@@ -2491,6 +2524,10 @@ local handle_mouse = function(button)
     -- Computing this prior to the first mouse event could distort the location
     -- since this could be an expensive operation (and the mouse could move).
     local topline_lookup = nil
+    -- For clicks on a scrollbar, we save the wincol and winline so they can be
+    -- restored after dragging.
+    local init_wincol
+    local init_winline
     while true do
       while true do
         idx = idx + 1
@@ -2616,6 +2653,10 @@ local handle_mouse = function(button)
             vim.cmd('normal! ' .. t'<esc>')
           end
           winid = mouse_winid
+          api.nvim_win_call(winid, function()
+            init_wincol = fn.wincol()
+            init_winline = fn.winline()
+          end)
           scrollbar_offset = props.row - mouse_row
           previous_row = props.row
         end
@@ -2645,7 +2686,7 @@ local handle_mouse = function(button)
               -- show the first line.
               topline = 1
             end
-            set_topline(winid, topline)
+            set_topline(winid, topline, init_wincol, init_winline)
             if api.nvim_win_get_option(winid, 'scrollbind')
                 or api.nvim_win_get_option(winid, 'cursorbind') then
               refresh_bars()
