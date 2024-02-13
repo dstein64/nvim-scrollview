@@ -40,13 +40,8 @@ let g:scrollview_include_end_region =
 let g:scrollview_line_limit = get(g:, 'scrollview_line_limit', 20000)
 let g:scrollview_mode = get(g:, 'scrollview_mode', 'auto')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', v:true)
-" Using a winblend of 100 results in the bar becoming invisible on nvim-qt.
-if !exists('g:scrollview_winblend')
-  let g:scrollview_winblend = 50
-  if &termguicolors
-    let g:scrollview_winblend = 0
-  endif
-endif
+let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
+let g:scrollview_winblend_gui = get(g:, 'scrollview_winblend_gui', 0)
 " The default zindex for floating windows is 50. A smaller value is used here
 " by default so that scrollbars don't cover floating windows.
 let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)

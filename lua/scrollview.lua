@@ -1404,6 +1404,9 @@ local show_scrollbar = function(winid, bar_winid)
       end
     end)
     local winblend = vim.g.scrollview_winblend
+    if to_bool(fn.has('gui_running')) or vim.o.termguicolors then
+      winblend = vim.g.scrollview_winblend_gui
+    end
     -- Add a workaround for Neovim #14624.
     if is_float then
       -- Disable winblend for base windows that are floating. The scrollbar would
@@ -1693,6 +1696,9 @@ local show_signs = function(winid, sign_winids, bar_winid)
               fn.matchaddpos(highlight, {sign_line_count})
             end)
             local winblend = vim.g.scrollview_winblend
+            if to_bool(fn.has('gui_running')) or vim.o.termguicolors then
+              winblend = vim.g.scrollview_winblend_gui
+            end
             -- Add a workaround for Neovim #14624.
             if is_float then
               -- Disable winblend for base windows that are floating. The sign

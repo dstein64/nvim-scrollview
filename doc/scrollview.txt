@@ -252,22 +252,37 @@ scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
-(semi-experimental)    scrollbars. Defaults to `50` if 'termguicolors' is not
-                       set and `0` otherwise (the functionality is experimental
-                       when 'termguicolors' is set). Must be between `0` (opaque)
+                       scrollbars when a GUI is not running and 'termguicolors'
+                       is not set. Defaults to `50`. Must be between `0` (opaque)
                        and `100` (transparent). This option is ignored for
                        scrollview windows whose highlight group has 'reverse'
-                       or 'inverse' specified as a cterm attribute (or a gui
-                       attribute when a GUI is running or 'termguicolors' is
-                       set); see |attr-list|. Such windows will have no
-                       transparency, as a workaround for Neovim #24159. This
-                       option is ignored for scrollview windows shown for
-                       floating windows; see |scrollview_floating_windows|. Such
+                       or 'inverse' specified as a cterm attribute; see
+                       |attr-list|. Such windows will have no transparency, as a
+                       workaround for Neovim #24159. This option is ignored
+                       for scrollview windows shown for floating windows; see
+                       |scrollview_floating_windows|. Such windows will have no
+                       transparency, as a workaround for Neovim #14624. This
+                       option can interact with highlight settings
+                       (|scrollview-color-customization|); careful adjustment of
+                       the winblend setting and highlighting may be necessary
+                       to achieve the desired result.
+
+scrollview_winblend_gui                    *scrollview_winblend_gui*
+(experimental)         |Number| specifying the level of transparency for
+                       scrollbars when a GUI is running or 'termguicolors' is
+                       set. Defaults to `0`. Must be between `0` (opaque) and `100`
+                       (transparent). This option is ignored for scrollview
+                       windows whose highlight group has 'reverse' or 'inverse'
+                       specified as a gui attribute; see |attr-list|. Such
                        windows will have no transparency, as a workaround for
-                       Neovim #14624. This option can interact with highlight
-                       settings (|scrollview-color-customization|); careful
-                       adjustment of the winblend setting and highlighting may
-                       be necessary to achieve the desired result.
+                       Neovim #24159. This option is ignored for scrollview
+                       windows shown for floating windows; see
+                       |scrollview_floating_windows|. Such windows will have no
+                       transparency, as a workaround for Neovim #14624. This
+                       option can interact with highlight settings
+                       (|scrollview-color-customization|); careful adjustment of
+                       the winblend setting and highlighting may be necessary
+                       to achieve the desired result.
 
 scrollview_zindex                          *scrollview_zindex*
                        |Number| specifying the z-index for scrollbars and signs.

@@ -95,4 +95,5 @@ scrollview_textwidth_symbol	scrollview.txt	/*scrollview_textwidth_symbol*
 scrollview_trail_priority	scrollview.txt	/*scrollview_trail_priority*
 scrollview_trail_symbol	scrollview.txt	/*scrollview_trail_symbol*
 scrollview_winblend	scrollview.txt	/*scrollview_winblend*
+scrollview_winblend_gui	scrollview.txt	/*scrollview_winblend_gui*
 scrollview_zindex	scrollview.txt	/*scrollview_zindex*
