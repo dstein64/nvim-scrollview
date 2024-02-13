@@ -261,11 +261,7 @@ scrollview_winblend    |Number| specifying the level of transparency for
                        workaround for Neovim #24159. This option is ignored
                        for scrollview windows shown for floating windows; see
                        |scrollview_floating_windows|. Such windows will have no
-                       transparency, as a workaround for Neovim #14624. This
-                       option can interact with highlight settings
-                       (|scrollview-color-customization|); careful adjustment of
-                       the winblend setting and highlighting may be necessary
-                       to achieve the desired result.
+                       transparency, as a workaround for Neovim #14624.
 
 scrollview_winblend_gui                    *scrollview_winblend_gui*
 (experimental)         |Number| specifying the level of transparency for
