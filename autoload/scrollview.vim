@@ -159,11 +159,11 @@ for [s:key, s:fallback, s:sign, s:severity, s:name] in s:diagnostics_symbol_data
         " https://github.com/neovim/neovim/pull/26193#issue-2009346914
         let g:[s:key] = luaeval(
               \ printf('vim.diagnostic.config().signs.text[%d]', s:severity))
-        if g:[s:key] ==# v:null
+        if g:[s:key] is# v:null
           let g:[s:key] = luaeval(
                 \ printf('vim.diagnostic.config().signs.text["%s"]', s:name))
         endif
-        if g:[s:key] ==# v:null
+        if g:[s:key] is# v:null
           let g:[s:key] = s:fallback
         endif
       else
