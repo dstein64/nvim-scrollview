@@ -1965,16 +1965,11 @@ local read_input_stream = function()
 end
 
 -- Scrolls the window so that the specified line number is at the top.
-local set_topline = function(winid, linenr, wincol, winline)
+local set_topline = function(winid, linenr)
   -- WARN: Unlike other functions that move the cursor (e.g., VirtualLineCount,
   -- VirtualProportionLine), a window workspace should not be used, as the
   -- cursor and viewport changes here are intended to persist.
   api.nvim_win_call(winid, function()
-    -- Make sure that h and l don't change lines.
-    local whichwrap = api.nvim_get_option('whichwrap')
-    vim.cmd('set whichwrap-=h')
-    vim.cmd('set whichwrap-=l')
-
     vim.cmd('keepjumps normal! ' .. linenr .. 'G0')
     local topline, _ = line_range(winid)
     -- Use virtual lines to figure out how much to scroll up. winline() doesn't
@@ -1983,6 +1978,15 @@ local set_topline = function(winid, linenr, wincol, winline)
     if virtual_line > 1 then
       vim.cmd('keepjumps normal! ' .. (virtual_line - 1) .. t'<c-e>')
     end
+  end)
+end
+
+local set_cursor_position = function(winid, winline, wincol)
+  api.nvim_win_call(winid, function()
+    -- Make sure that h and l don't change lines.
+    local whichwrap = api.nvim_get_option('whichwrap')
+    vim.cmd('set whichwrap-=h')
+    vim.cmd('set whichwrap-=l')
 
     -- Set the specified window line.
     local prior
@@ -2020,12 +2024,18 @@ local set_topline = function(winid, linenr, wincol, winline)
     prior = nil
     max_steps = fn.winwidth(0) * 2  -- limit steps as a precaution
     steps = 0
+    -- Redraw for proper handling of concealed text.
+    -- https://github.com/dstein64/nvim-scrollview/issues/127#issuecomment-1939726646
+    vim.cmd('redraw')
     while fn.wincol() < wincol
         and prior ~= fn.col('.')
         and steps < max_steps do
       steps = steps + 1
       prior = fn.col('.')
       vim.cmd('keepjumps normal! l')
+      -- Redraw for proper handling of concealed text.
+      -- https://github.com/dstein64/nvim-scrollview/issues/127#issuecomment-1939726646
+      vim.cmd('redraw')
       -- If we moved to the next screen line (e.g., with 'wrap' set), move back
       -- and break.
       if fn.winline() > winline then
@@ -2601,6 +2611,10 @@ local handle_mouse = function(button)
             -- scrollview_hide_on_intersect is enabled and dragging resulted in
             -- a scrollbar overlapping a floating window.
             refresh_bars()
+            -- We only restore the cursor after dragging is finished. The
+            -- cursor position can't be changed while dragging (but it stays in
+            -- the same place when there aren't wrapped lines).
+            set_cursor_position(winid, init_winline, init_wincol)
           end
           return
         end
@@ -2695,7 +2709,7 @@ local handle_mouse = function(button)
               -- show the first line.
               topline = 1
             end
-            set_topline(winid, topline, init_wincol, init_winline)
+            set_topline(winid, topline)
             if api.nvim_win_get_option(winid, 'scrollbind')
                 or api.nvim_win_get_option(winid, 'cursorbind') then
               refresh_bars()
