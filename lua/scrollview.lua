@@ -1988,6 +1988,8 @@ local set_cursor_position = function(winid, winline, wincol)
     vim.cmd('set whichwrap-=h')
     vim.cmd('set whichwrap-=l')
 
+    vim.cmd('keepjumps normal! H0')
+
     -- Set the specified window line.
     local prior
     local max_steps = fn.winheight(0) * 2  -- limit steps as a precaution
