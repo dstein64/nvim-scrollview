@@ -2021,8 +2021,9 @@ local set_cursor_position = function(winid, winline, wincol)
       -- displayed, like <99>, spans screen lines).
       vim.cmd('keepjumps normal! l')
     end
-    -- We use col() here for tracking movement, instead of wincol(), since the
-    -- cursor sometimes doesn't move (e.g., when there is concealed text).
+    -- We use col() here for tracking movement in addition to wincol(), since
+    -- the cursor sometimes doesn't move (e.g., when there is concealed text).
+    -- Using wincol() accommodates virtual text, so we use that too.
     prior = nil
     max_steps = fn.winwidth(0) * 2  -- limit steps as a precaution
     steps = 0
@@ -2030,10 +2031,10 @@ local set_cursor_position = function(winid, winline, wincol)
     -- https://github.com/dstein64/nvim-scrollview/issues/127#issuecomment-1939726646
     vim.cmd('redraw')
     while fn.wincol() < wincol
-        and prior ~= fn.col('.')
+        and not vim.deep_equal(prior, {fn.col('.'), fn.wincol()})
         and steps < max_steps do
       steps = steps + 1
-      prior = fn.col('.')
+      prior = {fn.col('.'), fn.wincol()}
       vim.cmd('keepjumps normal! l')
       -- Redraw for proper handling of concealed text.
       -- https://github.com/dstein64/nvim-scrollview/issues/127#issuecomment-1939726646
