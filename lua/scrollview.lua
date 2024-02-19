@@ -1992,7 +1992,9 @@ local set_cursor_position = function(winid, winline, wincol)
 
     -- Set the specified window line.
     local prior
-    local max_steps = fn.winheight(0) * 2  -- limit steps as a precaution
+    -- Limit the number of steps as a precaution. The doubling of window height
+    -- is to be safe.
+    local max_steps = fn.winheight(0) * 2
     local steps = 0
     while fn.winline() < winline
         and prior ~= fn.winline()
@@ -2025,7 +2027,13 @@ local set_cursor_position = function(winid, winline, wincol)
     -- the cursor sometimes doesn't move (e.g., when there is concealed text).
     -- Using wincol() accommodates virtual text, so we use that too.
     prior = nil
-    max_steps = fn.winwidth(0) * 2  -- limit steps as a precaution
+    -- Limit the number of steps as a precaution. The line length, in bytes,
+    -- accounts for characters that are concealed with empty text (the cursor
+    -- won't move for those characters), and the window width bounds the number
+    -- of steps that can be taken over normal characters. We double to be safe.
+    local line = fn.line('.')
+    local line_bytes = fn.line2byte(line + 1) - fn.line2byte(line)
+    max_steps = (fn.winwidth(0) + line_bytes) * 2
     steps = 0
     -- Redraw for proper handling of concealed text.
     -- https://github.com/dstein64/nvim-scrollview/issues/127#issuecomment-1939726646
