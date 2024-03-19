@@ -1528,26 +1528,36 @@ local show_signs = function(winid, sign_winids, bar_winid)
     end
     for _, line in ipairs(lines) do
       if line >= 1 and line <= line_count then
-        local row = binary_search(topline_lookup, line)
-        row = math.min(row, #topline_lookup)
-        if row > 1 and topline_lookup[row] > line then
-          row = row - 1  -- use the preceding line from topline lookup.
+        local row1 = binary_search(topline_lookup, line)
+        row1 = math.min(row1, #topline_lookup)
+        if row1 > 1 and topline_lookup[row1] > line then
+          row1 = row1 - 1  -- use the preceding line from topline lookup.
         end
-        if lookup[row] == nil then
-          lookup[row] = {}
+        local rows = {row1}  -- rows to draw the sign on
+        -- When extend is set, draw the sign on subsequent rows with the same
+        -- topline.
+        if sign_spec.extend then
+          while topline_lookup[row1] == topline_lookup[rows[#rows] + 1] do
+            table.insert(rows, rows[#rows] + 1)
+          end
         end
-        if lookup[row][name] == nil then
-          local properties = {
-            symbol = sign_spec.symbol,
-            highlight = sign_spec.highlight,
-            priority = sign_spec.priority,
-            sign_spec_id = sign_spec.id,
-          }
-          properties.name = name
-          properties.lines = {line}
-          lookup[row][name] = properties
-        else
-          table.insert(lookup[row][name].lines, line)
+        for _, row in ipairs(rows) do
+          if lookup[row] == nil then
+            lookup[row] = {}
+          end
+          if lookup[row][name] == nil then
+            local properties = {
+              symbol = sign_spec.symbol,
+              highlight = sign_spec.highlight,
+              priority = sign_spec.priority,
+              sign_spec_id = sign_spec.id,
+            }
+            properties.name = name
+            properties.lines = {line}
+            lookup[row][name] = properties
+          else
+            table.insert(lookup[row][name].lines, line)
+          end
         end
       end
     end
@@ -2785,6 +2795,7 @@ local register_sign_spec = function(specification)
   specification.id = id
   local defaults = {
     current_only = false,
+    extend = false,
     group = 'other',
     highlight = 'Pmenu',
     priority = 50,
