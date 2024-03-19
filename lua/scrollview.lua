@@ -1533,21 +1533,30 @@ local show_signs = function(winid, sign_winids, bar_winid)
         if row > 1 and topline_lookup[row] > line then
           row = row - 1  -- use the preceding line from topline lookup.
         end
-        if lookup[row] == nil then
-          lookup[row] = {}
+        local rows = {row}  -- rows to draw the sign on
+        -- When fill is set, draw the sign on subsequent rows with the same
+        -- topline.
+        -- TODO: implement and check for 'fill'
+        while topline_lookup[row] == topline_lookup[rows[#rows] + 1] do
+          table.insert(rows, rows[#rows] + 1)
         end
-        if lookup[row][name] == nil then
-          local properties = {
-            symbol = sign_spec.symbol,
-            highlight = sign_spec.highlight,
-            priority = sign_spec.priority,
-            sign_spec_id = sign_spec.id,
-          }
-          properties.name = name
-          properties.lines = {line}
-          lookup[row][name] = properties
-        else
-          table.insert(lookup[row][name].lines, line)
+        for _, row in ipairs(rows) do
+          if lookup[row] == nil then
+            lookup[row] = {}
+          end
+          if lookup[row][name] == nil then
+            local properties = {
+              symbol = sign_spec.symbol,
+              highlight = sign_spec.highlight,
+              priority = sign_spec.priority,
+              sign_spec_id = sign_spec.id,
+            }
+            properties.name = name
+            properties.lines = {line}
+            lookup[row][name] = properties
+          else
+            table.insert(lookup[row][name].lines, line)
+          end
         end
       end
     end
