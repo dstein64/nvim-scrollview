@@ -1534,9 +1534,9 @@ local show_signs = function(winid, sign_winids, bar_winid)
           row = row - 1  -- use the preceding line from topline lookup.
         end
         local rows = {row}  -- rows to draw the sign on
-        -- When expand is set, draw the sign on subsequent rows with the same
+        -- When extend is set, draw the sign on subsequent rows with the same
         -- topline.
-        if sign_spec.expand then
+        if sign_spec.extend then
           while topline_lookup[row] == topline_lookup[rows[#rows] + 1] do
             table.insert(rows, rows[#rows] + 1)
           end
@@ -2795,7 +2795,7 @@ local register_sign_spec = function(specification)
   specification.id = id
   local defaults = {
     current_only = false,
-    expand = false,
+    extend = false,
     group = 'other',
     highlight = 'Pmenu',
     priority = 50,
