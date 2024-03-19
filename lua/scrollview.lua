@@ -1536,7 +1536,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
         local rows = {row}  -- rows to draw the sign on
         -- When expand is set, draw the sign on subsequent rows with the same
         -- topline.
-        -- TODO: can also check if all lines are on screen.
         if sign_spec.expand then
           while topline_lookup[row] == topline_lookup[rows[#rows] + 1] do
             table.insert(rows, rows[#rows] + 1)
