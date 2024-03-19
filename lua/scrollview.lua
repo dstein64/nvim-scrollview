@@ -1534,11 +1534,13 @@ local show_signs = function(winid, sign_winids, bar_winid)
           row = row - 1  -- use the preceding line from topline lookup.
         end
         local rows = {row}  -- rows to draw the sign on
-        -- When fill is set, draw the sign on subsequent rows with the same
+        -- When expand is set, draw the sign on subsequent rows with the same
         -- topline.
-        -- TODO: implement and check for 'fill'
-        while topline_lookup[row] == topline_lookup[rows[#rows] + 1] do
-          table.insert(rows, rows[#rows] + 1)
+        -- TODO: can also check if all lines are on screen.
+        if sign_spec.expand then
+          while topline_lookup[row] == topline_lookup[rows[#rows] + 1] do
+            table.insert(rows, rows[#rows] + 1)
+          end
         end
         for _, row in ipairs(rows) do
           if lookup[row] == nil then
@@ -2794,6 +2796,7 @@ local register_sign_spec = function(specification)
   specification.id = id
   local defaults = {
     current_only = false,
+    expand = false,
     group = 'other',
     highlight = 'Pmenu',
     priority = 50,

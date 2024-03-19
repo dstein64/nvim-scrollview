@@ -88,6 +88,7 @@ function M.setup(config)
   local group = 'gitsigns'
 
   local add = scrollview.register_sign_spec({
+    expand = true,
     group = group,
     highlight = config.add_highlight,
     priority = config.add_priority,
@@ -95,6 +96,7 @@ function M.setup(config)
   }).name
 
   local change = scrollview.register_sign_spec({
+    expand = true,
     group = group,
     highlight = config.change_highlight,
     priority = config.change_priority,
@@ -102,6 +104,7 @@ function M.setup(config)
   }).name
 
   local delete = scrollview.register_sign_spec({
+    expand = true,
     group = group,
     highlight = config.delete_highlight,
     priority = config.delete_priority,
