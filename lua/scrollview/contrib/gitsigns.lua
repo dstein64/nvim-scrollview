@@ -163,13 +163,28 @@ function M.setup(config)
                 end
               end
             elseif hunk.type == 'change' then
+              -- WARN: A change hunk can be comprised of a change (the removed
+              -- lines) and an add (lines added after the removed lines). #129
               local first = hunk.added.start
-              local last = hunk.added.start
+              local last = first
               if not config.only_first_line then
                 last = last + hunk.added.count - 1
+                if hunk.added.count > hunk.removed.count then
+                  last = last - (hunk.added.count - hunk.removed.count)
+                end
               end
               for line = first, last do
                 table.insert(lines_change, line)
+              end
+              if hunk.added.count > hunk.removed.count then
+                first = hunk.added.start + hunk.removed.count
+                last = first
+                if not config.only_first_line then
+                  last = last + hunk.added.count - hunk.removed.count - 1
+                end
+                for line = first, last do
+                  table.insert(lines_add, line)
+                end
               end
             elseif hunk.type == 'delete' then
               table.insert(lines_delete, hunk.added.start)
