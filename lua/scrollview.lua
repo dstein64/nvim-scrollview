@@ -1,6 +1,6 @@
 local api = vim.api
 local fn = vim.fn
--- vim.tbl_islist was deprecated in v0.10. #131
+-- vim.tbl_islist was deprecated in Neovim v0.10. #131
 local islist = vim.islist or vim.tbl_islist
 
 local utils = require('scrollview.utils')
