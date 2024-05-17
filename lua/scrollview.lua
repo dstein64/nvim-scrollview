@@ -1,5 +1,7 @@
 local api = vim.api
 local fn = vim.fn
+-- vim.tbl_islist was deprecated in v0.10. #131
+local islist = vim.islist or vim.tbl_islist
 
 local utils = require('scrollview.utils')
 local binary_search = utils.binary_search
@@ -13,7 +15,6 @@ local subsequent = utils.subsequent
 local t = utils.t
 local tbl_get = utils.tbl_get
 local to_bool = utils.to_bool
-local islist = vim.islist or vim.tbl_islist
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
