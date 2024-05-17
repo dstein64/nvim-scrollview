@@ -13,6 +13,7 @@ local subsequent = utils.subsequent
 local t = utils.t
 local tbl_get = utils.tbl_get
 local to_bool = utils.to_bool
+local islist = vim.islist or vim.tbl_islist
 
 -- WARN: Sometimes 1-indexing is used (primarily for mutual Vim/Neovim API
 -- calls) and sometimes 0-indexing (primarily for Neovim-specific API calls).
@@ -257,7 +258,7 @@ local get_window_edges = function(winid)
   -- corners don't have to be checked). Borders don't impact the top and left
   -- positions calculated above; only the bottom and right positions.
   local border = api.nvim_win_get_config(winid).border
-  if border ~= nil and vim.tbl_islist(border) and #border == 8 then
+  if border ~= nil and islist(border) and #border == 8 then
     if border[2] ~= '' then
       -- There is a top border.
       bottom = bottom + 1
@@ -333,7 +334,7 @@ local is_mouse_over_scrollview_win = function(winid)
   local parent_is_float = tbl_get(parent_config, 'relative', '') ~= ''
   if parent_is_float then
     local border = parent_config.border
-    if border ~= nil and vim.tbl_islist(border) and #border == 8 then
+    if border ~= nil and islist(border) and #border == 8 then
       if border[2] ~= '' then
         -- There is a top border.
         row = row + 1
@@ -1942,7 +1943,7 @@ local read_input_stream = function()
       local is_float = tbl_get(config, 'relative', '') ~= ''
       if is_float then
         local border = config.border
-        if border ~= nil and vim.tbl_islist(border) and #border == 8 then
+        if border ~= nil and islist(border) and #border == 8 then
           if border[2] ~= '' then
             -- There is a top border.
             mouse_row = mouse_row - 1
