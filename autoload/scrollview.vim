@@ -182,6 +182,13 @@ let g:scrollview_folds_priority = get(g:, 'scrollview_folds_priority', 30)
 let g:scrollview_folds_symbol =
       \ get(g:, 'scrollview_folds_symbol', nr2char(0x25b6))
 
+" *** Latest change signs ***
+let g:scrollview_latestchange_priority =
+      \ get(g:, 'scrollview_latestchange_priority', 10)
+" Default symbol: the Greek uppercase letter delta, which denotes change.
+let g:scrollview_latestchange_symbol =
+      \ get(g:, 'scrollview_latestchange_symbol', nr2char(0x0394))
+
 " *** Location list signs ***
 let g:scrollview_loclist_priority = get(g:, 'scrollview_loclist_priority', 45)
 " Default symbol: a small circle

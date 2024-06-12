@@ -49,6 +49,7 @@ for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
 endfor
 highlight default link ScrollViewFolds Directory
 highlight default link ScrollViewHover CurSearch
+highlight default link ScrollViewLatestChange SpecialKey
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks Identifier
 highlight default link ScrollViewQuickFix Constant

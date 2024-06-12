@@ -80,6 +80,7 @@ with the same positioning logic as the scrollbar.
 * `cursor`: cursor position
 * `diagnostics`: errors, warnings, info, and hints
 * `folds`: closed folds
+* `latestchange`: latest change
 * `loclist`: items on the location list
 * `marks`
 * `quickfix`: items on the quickfix list

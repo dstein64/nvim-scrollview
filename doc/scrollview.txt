@@ -150,19 +150,20 @@ Built-in Sign Groups ~
                                            *scrollview-signs-built-in*
 Group        Information
 -----        -----------
-`conflicts`    git merge conflicts
-`cursor`       cursor position
-`diagnostics`  errors, warnings, info, and hints via |vim.diagnostic|
-`folds`        closed folds
-`loclist`      items on the location list
+`conflicts`     git merge conflicts
+`cursor`        cursor position
+`diagnostics`   errors, warnings, info, and hints via |vim.diagnostic|
+`folds`         closed folds
+`latestchange`  latest change
+`loclist`       items on the location list
 `marks`
-`quickfix`     items on the quickfix list
+`quickfix`      items on the quickfix list
 `search`
-`spell`        spell check items when the |'spell'| option is enabled
-`textwidth`    line lengths exceeding the value of the |'textwidth'| option, when
-             non-zero
-`trail`        trailing whitespace, when the |'list'| option is enabled and the
-             |'listchars'| option includes "trail"
+`spell`         spell check items when the |'spell'| option is enabled
+`textwidth`     line lengths exceeding the value of the |'textwidth'| option, when
+              non-zero
+`trail`         trailing whitespace, when the |'list'| option is enabled and the
+              |'listchars'| option includes "trail"
 
                                            *scrollview-restricted*
 Under certain scenarios, the plugin enters a restricted mode to prevent a
@@ -360,12 +361,7 @@ scrollview_cursor_priority                 *scrollview_cursor_priority*
 
 scrollview_cursor_symbol                   *scrollview_cursor_symbol*
                        |String| specifying the symbol for cursor signs. Defaults
-                       to a small square, resembling a block cursor. A |List| of
-                       |String|s can also be used; the symbol is selected using
-                       the index equal to the number of lines corresponding to
-                       the sign, or the last element when the retrieval would
-                       be out-of-bounds. Considered only when the plugin is
-                       loaded.
+                       to a small square, resembling a block cursor.
 
 scrollview_diagnostics_error_priority      *scrollview_diagnostics_error_priority*
                        |Number| specifying the priority for diagnostic error
@@ -511,19 +507,14 @@ scrollview_spell_symbol                    *scrollview_spell_symbol*
                        when the retrieval would be out-of-bounds. Considered
                        only when the plugin is loaded.
 
-scrollview_textwidth_priority              *scrollview_textwidth_priority*
-                       |Number| specifying the priority for textwidth signs.
-                       Defaults to `20`. Considered only when the plugin is
+scrollview_latestchange_priority           *scrollview_latestchange_priority*
+                       |Number| specifying the priority for latestchange signs.
+                       Defaults to `10`. Considered only when the plugin is
                        loaded.
 
-scrollview_textwidth_symbol                *scrollview_textwidth_symbol*
-                       |String| specifying the symbol for textwidth signs.
-                       Defaults to a right-pointing double angle quotation
-                       mark. A |List| of |String|s can also be used; the symbol is
-                       selected using the index equal to the number of lines
-                       corresponding to the sign, or the last element when the
-                       retrieval would be out-of-bounds. Considered only when
-                       the plugin is loaded.
+scrollview_latestchange_symbol             *scrollview_latestchange_symbol*
+                       |String| specifying the symbol for latestchange signs.
+                       Defaults to a Greek uppercase delta.
 
 scrollview_trail_priority                  *scrollview_trail_priority*
                        |Number| specifying the priority for trail signs.
@@ -648,6 +639,8 @@ colors.
   Directory
 `ScrollViewHover`               scrollbar and signs on hover
   CurSearch
+`ScrollViewLatestChange`        latestchange signs
+  SpecialKey
 `ScrollViewLocList`             loclist signs
   LineNr
 `ScrollViewMarks`               mark signs
