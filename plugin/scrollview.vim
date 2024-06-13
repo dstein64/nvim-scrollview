@@ -23,6 +23,10 @@ endif
 " E.g., the following will use custom highlight colors.
 "   :highlight ScrollView ctermbg=159 guibg=LightCyan
 highlight default link ScrollView Visual
+highlight default link ScrollViewChangeListPrevious SpecialKey
+highlight default link ScrollViewChangeListCurrent SpecialKey
+highlight default link ScrollViewChangeListNext SpecialKey
+highlight default link ScrollViewConflictsMiddle DiffAdd
 highlight default link ScrollViewConflictsTop DiffAdd
 highlight default link ScrollViewConflictsMiddle DiffAdd
 highlight default link ScrollViewConflictsBottom DiffAdd

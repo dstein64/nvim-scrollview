@@ -150,6 +150,7 @@ Built-in Sign Groups ~
                                            *scrollview-signs-built-in*
 Group        Information
 -----        -----------
+`changelist`    change list items (previous, current, and next)
 `conflicts`     git merge conflicts
 `cursor`        cursor position
 `diagnostics`   errors, warnings, info, and hints via |vim.diagnostic|
@@ -314,6 +315,35 @@ scrollview_signs_show_in_folds             *scrollview_signs_show_in_folds*
 
                                            *scrollview-signs-built-in-config*
 Configuration Variables for Built-in Sign Groups ~
+
+scrollview_changelist_previous_priority    *scrollview_changelist_previous_priority*
+                       |Number| specifying the priority for the previous item
+                       changelist sign. Defaults to `15`. Considered only when
+                       the plugin is loaded.
+
+scrollview_changelist_previous_symbol      *scrollview_changelist_previous_symbol*
+                       |String| specifying the symbol for the previous item
+                       changelist sign. Defaults to a left-pointing arrow in a
+                       triangle.
+
+scrollview_changelist_current_priority     *scrollview_changelist_current_priority*
+                       |Number| specifying the priority for the current item
+                       changelist sign. Defaults to `10`. Considered only when
+                       the plugin is loaded.
+
+scrollview_changelist_current_symbol       *scrollview_changelist_current_symbol*
+                       |String| specifying the symbol for the current item
+                       changelist sign. Defaults to `'@'`.
+
+scrollview_changelist_next_priority        *scrollview_changelist_next_priority*
+                       |Number| specifying the priority for the next item
+                       changelist sign. Defaults to `5`. Considered only when
+                       the plugin is loaded.
+
+scrollview_changelist_next_symbol          *scrollview_changelist_next_symbol*
+                       |String| specifying the symbol for the next item
+                       changelist sign. Defaults to a right-pointing arrow in
+                       a triangle.
 
 scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority*
                        |Number| specifying the priority for conflict bottom

@@ -76,6 +76,8 @@ There is built-in support for various types of signs (referred to as "sign
 groups"), listed below. The functionality is similar to the sign column, but
 with the same positioning logic as the scrollbar.
 
+
+* `changelist`: change list items (previous, current, and next)
 * `conflicts`: git merge conflicts
 * `cursor`: cursor position
 * `diagnostics`: errors, warnings, info, and hints

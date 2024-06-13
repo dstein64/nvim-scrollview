@@ -44,6 +44,12 @@ scrollview_always_show	scrollview.txt	/*scrollview_always_show*
 scrollview_auto_mouse	scrollview.txt	/*scrollview_auto_mouse*
 scrollview_base	scrollview.txt	/*scrollview_base*
 scrollview_byte_limit	scrollview.txt	/*scrollview_byte_limit*
+scrollview_changelist_current_priority	scrollview.txt	/*scrollview_changelist_current_priority*
+scrollview_changelist_current_symbol	scrollview.txt	/*scrollview_changelist_current_symbol*
+scrollview_changelist_next_priority	scrollview.txt	/*scrollview_changelist_next_priority*
+scrollview_changelist_next_symbol	scrollview.txt	/*scrollview_changelist_next_symbol*
+scrollview_changelist_previous_priority	scrollview.txt	/*scrollview_changelist_previous_priority*
+scrollview_changelist_previous_symbol	scrollview.txt	/*scrollview_changelist_previous_symbol*
 scrollview_character	scrollview.txt	/*scrollview_character*
 scrollview_column	scrollview.txt	/*scrollview_column*
 scrollview_conflicts_bottom_priority	scrollview.txt	/*scrollview_conflicts_bottom_priority*

@@ -76,6 +76,20 @@ let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
 let g:scrollview_signs_show_in_folds =
       \ get(g:, 'scrollview_signs_show_in_folds', v:false)
 
+" *** Change list signs ***
+let g:scrollview_changelist_previous_priority =
+      \ get(g:, 'scrollview_changelist_previous_priority', 15)
+let g:scrollview_changelist_previous_symbol =
+      \ get(g:, 'scrollview_changelist_previous_symbol', nr2char(0x1f894))
+let g:scrollview_changelist_current_priority =
+      \ get(g:, 'scrollview_changelist_current_priority', 10)
+let g:scrollview_changelist_current_symbol =
+      \ get(g:, 'scrollview_changelist_current_symbol', '@')
+let g:scrollview_changelist_next_priority =
+      \ get(g:, 'scrollview_changelist_next_priority', 5)
+let g:scrollview_changelist_next_symbol =
+      \ get(g:, 'scrollview_changelist_next_symbol', nr2char(0x1f896))
+
 " *** Conflict signs ***
 let g:scrollview_conflicts_bottom_priority =
       \ get(g:, 'scrollview_conflicts_bottom_priority', 80)
