@@ -163,8 +163,7 @@ Group        Information
 `spell`         spell check items when the |'spell'| option is enabled
 `textwidth`     line lengths exceeding the value of the |'textwidth'| option, when
               non-zero
-`trail`         trailing whitespace, when the |'list'| option is enabled and the
-              |'listchars'| option includes "trail"
+`trail`         trailing whitespace
 
                                            *scrollview-restricted*
 Under certain scenarios, the plugin enters a restricted mode to prevent a

@@ -90,8 +90,7 @@ with the same positioning logic as the scrollbar.
 * `spell`: spell check items when the `spell` option is enabled
 * `textwidth`: line lengths exceeding the value of the textwidth option, when
   non-zero
-* `trail`: trailing whitespace, when the `list` option is enabled and the
-  `listchars` option includes "trail"
+* `trail`: trailing whitespace
 
 `search` and `diagnostics` groups are enabled by default (`marks` too for
 `nvim>=0.10`). To modify which sign groups are enabled, set
