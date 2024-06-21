@@ -88,7 +88,7 @@ with the same positioning logic as the scrollbar.
 * `quickfix`: items on the quickfix list
 * `search`
 * `spell`: spell check items when the `spell` option is enabled
-* `textwidth`: line lengths exceeding the value of the textwidth option, when
+* `textwidth`: line lengths exceeding the value of the `textwidth` option, when
   non-zero
 * `trail`: trailing whitespace
 
