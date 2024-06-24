@@ -416,7 +416,10 @@ function! s:SetUpMouseMappings(button, primary) abort
 endfunction
 
 call s:SetUpMouseMappings(g:scrollview_mouse_primary, v:true)
-call s:SetUpMouseMappings(g:scrollview_mouse_secondary, v:false)
+" :popup doesn't work for nvim<0.8.
+if has('nvim-0.8')
+  call s:SetUpMouseMappings(g:scrollview_mouse_secondary, v:false)
+endif
 
 " Additional <plug> mappings are defined for convenience of creating
 " user-defined mappings that call nvim-scrollview functionality. However,
