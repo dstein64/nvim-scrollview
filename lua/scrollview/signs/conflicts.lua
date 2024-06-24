@@ -16,16 +16,19 @@ function M.init(enable)
   local group = 'conflicts'
   local spec_data = {
     [TOP] = {
+      'top',
       vim.g.scrollview_conflicts_top_priority,
       vim.g.scrollview_conflicts_top_symbol,
       'ScrollViewConflictsTop'
     },
     [MIDDLE] = {
+      'middle',
       vim.g.scrollview_conflicts_middle_priority,
       vim.g.scrollview_conflicts_middle_symbol,
       'ScrollViewConflictsMiddle'
     },
     [BOTTOM] = {
+      'bottom',
       vim.g.scrollview_conflicts_bottom_priority,
       vim.g.scrollview_conflicts_bottom_symbol,
       'ScrollViewConflictsBottom'
@@ -33,12 +36,13 @@ function M.init(enable)
   }
   local names = {}  -- maps position to registration name
   for position, item in pairs(spec_data) do
-    local priority, symbol, highlight = unpack(item)
+    local variant, priority, symbol, highlight = unpack(item)
     local registration = scrollview.register_sign_spec({
       group = group,
       highlight = highlight,
       priority = priority,
       symbol = symbol,
+      variant = variant,
     })
     names[position] = registration.name
   end

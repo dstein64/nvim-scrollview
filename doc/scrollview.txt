@@ -776,6 +776,8 @@ register_sign_spec({spec})                 *scrollview.register_sign_spec()*
                 - symbol (string): Defaults to `''`.
                 - type (string): `'b'` for buffer-local signs, `'w'` for
                   window-local signs. Defaults to `'b'`.
+                - variant (string|nil): Used for groups that include multiple
+                  variants. Defaults to `nil`.
 
     Return: ~
         (table) a table with the following key-value pairs.

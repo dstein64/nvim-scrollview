@@ -67,24 +67,28 @@ function M.setup(config)
     local value
     if severity == 'error' then
       value = {
+        'error',
         config.error_priority,
         config.error_symbol,
         config.error_highlight
       }
     elseif severity == 'hint' then
       value = {
+        'hint',
         config.hint_priority,
         config.hint_symbol,
         config.hint_highlight
       }
     elseif severity == 'info' then
       value = {
+        'info',
         config.info_priority,
         config.info_symbol,
         config.info_highlight
       }
     elseif severity == 'warn' then
       value = {
+        'warn',
         config.warn_priority,
         config.warn_symbol,
         config.warn_highlight
@@ -98,12 +102,13 @@ function M.setup(config)
   if vim.tbl_isempty(spec_data) then return end
   local names = {}  -- maps severity to registration name
   for severity, item in pairs(spec_data) do
-    local priority, symbol, highlight = unpack(item)
+    local variant, priority, symbol, highlight = unpack(item)
     local registration = scrollview.register_sign_spec({
       group = group,
       highlight = highlight,
       priority = priority,
       symbol = symbol,
+      variant = variant,
     })
     names[severity] = registration.name
   end

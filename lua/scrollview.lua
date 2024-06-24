@@ -2714,6 +2714,12 @@ local handle_mouse = function(button, primary)
                 lhs = menu_name .. '.' .. group
                 rhs = '<nop>'
                 vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
+                local variant = sign_specs[sign_props.sign_spec_id].variant
+                if variant ~= nil then
+                  lhs = menu_name .. '.' .. variant
+                  rhs = '<nop>'
+                  vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
+                end
                 -- We limit the number of items on the popup menu to prevent a
                 -- scenario where the menu pops up and then disappears unless
                 -- the mouse button is held.
@@ -2910,6 +2916,7 @@ local register_sign_spec = function(specification)
     show_in_folds = nil,  -- when set, overrides 'scrollview_signs_show_in_folds'
     symbol = '',  -- effectively ' '
     type = 'b',
+    variant = nil,
   }
   for key, val in pairs(defaults) do
     if specification[key] == nil then
@@ -2925,8 +2932,14 @@ local register_sign_spec = function(specification)
   -- start with a digit. This matches the rules for internal variables (:help
   -- internal-variables), but is more restrictive than what is possible with
   -- e.g., nvim_buf_set_var.
-  if string.match(specification.group, '^[a-zA-Z_][a-zA-Z0-9_]*$') == nil then
+  local valid_pattern = '^[a-zA-Z_][a-zA-Z0-9_]*$'
+  if string.match(specification.group, valid_pattern) == nil then
     error('Invalid group: ' .. specification.group)
+  end
+  -- Apply the same restrictions to variants.
+  if specification.variant ~= nil
+      and string.match(specification.variant, valid_pattern) == nil then
+    error('Invalid variant: ' .. specification.variant)
   end
   local name = 'scrollview_signs_' .. id .. '_' .. specification.group
   specification.name = name

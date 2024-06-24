@@ -17,24 +17,28 @@ function M.init(enable)
     local value
     if severity == vim.diagnostic.severity.ERROR then
       value = {
+        'error',
         vim.g.scrollview_diagnostics_error_priority,
         vim.g.scrollview_diagnostics_error_symbol,
         'ScrollViewDiagnosticsError'
       }
     elseif severity == vim.diagnostic.severity.HINT then
       value = {
+        'hint',
         vim.g.scrollview_diagnostics_hint_priority,
         vim.g.scrollview_diagnostics_hint_symbol,
         'ScrollViewDiagnosticsHint'
       }
     elseif severity == vim.diagnostic.severity.INFO then
       value = {
+        'info',
         vim.g.scrollview_diagnostics_info_priority,
         vim.g.scrollview_diagnostics_info_symbol,
         'ScrollViewDiagnosticsInfo'
       }
     elseif severity == vim.diagnostic.severity.WARN then
       value = {
+        'warn',
         vim.g.scrollview_diagnostics_warn_priority,
         vim.g.scrollview_diagnostics_warn_symbol,
         'ScrollViewDiagnosticsWarn'
@@ -47,12 +51,13 @@ function M.init(enable)
   if vim.tbl_isempty(spec_data) then return end
   local names = {}  -- maps severity to registration name
   for severity, item in pairs(spec_data) do
-    local priority, symbol, highlight = unpack(item)
+    local variant, priority, symbol, highlight = unpack(item)
     local registration = scrollview.register_sign_spec({
       group = group,
       highlight = highlight,
       priority = priority,
       symbol = symbol,
+      variant = variant,
     })
     names[severity] = registration.name
   end

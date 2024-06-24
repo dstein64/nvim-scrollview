@@ -25,6 +25,7 @@ function M.init(enable)
       highlight = 'ScrollViewMarks',
       priority = vim.g.scrollview_marks_priority,
       symbol = char,
+      variant = char,
     })
     names[char] = registration.name
   end

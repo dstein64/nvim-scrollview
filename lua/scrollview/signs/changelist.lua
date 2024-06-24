@@ -17,16 +17,19 @@ function M.init(enable)
 
   local spec_data = {
     [PREVIOUS] = {
+      'previous',
       vim.g.scrollview_changelist_previous_priority,
       vim.g.scrollview_changelist_previous_symbol,
       'ScrollViewChangeListPrevious'
     },
     [CURRENT] = {
+      'current',
       vim.g.scrollview_changelist_current_priority,
       vim.g.scrollview_changelist_current_symbol,
       'ScrollViewChangeListCurrent'
     },
     [NEXT] = {
+      'next',
       vim.g.scrollview_changelist_next_priority,
       vim.g.scrollview_changelist_next_symbol,
       'ScrollViewChangeListNext'
@@ -34,12 +37,13 @@ function M.init(enable)
   }
   local names = {}  -- maps direction to registration name
   for direction, item in pairs(spec_data) do
-    local priority, symbol, highlight = unpack(item)
+    local variant, priority, symbol, highlight = unpack(item)
     local registration = scrollview.register_sign_spec({
       group = group,
       highlight = highlight,
       priority = priority,
       symbol = symbol,
+      variant = variant,
     })
     names[direction] = registration.name
   end
