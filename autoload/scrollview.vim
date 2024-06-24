@@ -39,6 +39,19 @@ let g:scrollview_include_end_region =
 " the limit. Use -1 for no limit.
 let g:scrollview_line_limit = get(g:, 'scrollview_line_limit', 20000)
 let g:scrollview_mode = get(g:, 'scrollview_mode', 'auto')
+" If the old option, scrollview_auto_mouse, is set to false, disable the mouse
+" functionality.
+if !get(g:, 'scrollview_auto_mouse', v:true)
+  if !has_key(g:, 'scrollview_mouse_primary')
+    let g:scrollview_mouse_primary = v:null
+  endif
+  if !has_key(g:, 'scrollview_mouse_secondary')
+    let g:scrollview_mouse_secondary = v:null
+  endif
+endif
+let g:scrollview_mouse_primary = get(g:, 'scrollview_mouse_primary', 'left')
+let g:scrollview_mouse_secondary =
+      \ get(g:, 'scrollview_mouse_secondary', 'right')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', v:true)
 let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 let g:scrollview_winblend_gui = get(g:, 'scrollview_winblend_gui', 0)
@@ -373,33 +386,37 @@ endif
 " * Mappings
 " *************************************************
 
-" <plug> mappings for mouse functionality.
-" E.g., <plug>(ScrollViewLeftMouse)
-let s:mouse_plug_pairs = [
-      \   ['ScrollViewLeftMouse',   'left'  ],
-      \   ['ScrollViewMiddleMouse', 'middle'],
-      \   ['ScrollViewRightMouse',  'right' ],
-      \   ['ScrollViewX1Mouse',     'x1'    ],
-      \   ['ScrollViewX2Mouse',     'x2'    ],
-      \ ]
-for [s:plug_name, s:button] in s:mouse_plug_pairs
-  let s:lhs = printf('<silent> <plug>(%s)', s:plug_name)
-  let s:rhs = printf(
-        \ '<cmd>lua require("scrollview").handle_mouse("%s")<cr>', s:button)
-  execute 'noremap' s:lhs s:rhs
-  execute 'inoremap' s:lhs s:rhs
-endfor
+function! s:SetUpMouseMappings(button, primary) abort
+  if a:button isnot# v:null
+    " Create a mouse mapping only if mappings don't already exist and "!" is
+    " not used at the end of the button. For example, a mapping may already
+    " exist if the user uses swapped buttons from $VIMRUNTIME/pack/dist/opt
+    " /swapmouse/plugin/swapmouse.vim. Handling for that scenario would
+    " require modifications (e.g., possibly by updating the non-initial
+    " feedkeys calls in handle_mouse() to remap keys).
+    let l:force = v:false
+    let l:button = a:button
+    if strcharpart(l:button, strcharlen(l:button) - 1, 1) ==# '!'
+      let l:force = v:true
+      let l:button =
+            \ strcharpart(l:button, 0, strcharlen(l:button) - 1)
+    endif
+    for l:mapmode in 'nvi'
+      execute printf(
+            \   'silent! %smap %s <silent> <%smouse>'
+            \   .. ' <cmd>lua require("scrollview").handle_mouse("%s", %s)<cr>',
+            \   l:mapmode,
+            \   l:force ? '' : '<unique>',
+            \   l:button,
+            \   l:button,
+            \   a:primary ? 'true' : 'false',
+            \ )
+    endfor
+  endif
+endfunction
 
-if g:scrollview_auto_mouse
-  " Create a <leftmouse> mapping only if one does not already exist.
-  " For example, a mapping may already exist if the user uses swapped buttons
-  " from $VIMRUNTIME/pack/dist/opt/swapmouse/plugin/swapmouse.vim. Handling
-  " for that scenario would require modifications (e.g., possibly by updating
-  " the non-initial feedkeys calls in scrollview#HandleMouse to remap keys).
-  silent! nmap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
-  silent! vmap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
-  silent! imap <unique> <silent> <leftmouse> <plug>(ScrollViewLeftMouse)
-endif
+call s:SetUpMouseMappings(g:scrollview_mouse_primary, v:true)
+call s:SetUpMouseMappings(g:scrollview_mouse_secondary, v:false)
 
 " Additional <plug> mappings are defined for convenience of creating
 " user-defined mappings that call nvim-scrollview functionality. However,

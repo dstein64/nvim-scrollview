@@ -45,6 +45,8 @@ local bar_bufnr = -1
 -- sign_bufnr has the bufnr of the buffer created for signs.
 local sign_bufnr = -1
 
+local popup_bufnr = -1
+
 -- Keep count of pending async refreshes.
 local pending_async_refresh_count = 0
 
@@ -2529,10 +2531,21 @@ local last = function(groups)
   move_to_sign_line('$', groups)
 end
 
--- 'button' can be 'left', 'middle', 'right', 'x1', or 'x2'.
-local handle_mouse = function(button)
-  if not vim.tbl_contains({'left', 'middle', 'right', 'x1', 'x2'}, button) then
+-- 'button' can be 'left', 'middle', 'right', 'x1', or 'x2'. 'c-' or 'm-' can be
+-- prepended for the control-key and alt-key variants. If primary is true, the
+-- handling is for navigation (dragging scrollbars and navigating to signs).
+-- If primary is false, the handling is for context (showing popups with info).
+local handle_mouse = function(button, primary)
+  local valid_buttons = {
+    'left', 'middle', 'right', 'x1', 'x2',
+    'c-left', 'c-middle', 'c-right', 'c-x1', 'c-x2',
+    'm-left', 'm-middle', 'm-right', 'm-x1', 'm-x2',
+  }
+  if not vim.tbl_contains(valid_buttons, button) then
     error('Unsupported button: ' .. button)
+  end
+  if primary == nil then
+    primary = true
   end
   local mousedown = t('<' .. button .. 'mouse>')
   local mouseup = t('<' .. button .. 'release>')
@@ -2649,6 +2662,8 @@ local handle_mouse = function(button)
           end
           props = get_scrollview_bar_props(mouse_winid)
           local clicked_bar = false
+          local clicked_sign = false
+          local sign_props = nil  -- set when clicked_sign is true
           if not vim.tbl_isempty(props) then
             clicked_bar = mouse_row >= props.row
               and mouse_row < props.row + props.height
@@ -2656,28 +2671,116 @@ local handle_mouse = function(button)
               and mouse_col <= props.col
           end
           -- First check for a click on a sign and handle accordingly.
-          for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
-            if mouse_row == sign_props.row
-                and mouse_col >= sign_props.col
-                and mouse_col <= sign_props.col + sign_props.width - 1
-                and (not clicked_bar or sign_props.zindex > props.zindex) then
-              api.nvim_win_call(mouse_winid, function()
-                -- Go to the next sign_props line after the cursor.
-                local current = fn.line('.')
-                local target = subsequent(sign_props.lines, current, 1, true)
-                vim.cmd('normal!' .. target .. 'G')
-              end)
-              refresh_bars()
-              return
+          for _, sign_props2 in ipairs(get_scrollview_sign_props(mouse_winid)) do
+            if mouse_row == sign_props2.row
+                and mouse_col >= sign_props2.col
+                and mouse_col <= sign_props2.col + sign_props2.width - 1
+                and (not clicked_bar or sign_props2.zindex > props.zindex) then
+              clicked_sign = true
+              clicked_bar = false
+              sign_props = sign_props2
+              break
             end
           end
-          if not clicked_bar then
-            -- There was either no scrollbar in the window where a click
-            -- occurred or the click was not on a scrollbar.
+          if not clicked_bar and not clicked_sign then
+            -- There was either no scrollbar or signs in the window where a
+            -- click occurred or the click was not on a scrollbar or sign.
             fn.feedkeys(string.sub(string, str_idx), 'ni')
             return
           end
-          -- The click was on a scrollbar.
+          if clicked_sign and primary then
+            -- There was a primary click on a sign. Navigate to the next
+            -- sign_props line after the cursor.
+            api.nvim_win_call(mouse_winid, function()
+              local current = fn.line('.')
+              local target = subsequent(sign_props.lines, current, 1, true)
+              vim.cmd('normal!' .. target .. 'G')
+            end)
+            refresh_bars()
+            return
+          end
+          if not primary then
+            -- There was a secondary click on either a scrollbar or sign. Show
+            -- a popup accordingly.
+            local menu_modes = {'n', 'v', 'i'}
+            -- Menus starting with ']' are excluded from the main menu bar
+            -- (:help hidden-menus).
+            local menu_name = ']ScrollViewPopUp'
+            local lhs, rhs
+            local mousepos = fn.getmousepos()
+            for _, menu_mode in ipairs(menu_modes) do
+              if clicked_sign then
+                local group = sign_specs[sign_props.sign_spec_id].group
+                lhs = menu_name .. '.' .. group
+                rhs = '<nop>'
+                vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
+                -- We limit the number of items on the popup menu to prevent a
+                -- scenario where the menu pops up and then disappears unless
+                -- the mouse button is held.
+                local rows_available = vim.o.lines
+                rows_available = math.max(
+                  rows_available - mousepos.screenrow,
+                  mousepos.screenrow - 1
+                )
+                for line_idx, line in ipairs(sign_props.lines) do
+                  -- Add 1 to account for the header (menu item added above).
+                  if line_idx + 1 > rows_available then break end
+                  lhs = menu_name .. '.' .. line
+                  local parent_winnr =
+                    api.nvim_win_get_number(sign_props.parent_winid)
+                  local wincmd = parent_winnr .. 'wincmd w'
+                  rhs = '<cmd>' .. wincmd .. '<bar>normal! ' .. line .. 'G<cr>'
+                  vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
+                end
+              else
+                local popup_title = clicked_bar and 'scrollbar' or 'scrollview'
+                lhs = menu_name .. '.' .. popup_title
+                rhs = '<nop>'
+                vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
+              end
+            end
+            -- We create a temporary floating window for positioning the cursor
+            -- at the mouse pointer. This way, the popup opens where the click
+            -- occurs.
+            if popup_bufnr == -1
+              or not to_bool(fn.bufloaded(popup_bufnr)) then
+              if popup_bufnr == -1 then
+                popup_bufnr = api.nvim_create_buf(false, true)
+              end
+              -- Other plugins might have unloaded the buffer. #104
+              fn.bufload(popup_bufnr)
+              api.nvim_buf_set_option(popup_bufnr, 'modifiable', false)
+              api.nvim_buf_set_option(popup_bufnr, 'buftype', 'nofile')
+              api.nvim_buf_set_option(popup_bufnr, 'swapfile', false)
+              api.nvim_buf_set_option(popup_bufnr, 'bufhidden', 'hide')
+              api.nvim_buf_set_option(popup_bufnr, 'buflisted', false)
+              -- Don't turn off undo for Neovim 0.9.0 and 0.9.1 since Neovim
+              -- could crash, presumably from Neovim #24289. #111, #115
+              if not to_bool(fn.has('nvim-0.9'))
+                or to_bool(fn.has('nvim-0.9.2')) then
+                api.nvim_buf_set_option(popup_bufnr, 'undolevels', -1)
+              end
+            end
+            local popup_win = api.nvim_open_win(popup_bufnr, false, {
+              relative = 'editor',
+              focusable = false,
+              width = 1,
+              height = 1,
+              row = mousepos.screenrow - 1,
+              col = mousepos.screencol - 1,
+              zindex = 1,
+              style = 'minimal'
+            })
+            api.nvim_tabpage_set_win(0, popup_win)
+            vim.cmd('popup ' .. menu_name)
+            for _, menu_mode in ipairs(menu_modes) do
+              vim.cmd('silent! ' .. menu_mode .. 'unmenu ' .. menu_name)
+            end
+            api.nvim_win_close(popup_win, true)
+            refresh_bars()
+            return
+          end
+          -- There was a primary click on a scrollbar.
           -- It's possible that the clicked scrollbar is out-of-sync. Refresh
           -- the scrollbars and check if the mouse is still over a scrollbar. If
           -- not, ignore all mouse events until a mouseup. This approach was

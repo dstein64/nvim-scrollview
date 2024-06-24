@@ -101,15 +101,6 @@ The following |<Plug>| mappings are defined for convenience.
 * `<Plug>(ScrollViewRefresh)`
 * `<Plug>(ScrollViewToggle)`
 
-The following |<Plug>| mappings are defined for customizing mouse functionality
-(see |scrollview-mouse-customization|).
-
-* `<Plug>(ScrollViewLeftMouse)`
-* `<Plug>(ScrollViewMiddleMouse)`
-* `<Plug>(ScrollViewRightMouse)`
-* `<Plug>(ScrollViewX1Mouse)`
-* `<Plug>(ScrollViewX2Mouse)`
-
                                            *scrollview-autocommands*
 The |User| *ScrollViewRefresh* |autocommand| fires prior to refreshing scrollbars
 and signs.
@@ -146,6 +137,12 @@ is configurable, the closer it will be to the scrollbar. When the number of
 signs exceeds the value specified by |scrollview_signs_max_per_row|, the lower
 priority signs will be dropped.
 
+Clicking on a sign will navigate to its associated line. If a sign is linked
+to multiple lines, successive clicks will cycle through these lines.
+Right-clicking a sign reveals additional information, including its sign group
+and the corresponding lines, which can be selected for navigation. Identifying
+the sign group can be helpful if you are unsure what a sign represents.
+
 Built-in Sign Groups ~
                                            *scrollview-signs-built-in*
 Group        Information
@@ -178,12 +175,6 @@ Configuration Variables ~
                                            *scrollview_always_show*
 scrollview_always_show |Boolean| specifying whether scrollbars and signs are
                        shown when all lines are visible. Defaults to |v:false|.
-
-                                           *scrollview_auto_mouse*
-scrollview_auto_mouse  |Boolean| specifying whether a mapping is automatically
-                       created for mouse support (without clobbering).
-                       Defaults to |v:true|. Considered only when the plugin is
-                       loaded.
 
                                            *scrollview_base*
 scrollview_base        |String| specifying where the scrollbar is anchored.
@@ -245,6 +236,26 @@ scrollview_line_limit  |Number| specifying the buffer size threshold (in
 scrollview_mode        |String| specifying what the scrollbar position and size
                        correspond to. See |scrollview-modes| for details on the
                        available modes. Defaults to `'auto'`.
+
+scrollview_mouse_primary                   *scrollview_mouse_primary*
+                       |String| specifying the button for primary mouse
+                       operations (dragging scrollbars and clicking signs).
+                       Possible values include `'left'`, `'middle'`, `'right'`,
+                       `'x1'`, and `'x2'`. These can be prepended with `'c-'` or
+                       `'m-'` for the control-key and alt-key variants (e.g.,
+                       `'c-left'` for control-left). An existing mapping will
+                       not be clobbered, unless `'!'` is added at the end (e.g.,
+                       `'left!'`). Set to `v:null` to disable the functionality.
+                       Defaults to `'left'`. Considered only when the plugin is
+                       loaded.
+
+scrollview_mouse_secondary                 *scrollview_mouse_secondary*
+                       |String| specifying the button for secondary mouse
+                       operations (clicking signs for additional information).
+                       See |scrollview_mouse_secondary| for the possible values,
+                       including how `'c-'`, `'m-'`, `'!'`, and `v:null` can be
+                       utilized. Defaults to `'right'`. Considered only when the
+                       plugin is loaded.
 
                                            *scrollview_on_startup*
 scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
@@ -693,39 +704,6 @@ following example.
 
     " Specify custom highlighting for ScrollView
     highlight ScrollView ctermbg=159 guibg=LightCyan
-
-Mouse Customization
-                                           *scrollview-mouse-customization*
-When |scrollview_auto_mouse| is set, a |<LeftMouse>| mapping is automatically
-created for interactive mouse support. An existing mapping will not be
-clobbered.
-
-Mappings can be used to manually create mappings for mouse support.
- >
-    " Add support for dragging scrollbars with the left mouse button
-    nmap <leftmouse> <plug>(ScrollViewLeftMouse)
-    vmap <leftmouse> <plug>(ScrollViewLeftMouse)
-    imap <leftmouse> <plug>(ScrollViewLeftMouse)
-
-    " Add support for dragging scrollbars with the middle mouse button
-    nmap <middlemouse> <plug>(ScrollViewMiddleMouse)
-    vmap <middlemouse> <plug>(ScrollViewMiddleMouse)
-    imap <middlemouse> <plug>(ScrollViewMiddleMouse)
-
-    " Add support for dragging scrollbars with the right mouse button
-    nmap <rightmouse> <plug>(ScrollViewRightMouse)
-    vmap <rightmouse> <plug>(ScrollViewRightMouse)
-    imap <rightmouse> <plug>(ScrollViewRightMouse)
-
-    " Add support for dragging scrollbars with the x1 mouse button
-    nmap <x1mouse> <plug>(ScrollViewX1Mouse)
-    vmap <x1mouse> <plug>(ScrollViewX1Mouse)
-    imap <x1mouse> <plug>(ScrollViewX1Mouse)
-
-    " Add support for dragging scrollbars with the x2 mouse button
-    nmap <x2mouse> <plug>(ScrollViewX2Mouse)
-    vmap <x2mouse> <plug>(ScrollViewX2Mouse)
-    imap <x2mouse> <plug>(ScrollViewX2Mouse)
 
 ============================================================================
 5. Sign Extensibility                      *scrollview-signs-extensibility*

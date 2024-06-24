@@ -66,16 +66,13 @@ A package manager can be used to install `nvim-scrollview`.
 * `:ScrollViewNext`, `:ScrollViewPrev`, `:ScrollViewFirst`, and
   `:ScrollViewLast` move the cursor to lines with signs. Arguments can specify
   which sign groups are considered.
-* The scrollbars can be dragged and signs can be clicked. This requires a
-  corresponding mapping, which is automatically configured when
-  `scrollview_auto_mouse` is set (see `:help scrollview-mouse-customization`).
+* The scrollbars can be dragged and signs can be clicked.
 
 ## Signs
 
 There is built-in support for various types of signs (referred to as "sign
 groups"), listed below. The functionality is similar to the sign column, but
 with the same positioning logic as the scrollbar.
-
 
 * `changelist`: change list items (previous, current, and next)
 * `conflicts`: git merge conflicts
@@ -97,6 +94,12 @@ with the same positioning logic as the scrollbar.
 `scrollview_signs_on_startup` accordingly in your Neovim configuation (see
 `:help scrollview_signs_on_startup`), or use `:ScrollViewEnable {group1}
 {group2} ...` to enable sign groups in the current Neovim session.
+
+Clicking on a sign will navigate to its associated line. If a sign is linked to
+multiple lines, successive clicks will cycle through these lines. Right-clicking
+a sign reveals additional information, including its sign group and the
+corresponding lines, which can be selected for navigation. Identifying the sign
+group can be helpful if you are unsure what a sign represents.
 
 The plugin was written so that it's possible to extend the sign functionality
 in a Neovim configuration file or with a plugin. See the documentation for

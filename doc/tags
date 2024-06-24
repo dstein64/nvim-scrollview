@@ -18,7 +18,6 @@ scrollview-installation	scrollview.txt	/*scrollview-installation*
 scrollview-issues	scrollview.txt	/*scrollview-issues*
 scrollview-mappings	scrollview.txt	/*scrollview-mappings*
 scrollview-modes	scrollview.txt	/*scrollview-modes*
-scrollview-mouse-customization	scrollview.txt	/*scrollview-mouse-customization*
 scrollview-other-issues	scrollview.txt	/*scrollview-other-issues*
 scrollview-refreshing-global	scrollview.txt	/*scrollview-refreshing-global*
 scrollview-requirements	scrollview.txt	/*scrollview-requirements*
@@ -41,7 +40,6 @@ scrollview.set_sign_group_state()	scrollview.txt	/*scrollview.set_sign_group_sta
 scrollview.setup()	scrollview.txt	/*scrollview.setup()*
 scrollview.txt	scrollview.txt	/*scrollview.txt*
 scrollview_always_show	scrollview.txt	/*scrollview_always_show*
-scrollview_auto_mouse	scrollview.txt	/*scrollview_auto_mouse*
 scrollview_base	scrollview.txt	/*scrollview_base*
 scrollview_byte_limit	scrollview.txt	/*scrollview_byte_limit*
 scrollview_changelist_current_priority	scrollview.txt	/*scrollview_changelist_current_priority*
@@ -85,6 +83,8 @@ scrollview_loclist_symbol	scrollview.txt	/*scrollview_loclist_symbol*
 scrollview_marks_characters	scrollview.txt	/*scrollview_marks_characters*
 scrollview_marks_priority	scrollview.txt	/*scrollview_marks_priority*
 scrollview_mode	scrollview.txt	/*scrollview_mode*
+scrollview_mouse_primary	scrollview.txt	/*scrollview_mouse_primary*
+scrollview_mouse_secondary	scrollview.txt	/*scrollview_mouse_secondary*
 scrollview_on_startup	scrollview.txt	/*scrollview_on_startup*
 scrollview_quickfix_priority	scrollview.txt	/*scrollview_quickfix_priority*
 scrollview_quickfix_symbol	scrollview.txt	/*scrollview_quickfix_symbol*
