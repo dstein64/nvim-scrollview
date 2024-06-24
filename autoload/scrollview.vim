@@ -401,7 +401,7 @@ function! s:SetUpMouseMappings(button, primary) abort
       let l:button =
             \ strcharpart(l:button, 0, strchars(l:button, 1) - 1)
     endif
-    for l:mapmode in 'nvi'
+    for l:mapmode in ['n', 'v', 'i']
       execute printf(
             \   'silent! %smap %s <silent> <%smouse>'
             \   .. ' <cmd>lua require("scrollview").handle_mouse("%s", %s)<cr>',
