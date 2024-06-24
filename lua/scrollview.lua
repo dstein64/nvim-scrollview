@@ -2771,7 +2771,7 @@ local handle_mouse = function(button, primary)
               zindex = 1,
               style = 'minimal'
             })
-            api.nvim_tabpage_set_win(0, popup_win)
+            api.nvim_set_current_win(popup_win)
             vim.cmd('popup ' .. menu_name)
             for _, menu_mode in ipairs(menu_modes) do
               vim.cmd('silent! ' .. menu_mode .. 'unmenu ' .. menu_name)
