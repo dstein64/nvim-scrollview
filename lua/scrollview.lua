@@ -2722,9 +2722,12 @@ local handle_mouse = function(button, primary)
                   rows_available - mousepos.screenrow,
                   mousepos.screenrow - 1
                 )
+                rows_available =
+                  rows_available - #fn.menu_info(menu_name, menu_mode).submenus
                 for line_idx, line in ipairs(sign_props.lines) do
-                  -- Add 1 to account for the header (menu item added above).
-                  if line_idx + 1 > rows_available then break end
+                  if line_idx > rows_available then
+                    break
+                  end
                   lhs = menu_name .. '.' .. line
                   local parent_winnr =
                     api.nvim_win_get_number(sign_props.parent_winid)
