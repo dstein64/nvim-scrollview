@@ -396,10 +396,10 @@ function! s:SetUpMouseMappings(button, primary) abort
     " feedkeys calls in handle_mouse() to remap keys).
     let l:force = v:false
     let l:button = a:button
-    if strcharpart(l:button, strcharlen(l:button) - 1, 1) ==# '!'
+    if strcharpart(l:button, strchars(l:button, 1) - 1, 1) ==# '!'
       let l:force = v:true
       let l:button =
-            \ strcharpart(l:button, 0, strcharlen(l:button) - 1)
+            \ strcharpart(l:button, 0, strchars(l:button, 1) - 1)
     endif
     for l:mapmode in 'nvi'
       execute printf(
