@@ -252,7 +252,7 @@ scrollview_mouse_primary                   *scrollview_mouse_primary*
 scrollview_mouse_secondary                 *scrollview_mouse_secondary*
                        |String| specifying the button for secondary mouse
                        operations (clicking signs for additional information).
-                       See |scrollview_mouse_secondary| for the possible values,
+                       See |scrollview_mouse_primary| for the possible values,
                        including how `'c-'`, `'m-'`, `'!'`, and `v:null` can be
                        utilized. Defaults to `'right'`. Considered only when the
                        plugin is loaded.
