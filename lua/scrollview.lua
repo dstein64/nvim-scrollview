@@ -2720,6 +2720,9 @@ local handle_mouse = function(button, primary)
                   rhs = '<nop>'
                   vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
                 end
+                lhs = menu_name .. '.-sep-'
+                rhs = '<nop>'
+                vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
                 -- We limit the number of items on the popup menu to prevent a
                 -- scenario where the menu pops up and then disappears unless
                 -- the mouse button is held.
