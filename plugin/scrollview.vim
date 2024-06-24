@@ -52,12 +52,20 @@ for [s:key, s:fallback, s:sign] in s:diagnostics_highlight_data
   execute 'highlight default link ' .. s:key .. ' ' .. s:highlight
 endfor
 highlight default link ScrollViewFolds Directory
-highlight default link ScrollViewHover CurSearch
+if has('nvim-0.9.2')
+  highlight default link ScrollViewHover CurSearch
+else
+  highlight default link ScrollViewHover WildMenu
+endif
 highlight default link ScrollViewLatestChange SpecialKey
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks Identifier
 highlight default link ScrollViewQuickFix Constant
-highlight default link ScrollViewRestricted CurSearch
+if has('nvim-0.9.2')
+  highlight default link ScrollViewRestricted CurSearch
+else
+  highlight default link ScrollViewRestricted MatchParen
+endif
 highlight default link ScrollViewSearch NonText
 highlight default link ScrollViewSpell Statement
 highlight default link ScrollViewTextWidth Question

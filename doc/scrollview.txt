@@ -678,7 +678,8 @@ colors.
 `ScrollViewFolds`               fold signs
   Directory
 `ScrollViewHover`               scrollbar and signs on hover
-  CurSearch
+  CurSearch for nvim>=0.9.2
+  and WildMenu otherwise
 `ScrollViewLatestChange`        latestchange signs
   SpecialKey
 `ScrollViewLocList`             loclist signs
@@ -688,7 +689,8 @@ colors.
 `ScrollViewQuickFix`            quickfix signs
   Constant
 `ScrollViewRestricted`          |scrollview-restricted| scrollbar
-  CurSearch
+  CurSearch for nvim>=0.9.2
+  and MatchParen otherwise
 `ScrollViewSearch`              search signs
   NonText
 `ScrollViewSpell`               spell signs
