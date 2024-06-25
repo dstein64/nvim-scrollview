@@ -2970,6 +2970,8 @@ end
 -- an optional argument that specifies whether scrollview will refresh
 -- afterwards. It defaults to true.
 local deregister_sign_spec = function(id, refresh_)
+  -- WARN: sign_group_state is not updated (to remove the group entry if there
+  -- are no more sign specifications of that group).
   if refresh_ == nil then
     refresh_ = true
   end
