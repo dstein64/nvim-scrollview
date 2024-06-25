@@ -67,7 +67,7 @@ A package manager can be used to install `nvim-scrollview`.
   `:ScrollViewLast` move the cursor to lines with signs. Arguments can specify
   which sign groups are considered.
 * The scrollbars are draggable with a mouse. Signs can be clicked for
-  navigation or right-clicked for information. If `'mousemoveevent'` is set,
+  navigation or right-clicked for information. If `mousemoveevent` is set,
   scrollbars and signs are highlighted when the mouse pointer hovers.
 
 ## Signs
