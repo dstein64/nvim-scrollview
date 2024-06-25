@@ -36,7 +36,7 @@ Use |packages| or one of the various package managers.
                                            *scrollview-mouse*
 
 The scrollbars are draggable with a mouse. Signs can be clicked for navigation
-or right-clicked for information. If 'mousemoveevent' is set, scrollbars and
+or right-clicked for information. If |'mousemoveevent'| is set, scrollbars and
 signs are highlighted when the mouse pointer hovers.
 
                                            *scrollview-commands*
