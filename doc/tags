@@ -2,6 +2,7 @@
 :ScrollViewEnable	scrollview.txt	/*:ScrollViewEnable*
 :ScrollViewFirst	scrollview.txt	/*:ScrollViewFirst*
 :ScrollViewLast	scrollview.txt	/*:ScrollViewLast*
+:ScrollViewLegend	scrollview.txt	/*:ScrollViewLegend*
 :ScrollViewNext	scrollview.txt	/*:ScrollViewNext*
 :ScrollViewPrev	scrollview.txt	/*:ScrollViewPrev*
 :ScrollViewRefresh	scrollview.txt	/*:ScrollViewRefresh*

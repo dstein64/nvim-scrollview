@@ -7,6 +7,7 @@ local utils = require('scrollview.utils')
 local binary_search = utils.binary_search
 local concat = utils.concat
 local copy = utils.copy
+local echo = utils.echo
 local preceding = utils.preceding
 local remove_duplicates = utils.remove_duplicates
 local round = utils.round
@@ -27,6 +28,13 @@ local to_bool = utils.to_bool
 -- XXX: Some of the functionality is applicable to bars and signs, but is
 -- named as if it were only applicable to bars (since it was implemented prior
 -- to sign support).
+
+-- *************************************************
+-- * Forward Declarations
+-- *************************************************
+
+-- Declared here since it's used by the earlier legend() function.
+local get_sign_groups
 
 -- *************************************************
 -- * Globals
@@ -74,6 +82,8 @@ local SIGN_TYPE = 1
 local PROPS_VAR = 'scrollview_props'
 
 -- Stores registered sign specifications.
+-- WARN: This may seem array-like, but since items can be set to nil by
+-- deregister_sign_spec(), it's dictionary-like (use pairs(), not ipairs()).
 local sign_specs = {}
 -- Keep track of how many sign specifications were registered. This is used for
 -- ID assignment, and is not adjusted for deregistrations.
@@ -1289,6 +1299,15 @@ local get_normal_highlight = function(winid)
   return highlight
 end
 
+local get_scrollbar_character = function()
+  local character = vim.g.scrollview_character
+  character = character:gsub('\n', '')
+  character = character:gsub('\r', '')
+  if #character < 1 then character = ' ' end
+  character = fn.strcharpart(character, 0, 1)
+  return character
+end
+
 -- Show a scrollbar for the specified 'winid' window ID, using the specified
 -- 'bar_winid' floating window ID (a new floating window will be created if
 -- this is -1). Returns -1 if the bar is not shown, and the floating window ID
@@ -1347,10 +1366,7 @@ local show_scrollbar = function(winid, bar_winid)
   -- Make sure that a custom character is up-to-date and is repeated enough to
   -- cover the full height of the scrollbar.
   local bar_line_count = api.nvim_buf_line_count(bar_bufnr)
-  local character = vim.g.scrollview_character
-  character = character:gsub('\n', '')
-  character = character:gsub('\r', '')
-  if #character < 1 then character = ' ' end
+  local character = get_scrollbar_character()
   if api.nvim_buf_get_lines(bar_bufnr, 0, 1, false)[1] ~= character
       or bar_position.height > bar_line_count then
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', true)
@@ -1606,9 +1622,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
     end
     for _, properties in ipairs(props_list) do
       local symbol = properties.symbol
-      symbol = symbol:gsub('\n', '')
-      symbol = symbol:gsub('\r', '')
-      if #symbol < 1 then symbol = ' ' end
       local sign_width = fn.strdisplaywidth(symbol)
       local col = base_col
       if vim.g.scrollview_signs_overflow == 'left' then
@@ -1756,11 +1769,13 @@ local show_signs = function(winid, sign_winids, bar_winid)
         local props = {
           col = col,
           height = 1,
+          highlight = properties.highlight,
           lines = properties.lines,
           parent_winid = winid,
           row = row,
           scrollview_winid = sign_winid,
           sign_spec_id = properties.sign_spec_id,
+          symbol = properties.symbol,
           type = SIGN_TYPE,
           width = sign_width,
           zindex = zindex,
@@ -2531,6 +2546,135 @@ local last = function(groups)
   move_to_sign_line('$', groups)
 end
 
+-- Echo a legend of scrollview symbols. 'groups' specifies the sign groups
+-- that are considered; use nil for all. 'full' indicates whether all
+-- registered signs (including those from disabled groups) should be included
+-- in the legend, as opposed to just those that are currently visible.
+local legend = function(groups, full)
+  local included = {}  -- maps groups to their inclusion state
+  for _, group in pairs(get_sign_groups()) do
+    included[group] = groups == nil and true or false
+  end
+  if groups ~= nil then
+    for _, group in ipairs(groups) do
+      included[group] = true
+    end
+  end
+  local items = {}
+  local add_scrollbar_item = function()
+    table.insert(items, {
+      name = 'scrollbar',
+      extra = nil,
+      highlight = 'ScrollView',
+      symbol = get_scrollbar_character(),
+    })
+  end
+  if full then
+    add_scrollbar_item()
+    for _, sign_spec in pairs(sign_specs) do
+      if included[sign_spec.group] then
+        local count = math.max(#sign_spec.symbol, #sign_spec.highlight)
+        for idx = 1, count do
+          local symbol = sign_spec.symbol[math.min(idx, #sign_spec.symbol)]
+          local highlight =
+            sign_spec.highlight[math.min(idx, #sign_spec.highlight)]
+          table.insert(items, {
+            name = sign_spec.group,
+            extra = sign_spec.variant,
+            highlight = highlight,
+            symbol = symbol,
+          })
+        end
+      end
+    end
+  else
+    for _, winid in ipairs(get_scrollview_windows()) do
+      local props = api.nvim_win_get_var(winid, PROPS_VAR)
+      if props.type == BAR_TYPE then
+        add_scrollbar_item()
+      elseif props.type == SIGN_TYPE then
+        local sign_spec = sign_specs[props.sign_spec_id]
+        if included[sign_spec.group] then
+          table.insert(items, {
+            name = sign_spec.group,
+            extra = sign_spec.variant,
+            highlight = props.highlight,
+            symbol = props.symbol,
+          })
+        end
+      else
+        error('Unknown props type: ' .. props.type)
+      end
+    end
+  end
+  for _, item in ipairs(items) do
+    -- Check for the expected fields, since other code changes would be
+    -- necessary if the fields change (the sorting and duplicate removal code
+    -- later in this function).
+    local keys = {}
+    for key, _ in pairs(item) do
+      if key ~= 'name'
+          and key ~= 'extra'
+          and key ~= 'symbol'
+          and key ~= 'highlight' then
+        error('Unknown key: ' .. key)
+      end
+      table.insert(keys, key)
+    end
+    -- 'extra' is not required.
+    for _, key in ipairs({'name', 'symbol', 'highlight'}) do
+      if item[key] == nil then
+        error('Missing key: ' .. key)
+      end
+    end
+  end
+  table.sort(items, function(a, b)
+    if a.name == 'scrollbar' and b.name ~= 'scrollbar' then
+      return true
+    end
+    if a.name ~= 'scrollbar' and b.name == 'scrollbar' then
+      return false
+    end
+    if a.name ~= b.name then
+      return a.name < b.name
+    elseif a.extra ~= b.extra then
+      if a.extra ~= nil and b.extra ~= nil then
+        return a.extra < b.extra
+      elseif a.extra == nil then
+        return true
+      else
+        -- b.extra == nil
+        return false
+      end
+    elseif a.symbol ~= b.symbol then
+      return a.symbol < b.symbol
+    else
+      return a.highlight < b.highlight
+    end
+  end)
+  local echo_list = {}
+  table.insert(echo_list, {'Title', 'nvim-scrollview'})
+  for idx, item in ipairs(items) do
+    -- Skip duplicates. Duplicates can arise since the same sign can be shown
+    -- in different windows or multiple times in the same window.
+    if idx == 1
+        or item.name ~= items[idx - 1].name
+        or item.extra ~= items[idx - 1].extra
+        or item.symbol ~= items[idx - 1].symbol
+        or item.highlight ~= items[idx - 1].highlight then
+      table.insert(echo_list, {'None', '\n'})
+      table.insert(echo_list, {item.highlight, item.symbol})
+      table.insert(echo_list, {'None', ' '})
+      table.insert(echo_list, {'None', item.name})
+      if item.extra ~= nil then
+        table.insert(echo_list, {'None', ' '})
+        table.insert(echo_list, {'NonText', item.extra})
+      end
+    end
+  end
+  echo(echo_list)
+end
+
 -- 'button' can be 'left', 'middle', 'right', 'x1', or 'x2'. 'c-' or 'm-' can be
 -- prepended for the control-key and alt-key variants. If primary is true, the
 -- handling is for navigation (dragging scrollbars and navigating to signs).
@@ -2926,7 +3070,7 @@ local register_sign_spec = function(specification)
       specification[key] = val
     end
   end
-  for _, group in ipairs({'all', 'defaults'}) do
+  for _, group in ipairs({'all', 'defaults', 'scrollbar'}) do
     if specification.group == group then
       error('Invalid group: ' .. group)
     end
@@ -2953,6 +3097,12 @@ local register_sign_spec = function(specification)
     else
       specification[key] = copy(specification[key])
     end
+  end
+  for idx, symbol in ipairs(specification.symbol) do
+    symbol = symbol:gsub('\n', '')
+    symbol = symbol:gsub('\r', '')
+    if #symbol < 1 then symbol = ' ' end
+    specification.symbol[idx] = symbol
   end
   sign_specs[id] = specification
   if sign_group_state[specification.group] == nil then
@@ -3018,7 +3168,7 @@ local is_sign_group_active = function(group)
   return scrollview_enabled and get_sign_group_state(group)
 end
 
-local get_sign_groups = function()
+get_sign_groups = function()
   local groups = {}
   for group, _ in pairs(sign_group_state) do
     table.insert(groups, group)
@@ -3147,6 +3297,7 @@ return {
   get_sign_eligible_windows = get_sign_eligible_windows,
   handle_mouse = handle_mouse,
   last = last,
+  legend = legend,
   next = next,
   prev = prev,
   refresh = refresh,

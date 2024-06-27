@@ -282,6 +282,10 @@ let g:scrollview_refreshing = v:false
 " the line count changes.
 let g:scrollview_ins_mode_buf_lines = 0
 
+" A string for the echo() function, to avoid having to handle character
+" escaping.
+let g:scrollview_echo_string = v:null
+
 " *************************************************
 " * Versioning
 " *************************************************
@@ -359,6 +363,12 @@ if !exists(':ScrollViewLast')
   command -bar -nargs=* -complete=custom,s:Complete ScrollViewLast
         \ lua require('scrollview').last(
         \   #{<f-args>} > 0 and {<f-args>} or nil)
+endif
+
+if !exists(':ScrollViewLegend')
+  command -bang -bar -nargs=* -complete=custom,s:Complete ScrollViewLegend
+        \ lua require('scrollview').legend(
+        \   #{<f-args>} > 0 and {<f-args>} or nil, '<bang>' == '!')
 endif
 
 if !exists(':ScrollViewNext')

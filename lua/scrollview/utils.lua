@@ -43,6 +43,19 @@ function M.copy(table)
   return result
 end
 
+-- Takes a list of lists. Each sublist is comprised of a highlight group name
+-- and a corresponding string to echo.
+function M.echo(echo_list)
+  vim.cmd('redraw')
+  for _, item in ipairs(echo_list) do
+    local hlgroup, string = unpack(item)
+    vim.g.scrollview_echo_string = string
+    vim.cmd('echohl ' .. hlgroup .. ' | echon g:scrollview_echo_string')
+    vim.g.scrollview_echo_string = vim.NIL
+  end
+  vim.cmd('echohl None')
+end
+
 -- For sorted list l with no duplicates, return the previous item before the
 -- specified item (wraps around).
 function M.preceding(l, item, count, wrapscan)

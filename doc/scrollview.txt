@@ -66,6 +66,15 @@ signs are highlighted when the mouse pointer hovers.
                        a result of some window arrangement actions (see
                        |scrollview-issues|).
 
+:ScrollViewLegend[!] [{group1} ...]        *:ScrollViewLegend*
+                       Show a legend for the scrollbar and signs. The optional
+                       trailing arguments specify which sign groups are
+                       considered (all groups when not specified). Without
+                       [!], the legend will only contain items that are
+                       currently visible. With [!], the legend will include
+                       the scrollbar and all registered signs (even those from
+                       disabled groups), regardless of their display status.
+
 :[count]ScrollViewNext [{group1} ...]      *:ScrollViewNext*
                        Move the cursor to the [count]'th next line with a
                        sign. If the |'wrapscan'| option is set, the movement
