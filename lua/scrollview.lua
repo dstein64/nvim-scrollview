@@ -2609,8 +2609,8 @@ local legend = function(groups, full)
   end
   for _, item in ipairs(items) do
     -- Check for the expected fields, since other code changes would be
-    -- necessary if the fields change (the sorting and duplicate removal code
-    -- later in this function).
+    -- necessary if the fields change (the sorting code later in this
+    -- function).
     local keys = {}
     for key, _ in pairs(item) do
       if key ~= 'name'
@@ -2657,11 +2657,7 @@ local legend = function(groups, full)
   for idx, item in ipairs(items) do
     -- Skip duplicates. Duplicates can arise since the same sign can be shown
     -- in different windows or multiple times in the same window.
-    if idx == 1
-        or item.name ~= items[idx - 1].name
-        or item.extra ~= items[idx - 1].extra
-        or item.symbol ~= items[idx - 1].symbol
-        or item.highlight ~= items[idx - 1].highlight then
+    if idx == 1 or not vim.deep_equal(item, items[idx - 1]) then
       table.insert(echo_list, {'None', '\n'})
       table.insert(echo_list, {item.highlight, item.symbol})
       table.insert(echo_list, {'None', ' '})
