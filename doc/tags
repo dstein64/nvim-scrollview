@@ -100,6 +100,8 @@ scrollview_signs_show_in_folds	scrollview.txt	/*scrollview_signs_show_in_folds*
 scrollview_signs_version	scrollview.txt	/*scrollview_signs_version*
 scrollview_spell_priority	scrollview.txt	/*scrollview_spell_priority*
 scrollview_spell_symbol	scrollview.txt	/*scrollview_spell_symbol*
+scrollview_textwidth_priority	scrollview.txt	/*scrollview_textwidth_priority*
+scrollview_textwidth_symbol	scrollview.txt	/*scrollview_textwidth_symbol*
 scrollview_trail_priority	scrollview.txt	/*scrollview_trail_priority*
 scrollview_trail_symbol	scrollview.txt	/*scrollview_trail_symbol*
 scrollview_winblend	scrollview.txt	/*scrollview_winblend*

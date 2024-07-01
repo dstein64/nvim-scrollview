@@ -570,6 +570,20 @@ scrollview_spell_symbol                    *scrollview_spell_symbol*
                        when the retrieval would be out-of-bounds. Considered
                        only when the plugin is loaded.
 
+scrollview_textwidth_priority              *scrollview_textwidth_priority*
+                       |Number| specifying the priority for textwidth signs.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_textwidth_symbol                *scrollview_textwidth_symbol*
+                       |String| specifying the symbol for textwidth signs.
+                       Defaults to a right-pointing double angle quotation
+                       mark. A |List| of |String|s can also be used; the symbol is
+                       selected using the index equal to the number of lines
+                       corresponding to the sign, or the last element when the
+                       retrieval would be out-of-bounds. Considered only when
+                       the plugin is loaded.
+
 scrollview_trail_priority                  *scrollview_trail_priority*
                        |Number| specifying the priority for trail signs.
                        Defaults to `50`. Considered only when the plugin is
