@@ -497,6 +497,15 @@ scrollview_folds_symbol                    *scrollview_folds_symbol*
                        out-of-bounds. Considered only when the plugin is
                        loaded.
 
+scrollview_latestchange_priority           *scrollview_latestchange_priority*
+                       |Number| specifying the priority for latestchange signs.
+                       Defaults to `10`. Considered only when the plugin is
+                       loaded.
+
+scrollview_latestchange_symbol             *scrollview_latestchange_symbol*
+                       |String| specifying the symbol for latestchange signs.
+                       Defaults to a Greek uppercase delta.
+
 scrollview_loclist_priority                *scrollview_loclist_priority*
                        |Number| specifying the priority for loclist signs.
                        Defaults to `45`. Considered only when the plugin is
@@ -560,15 +569,6 @@ scrollview_spell_symbol                    *scrollview_spell_symbol*
                        lines corresponding to the sign, or the last element
                        when the retrieval would be out-of-bounds. Considered
                        only when the plugin is loaded.
-
-scrollview_latestchange_priority           *scrollview_latestchange_priority*
-                       |Number| specifying the priority for latestchange signs.
-                       Defaults to `10`. Considered only when the plugin is
-                       loaded.
-
-scrollview_latestchange_symbol             *scrollview_latestchange_symbol*
-                       |String| specifying the symbol for latestchange signs.
-                       Defaults to a Greek uppercase delta.
 
 scrollview_trail_priority                  *scrollview_trail_priority*
                        |Number| specifying the priority for trail signs.
