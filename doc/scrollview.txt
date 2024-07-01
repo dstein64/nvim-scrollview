@@ -675,6 +675,12 @@ colors.
 ----                          ------
 `ScrollView`                    scrollbar
   Visual
+`ScrollViewChangeListPrevious`  changelist previous signs
+  SpecialKey
+`ScrollViewChangeListCurrent`   changelist current signs
+  SpecialKey
+`ScrollViewChangeListNext`      changelist next signs
+  SpecialKey
 `ScrollViewConflictsTop`        top conflict signs
   DiffAdd
 `ScrollViewConflictsMiddle`     middle conflict signs
