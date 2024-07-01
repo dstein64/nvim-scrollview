@@ -347,8 +347,8 @@ scrollview_changelist_previous_priority    *scrollview_changelist_previous_prior
 
 scrollview_changelist_previous_symbol      *scrollview_changelist_previous_symbol*
                        |String| specifying the symbol for the previous item
-                       changelist sign. Defaults to a left-pointing arrow in a
-                       triangle.
+                       changelist sign. Defaults to an upwards arrow with tip
+                       leftwards.
 
 scrollview_changelist_current_priority     *scrollview_changelist_current_priority*
                        |Number| specifying the priority for the current item
@@ -366,8 +366,8 @@ scrollview_changelist_next_priority        *scrollview_changelist_next_priority*
 
 scrollview_changelist_next_symbol          *scrollview_changelist_next_symbol*
                        |String| specifying the symbol for the next item
-                       changelist sign. Defaults to a right-pointing arrow in
-                       a triangle.
+                       changelist sign. Defaults to a downwards arrow with tip
+                       rightwards.
 
 scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority*
                        |Number| specifying the priority for conflict bottom

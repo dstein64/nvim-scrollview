@@ -93,7 +93,7 @@ let g:scrollview_signs_show_in_folds =
 let g:scrollview_changelist_previous_priority =
       \ get(g:, 'scrollview_changelist_previous_priority', 15)
 let g:scrollview_changelist_previous_symbol =
-      \ get(g:, 'scrollview_changelist_previous_symbol', nr2char(0x1f894))
+      \ get(g:, 'scrollview_changelist_previous_symbol', nr2char(0x21b0))
 let g:scrollview_changelist_current_priority =
       \ get(g:, 'scrollview_changelist_current_priority', 10)
 let g:scrollview_changelist_current_symbol =
@@ -101,7 +101,7 @@ let g:scrollview_changelist_current_symbol =
 let g:scrollview_changelist_next_priority =
       \ get(g:, 'scrollview_changelist_next_priority', 5)
 let g:scrollview_changelist_next_symbol =
-      \ get(g:, 'scrollview_changelist_next_symbol', nr2char(0x1f896))
+      \ get(g:, 'scrollview_changelist_next_symbol', nr2char(0x21b3))
 
 " *** Conflict signs ***
 let g:scrollview_conflicts_bottom_priority =
