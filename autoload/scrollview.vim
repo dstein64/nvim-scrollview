@@ -413,7 +413,7 @@ function! s:SetUpMouseMappings(button, primary) abort
     endif
     for l:mapmode in ['n', 'v', 'i']
       execute printf(
-            \   'silent! %smap %s <silent> <%smouse>'
+            \   'silent! %snoremap %s <silent> <%smouse>'
             \   .. ' <cmd>lua require("scrollview").handle_mouse("%s", %s)<cr>',
             \   l:mapmode,
             \   l:force ? '' : '<unique>',
