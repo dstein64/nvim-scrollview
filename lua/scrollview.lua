@@ -2874,8 +2874,12 @@ local handle_mouse = function(button, primary)
                     menu_slots_available - mousepos.screenrow,
                     mousepos.screenrow - 1
                   )
-                  menu_slots_available = menu_slots_available
-                    - #fn.menu_info(menu_name, menu_mode).submenus
+                  -- menu_get is used instead of menu_info, to avoid Vim Issue
+                  -- #15154.
+                  pcall(function()
+                    menu_slots_available = menu_slots_available
+                      - #fn.menu_get(menu_name, menu_mode)[1].submenus
+                  end)
                 end
                 for line_idx, line in ipairs(sign_props.lines) do
                   if menu_slots_available ~= nil
