@@ -2863,18 +2863,23 @@ local handle_mouse = function(button, primary)
                 lhs = menu_name .. '.-sep-'
                 rhs = '<nop>'
                 vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
-                -- We limit the number of items on the popup menu to prevent a
-                -- scenario where the menu pops up and then disappears unless
-                -- the mouse button is held.
-                local rows_available = vim.o.lines
-                rows_available = math.max(
-                  rows_available - mousepos.screenrow,
-                  mousepos.screenrow - 1
-                )
-                rows_available =
-                  rows_available - #fn.menu_info(menu_name, menu_mode).submenus
+                -- For nvim<0.11, we limit the number of items on the popup
+                -- menu to prevent a scenario where the menu pops up and then
+                -- disappears unless the mouse button is held. The issue is not
+                -- present as of nvim commit 842725e.
+                local menu_slots_available = nil
+                if not to_bool(fn.has('nvim-0.11')) then
+                  menu_slots_available = vim.o.lines
+                  menu_slots_available = math.max(
+                    menu_slots_available - mousepos.screenrow,
+                    mousepos.screenrow - 1
+                  )
+                  menu_slots_available = menu_slots_available
+                    - #fn.menu_info(menu_name, menu_mode).submenus
+                end
                 for line_idx, line in ipairs(sign_props.lines) do
-                  if line_idx > rows_available then
+                  if menu_slots_available ~= nil
+                      and line_idx > menu_slots_available then
                     break
                   end
                   lhs = menu_name .. '.' .. line
