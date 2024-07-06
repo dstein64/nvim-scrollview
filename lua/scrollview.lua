@@ -2883,8 +2883,6 @@ local handle_mouse = function(button, primary)
                   break
                 end
                 lhs = menu_name .. '.' .. line
-                local parent_winnr =
-                  api.nvim_win_get_number(sign_props.parent_winid)
                 rhs = string.format(
                   '<cmd>call win_execute(%d, "normal! %dG")<cr>',
                   sign_props.parent_winid,
