@@ -2872,7 +2872,7 @@ local handle_mouse = function(button, primary)
                   menu_slots_available - mousepos.screenrow,
                   mousepos.screenrow - 1
                 )
-                -- WARN: menu_get can have issues if used with multiple modes
+                -- WARN: menu_info can have issues if used with multiple modes
                 -- (Vim Issue #15154).
                 menu_slots_available = menu_slots_available
                   - #fn.menu_info(menu_name).submenus
