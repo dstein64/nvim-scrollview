@@ -2885,8 +2885,11 @@ local handle_mouse = function(button, primary)
                 lhs = menu_name .. '.' .. line
                 local parent_winnr =
                   api.nvim_win_get_number(sign_props.parent_winid)
-                local wincmd = parent_winnr .. 'wincmd w'
-                rhs = '<cmd>' .. wincmd .. '<bar>normal! ' .. line .. 'G<cr>'
+                rhs = string.format(
+                  '<cmd>call win_execute(%d, "normal! %dG")<cr>',
+                  sign_props.parent_winid,
+                  line
+                )
                 vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
               end
             else
