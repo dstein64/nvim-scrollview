@@ -2842,63 +2842,58 @@ local handle_mouse = function(button, primary)
           if not primary then
             -- There was a secondary click on either a scrollbar or sign. Show
             -- a popup accordingly.
-            local menu_modes = {'n', 'v', 'i'}
             -- Menus starting with ']' are excluded from the main menu bar
             -- (:help hidden-menus).
             local menu_name = ']ScrollViewPopUp'
             local lhs, rhs
             local mousepos = fn.getmousepos()
-            for _, menu_mode in ipairs(menu_modes) do
-              if clicked_sign then
-                local group = sign_specs[sign_props.sign_spec_id].group
-                lhs = menu_name .. '.' .. group
+            if clicked_sign then
+              local group = sign_specs[sign_props.sign_spec_id].group
+              lhs = menu_name .. '.' .. group
+              rhs = '<nop>'
+              vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
+              local variant = sign_specs[sign_props.sign_spec_id].variant
+              if variant ~= nil then
+                lhs = menu_name .. '.' .. variant
                 rhs = '<nop>'
-                vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
-                local variant = sign_specs[sign_props.sign_spec_id].variant
-                if variant ~= nil then
-                  lhs = menu_name .. '.' .. variant
-                  rhs = '<nop>'
-                  vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
-                end
-                lhs = menu_name .. '.-sep-'
-                rhs = '<nop>'
-                vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
-                -- For nvim<0.11, we limit the number of items on the popup
-                -- menu to prevent a scenario where the menu pops up and then
-                -- disappears unless the mouse button is held. The issue is not
-                -- present as of nvim commit 842725e.
-                local menu_slots_available = nil
-                if not to_bool(fn.has('nvim-0.11')) then
-                  menu_slots_available = vim.o.lines
-                  menu_slots_available = math.max(
-                    menu_slots_available - mousepos.screenrow,
-                    mousepos.screenrow - 1
-                  )
-                  -- menu_get is used instead of menu_info, to avoid Vim Issue
-                  -- #15154.
-                  pcall(function()
-                    menu_slots_available = menu_slots_available
-                      - #fn.menu_get(menu_name, menu_mode)[1].submenus
-                  end)
-                end
-                for line_idx, line in ipairs(sign_props.lines) do
-                  if menu_slots_available ~= nil
-                      and line_idx > menu_slots_available then
-                    break
-                  end
-                  lhs = menu_name .. '.' .. line
-                  local parent_winnr =
-                    api.nvim_win_get_number(sign_props.parent_winid)
-                  local wincmd = parent_winnr .. 'wincmd w'
-                  rhs = '<cmd>' .. wincmd .. '<bar>normal! ' .. line .. 'G<cr>'
-                  vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
-                end
-              else
-                local popup_title = clicked_bar and 'scrollbar' or 'scrollview'
-                lhs = menu_name .. '.' .. popup_title
-                rhs = '<nop>'
-                vim.cmd(menu_mode .. 'noremenu ' .. lhs .. ' ' .. rhs)
+                vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
               end
+              lhs = menu_name .. '.-sep-'
+              rhs = '<nop>'
+              vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
+              -- For nvim<0.11, we limit the number of items on the popup
+              -- menu to prevent a scenario where the menu pops up and then
+              -- disappears unless the mouse button is held. The issue is not
+              -- present as of nvim commit 842725e.
+              local menu_slots_available = nil
+              if not to_bool(fn.has('nvim-0.11')) then
+                menu_slots_available = vim.o.lines
+                menu_slots_available = math.max(
+                  menu_slots_available - mousepos.screenrow,
+                  mousepos.screenrow - 1
+                )
+                -- WARN: menu_get can have issues if used with multiple modes
+                -- (Vim Issue #15154).
+                menu_slots_available = menu_slots_available
+                  - #fn.menu_info(menu_name).submenus
+              end
+              for line_idx, line in ipairs(sign_props.lines) do
+                if menu_slots_available ~= nil
+                    and line_idx > menu_slots_available then
+                  break
+                end
+                lhs = menu_name .. '.' .. line
+                local parent_winnr =
+                  api.nvim_win_get_number(sign_props.parent_winid)
+                local wincmd = parent_winnr .. 'wincmd w'
+                rhs = '<cmd>' .. wincmd .. '<bar>normal! ' .. line .. 'G<cr>'
+                vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
+              end
+            else
+              local popup_title = clicked_bar and 'scrollbar' or 'scrollview'
+              lhs = menu_name .. '.' .. popup_title
+              rhs = '<nop>'
+              vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
             end
             -- We create a temporary floating window for positioning the cursor
             -- at the mouse pointer. This way, the popup opens where the click
@@ -2934,9 +2929,7 @@ local handle_mouse = function(button, primary)
             })
             api.nvim_set_current_win(popup_win)
             vim.cmd('popup ' .. menu_name)
-            for _, menu_mode in ipairs(menu_modes) do
-              vim.cmd('silent! ' .. menu_mode .. 'unmenu ' .. menu_name)
-            end
+            vim.cmd('silent! aunmenu ' .. menu_name)
             api.nvim_win_close(popup_win, true)
             refresh_bars()
             return
