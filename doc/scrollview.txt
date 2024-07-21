@@ -119,6 +119,15 @@ The following |<Plug>| mappings are defined for convenience.
 The |User| *ScrollViewRefresh* |autocommand| fires prior to refreshing scrollbars
 and signs.
 
+                                           *scrollview-enabled-global*
+                                           *scrollview_enabled*
+A global variable, `scrollview_enabled`, is set to |v:true| when the plugin is
+enabled, and |v:false| otherwise. It can be accessed from Lua
+(`vim.g.scrollview_enabled`) or Vimscript (`g:scrollview_enabled`). Do not
+modify its value; it should be treated as read-only. Use |:ScrollViewEnable|,
+|:ScrollViewDisable|, and |:ScrollViewToggle| to enable, disable, or toggle
+the plugin.
+
                                            *scrollview-refreshing-global*
                                            *scrollview_refreshing*
 A global variable, `scrollview_refreshing`, is set to |v:true| while scrollbars

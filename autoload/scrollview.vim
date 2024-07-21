@@ -275,6 +275,8 @@ let g:scrollview_trail_symbol =
 " Internal global state is primarily represented with local variables in
 " lua/scrollview.lua, but specified here when more convenient.
 
+let g:scrollview_enabled = v:false
+
 " A flag that gets set to true while scrollbars are being refreshed. #88
 let g:scrollview_refreshing = v:false
 

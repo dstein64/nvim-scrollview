@@ -40,9 +40,6 @@ local get_sign_groups
 -- * Globals
 -- *************************************************
 
--- Internal flag for tracking scrollview state.
-local scrollview_enabled = false
-
 -- Since there is no text displayed in the buffers, the same buffers are used
 -- for multiple windows. This also prevents the buffer list from getting high
 -- from usage of the plugin.
@@ -2261,7 +2258,7 @@ local refresh_bars_async = function()
       end
       -- ScrollView may have already been disabled by time this callback
       -- executes asynchronously.
-      if scrollview_enabled then
+      if vim.g.scrollview_enabled then
         refresh_bars()
       end
     end, 0)
@@ -2314,7 +2311,7 @@ end
 -- wheel scrolling).
 
 local enable = function()
-  scrollview_enabled = true
+  vim.g.scrollview_enabled = true
   vim.cmd([[
     augroup scrollview
       autocmd!
@@ -2431,7 +2428,7 @@ local disable = function()
       ]])
       return
     end
-    scrollview_enabled = false
+    vim.g.scrollview_enabled = false
     vim.cmd([[
       augroup scrollview
         autocmd!
@@ -2456,7 +2453,7 @@ local set_state = function(state)
     state = nil
   end
   if state == nil then
-    state = not scrollview_enabled
+    state = not vim.g.scrollview_enabled
   end
   if state then
     enable()
@@ -2466,7 +2463,7 @@ local set_state = function(state)
 end
 
 local refresh = function()
-  if scrollview_enabled then
+  if vim.g.scrollview_enabled then
     -- This refresh is asynchronous to keep interactions responsive (e.g.,
     -- mouse wheel scrolling, as redundant async refreshes are dropped). If
     -- scenarios necessitate synchronous refreshes, the interface would have to
@@ -2689,7 +2686,7 @@ local handle_mouse = function(button, primary)
   end
   local mousedown = t('<' .. button .. 'mouse>')
   local mouseup = t('<' .. button .. 'release>')
-  if not scrollview_enabled then
+  if not vim.g.scrollview_enabled then
     -- nvim-scrollview is disabled. Process the click as it would ordinarily be
     -- processed, by re-sending the click and returning.
     fn.feedkeys(mousedown, 'ni')
@@ -3125,7 +3122,7 @@ local deregister_sign_spec = function(id, refresh_)
     refresh_ = true
   end
   sign_specs[id] = nil
-  if refresh_ and scrollview_enabled then
+  if refresh_ and vim.g.scrollview_enabled then
     refresh_bars()
   end
 end
@@ -3164,7 +3161,7 @@ end
 -- (hypothetical) get_state function to check if scrollview is enabled and (2)
 -- a get_sign_group_state function to check if the group is enabled.
 local is_sign_group_active = function(group)
-  return scrollview_enabled and get_sign_group_state(group)
+  return vim.g.scrollview_enabled and get_sign_group_state(group)
 end
 
 get_sign_groups = function()
