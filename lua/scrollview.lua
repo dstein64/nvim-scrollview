@@ -1451,7 +1451,7 @@ local show_scrollbar = function(winid, bar_winid)
   set_window_option(bar_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
   set_window_option(bar_winid, 'foldenable', false)
   -- Don't inherit 'foldmethod'. It could slow down scrolling. #135
-  set_window_option(sign_winid, 'foldmethod', 'manual')
+  set_window_option(bar_winid, 'foldmethod', 'manual')
   set_window_option(bar_winid, 'wrap', false)
   api.nvim_win_set_var(bar_winid, WIN_VAR, WIN_VAL)
   local props = {
