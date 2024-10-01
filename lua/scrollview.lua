@@ -1119,6 +1119,10 @@ local should_show = function(winid)
   if is_scrollview_window(winid) then
     return false
   end
+  -- Exclude workspace windows.
+  if fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1 then
+    return false
+  end
   if vim.g.scrollview_zindex <= 0 then
     return false
   end
