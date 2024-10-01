@@ -1246,6 +1246,12 @@ local get_normal_highlight = function(winid)
         hl_spec = api.nvim_get_hl(
           hl_ns, {name = 'Normal', create = false, link = true})
       end
+      -- Use the global namespace if the specification was not found.
+      if vim.tbl_isempty(hl_spec) then
+        local hl_name = is_float and 'NormalFloat' or 'Normal'
+        hl_spec = api.nvim_get_hl(
+          0, {name = hl_name, create = false, link = true})
+      end
       local visited = {}
       while not vim.tbl_isempty(hl_spec)
           and hl_spec.link ~= nil
