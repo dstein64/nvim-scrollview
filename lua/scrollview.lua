@@ -1892,6 +1892,16 @@ local restore = function(state)
   if api.nvim_get_option('title') then
     api.nvim_set_option('title', true)
   end
+  -- Use a no-op normal! command so that events are processed before reverting
+  -- 'eventignore'. The event being targeted is ModeChanged, which fires from
+  -- switching from a window workspace floating window in normal mode back to
+  -- the active window in visual mode. Here we switch back and forth from
+  -- visual and select modes, which is effectively a no-op. Without doing this,
+  -- the ModeChanged event will fire later, after eventignore is restored. Here
+  -- it will fire but will be ignored, since eventignore=all. #136
+  if is_visual_mode(fn.mode()) or is_select_mode(fn.mode()) then
+    vim.cmd('normal! ' .. t'<c-g><c-g>')
+  end
   api.nvim_set_option('eventignore', state.eventignore)
   api.nvim_set_option('belloff', state.belloff)
 end
