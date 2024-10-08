@@ -36,6 +36,9 @@ local to_bool = utils.to_bool
 -- Declared here since it's used by the earlier legend() function.
 local get_sign_groups
 
+-- Declared here since it's used by the earlier refresh_bars() function.
+local is_sign_group_active
+
 -- *************************************************
 -- * Globals
 -- *************************************************
@@ -58,6 +61,9 @@ local pending_async_refresh_count = 0
 -- Keep count of pending mousemove callbacks.
 local pending_mousemove_callback_count = 0
 
+-- Tracks whether the handle_mouse function is running.
+local handling_mouse = false
+
 -- A window variable is set on each scrollview window, as a way to check for
 -- scrollview windows, in addition to matching the scrollview buffer number
 -- saved in bar_bufnr. This was preferable versus maintaining a list of window
@@ -78,6 +84,12 @@ local SIGN_TYPE = 1
 -- A key for saving scrollbar properties using a window variable.
 local PROPS_VAR = 'scrollview_props'
 
+-- Maps sign groups to state (enabled or disabled).
+local sign_group_state = {}
+
+-- Maps sign groups to refresh callbacks.
+local sign_group_callbacks = {}
+
 -- Stores registered sign specifications.
 -- WARN: This may seem array-like, but since items can be set to nil by
 -- deregister_sign_spec(), it's dictionary-like (use pairs(), not ipairs()).
@@ -85,9 +97,6 @@ local sign_specs = {}
 -- Keep track of how many sign specifications were registered. This is used for
 -- ID assignment, and is not adjusted for deregistrations.
 local sign_spec_counter = 0
-
--- Maps sign groups to state (enabled or disabled).
-local sign_group_state = {}
 
 -- Track whether there has been a <mousemove> occurrence. Hover highlights are
 -- only used if this has been set to true. Without this, the bar would be
@@ -232,7 +241,7 @@ local register_key_sequence_callback = function(seq, modes, callback)
       end
     end
     if not known_mode then
-      error('Unknown mode ' .. mode)
+      error('Unknown mode: ' .. mode)
     end
     local key = mode .. seq
     key_sequence_callbacks[key] = callback
@@ -2148,9 +2157,7 @@ local remove_if_command_line_window = function()
   end
 end
 
--- Refreshes scrollbars. There is an optional argument that specifies whether
--- removing existing scrollbars is asynchronous (defaults to true). Global
--- state is initialized and restored.
+-- Refreshes scrollbars. Global state is initialized and restored.
 local refresh_bars = function()
   vim.g.scrollview_refreshing = true
   local state = init()
@@ -2194,9 +2201,17 @@ local refresh_bars = function()
       end
     end
     local eventignore = api.nvim_get_option('eventignore')
-    api.nvim_set_option('eventignore', state.eventignore)
-    vim.cmd('doautocmd <nomodeline> User ScrollViewRefresh')
-    api.nvim_set_option('eventignore', eventignore)
+    -- Execute sign group callbacks. We don't do this when handle_mouse is
+    -- running, since it's not necessary and for the cursor sign, it can result
+    -- in incorrect positioning (keeping the cursor at the same position also
+    -- results in incorrect positioning, but this was deemed preferable).
+    if not handling_mouse then
+      for group, callback in pairs(sign_group_callbacks) do
+        if is_sign_group_active(group) then
+          callback()
+        end
+      end
+    end
     -- Reset highlight group name mapping (and table size) for each refresh
     -- cycle.
     normal_highlight_lookup = {}
@@ -2234,14 +2249,8 @@ local refresh_bars = function()
       end
     end
     local existing_wins = concat(existing_barids, existing_signids)
-    if vim.tbl_isempty(existing_wins) then  -- luacheck: ignore 542 (empty if)
-      -- Do nothing. The following clauses are only applicable when there are
-      -- existing windows. Skipping prevents the creation of an unnecessary
-      -- timer.
-    else
-      for _, winid in ipairs(existing_wins) do
-        close_scrollview_window(winid)
-      end
+    for _, winid in ipairs(existing_wins) do
+      close_scrollview_window(winid)
     end
   end)
   reset_win_workspaces()
@@ -2687,6 +2696,7 @@ end
 -- handling is for navigation (dragging scrollbars and navigating to signs).
 -- If primary is false, the handling is for context (showing popups with info).
 local handle_mouse = function(button, primary)
+  handling_mouse = true
   local valid_buttons = {
     'left', 'middle', 'right', 'x1', 'x2',
     'c-left', 'c-middle', 'c-right', 'c-x1', 'c-x2',
@@ -3049,6 +3059,7 @@ local handle_mouse = function(button, primary)
     reset_memoize()
   end
   restore(state)
+  handling_mouse = false
 end
 
 -- A convenience function for setting global options with
@@ -3060,6 +3071,39 @@ local setup = function(opts)
   end
 end
 
+local register_sign_group = function(group)
+  if sign_group_state[group] ~= nil then
+    error('group is already registered: ' .. group)
+  end
+  sign_group_state[group] = false
+end
+
+-- Deregister a sign group and corresponding (1) sign spec registrations and
+-- (2) sign group refresh callbacks. 'refresh' is an optional argument that
+-- specifies whether scrollview will refresh afterwards. It defaults to true.
+local deregister_sign_group = function(group, refresh_)
+  if refresh_ == nil then
+    refresh_ = true
+  end
+  sign_group_state[group] = nil
+  -- The linear runtime could be reduced by mapping groups to the set of
+  -- corresponding sign specs.
+  for id, sign_spec in pairs(sign_specs) do
+    if sign_spec.group == group then
+      sign_specs[id] = nil
+    end
+  end
+  sign_group_callbacks[group] = nil
+  if refresh_ and vim.g.scrollview_enabled then
+    refresh_bars()
+  end
+end
+
+-- Set the refresh callback for a sign group. Set callback to nil to unset.
+local set_sign_group_callback = function(group, callback)
+  sign_group_callbacks[group] = callback
+end
+
 local register_sign_spec = function(specification)
   local id = sign_spec_counter + 1
   specification = copy(specification)
@@ -3067,7 +3111,7 @@ local register_sign_spec = function(specification)
   local defaults = {
     current_only = false,
     extend = false,
-    group = 'other',
+    group = nil,
     highlight = 'Pmenu',
     priority = 50,
     show_in_folds = nil,  -- when set, overrides 'scrollview_signs_show_in_folds'
@@ -3080,10 +3124,16 @@ local register_sign_spec = function(specification)
       specification[key] = val
     end
   end
+  if specification.group == nil then
+    error('group is required')
+  end
   for _, group in ipairs({'all', 'defaults', 'scrollbar'}) do
     if specification.group == group then
       error('Invalid group: ' .. group)
     end
+  end
+  if sign_group_state[specification.group] == nil then
+    error('group was not registered: ' .. specification.group)
   end
   -- Group names can be made up of letters, digits, and underscores, but cannot
   -- start with a digit. This matches the rules for internal variables (:help
@@ -3115,9 +3165,6 @@ local register_sign_spec = function(specification)
     specification.symbol[idx] = symbol
   end
   sign_specs[id] = specification
-  if sign_group_state[specification.group] == nil then
-    sign_group_state[specification.group] = false
-  end
   sign_spec_counter = id
   local registration = {
     id = id,
@@ -3130,8 +3177,6 @@ end
 -- an optional argument that specifies whether scrollview will refresh
 -- afterwards. It defaults to true.
 local deregister_sign_spec = function(id, refresh_)
-  -- WARN: sign_group_state is not updated (to remove the group entry if there
-  -- are no more sign specifications of that group).
   if refresh_ == nil then
     refresh_ = true
   end
@@ -3174,7 +3219,7 @@ end
 -- enabled. Using this is more convenient than having to call (1) a
 -- (hypothetical) get_state function to check if scrollview is enabled and (2)
 -- a get_sign_group_state function to check if the group is enabled.
-local is_sign_group_active = function(group)
+is_sign_group_active = function(group)
   return vim.g.scrollview_enabled and get_sign_group_state(group)
 end
 
@@ -3316,9 +3361,12 @@ return {
 
   -- Sign registration/configuration
   deregister_sign_spec = deregister_sign_spec,
+  deregister_sign_group = deregister_sign_group,
   get_sign_groups = get_sign_groups,
   is_sign_group_active = is_sign_group_active,
+  register_sign_group = register_sign_group,
   register_sign_spec = register_sign_spec,
+  set_sign_group_callback = set_sign_group_callback,
   set_sign_group_state = set_sign_group_state,
 
   -- Key sequence callback registration

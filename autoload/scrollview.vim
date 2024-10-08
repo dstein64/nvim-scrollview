@@ -295,7 +295,7 @@ let g:scrollview_echo_string = v:null
 " An integer to be incremented when the interface for using signs changes.
 " For example, this would correspond to the register_sign_spec function
 " interface and the format for saving sign information in buffers.
-let g:scrollview_signs_version = 1
+let g:scrollview_signs_version = 2
 
 " *************************************************
 " * Commands

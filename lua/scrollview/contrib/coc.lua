@@ -61,6 +61,7 @@ function M.setup(config)
   end
 
   local group = 'coc'
+  scrollview.register_sign_group(group)
 
   local spec_data = {}
   for _, severity in ipairs(config.severities) do

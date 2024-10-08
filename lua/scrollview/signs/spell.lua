@@ -12,6 +12,7 @@ function M.init(enable)
   end
 
   local group = 'spell'
+  scrollview.register_sign_group(group)
   local registration = scrollview.register_sign_spec({
     group = group,
     highlight = 'ScrollViewSpell',
@@ -38,45 +39,41 @@ function M.init(enable)
     end)
   end
 
-  api.nvim_create_autocmd('User', {
-    pattern = 'ScrollViewRefresh',
-    callback = function()
-      if not scrollview.is_sign_group_active(group) then return end
-      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
-        local bufnr = api.nvim_win_get_buf(winid)
-        local spell = api.nvim_win_get_option(winid, 'spell')
-        local winvars = vim.w[winid]
-        local lines = {}
-        if spell then
-          local changedtick = vim.b[bufnr].changedtick
-          local changedtick_cached = winvars.scrollview_spell_changedtick_cached
-          local bufnr_cached = winvars.scrollview_spell_bufnr_cached
-          local cache_hit = changedtick_cached == changedtick
-            and bufnr_cached == bufnr
-          if cache_hit then
-            lines = winvars.scrollview_spell_cached
-          else
-            local line_count = api.nvim_buf_line_count(bufnr)
-            scrollview.with_win_workspace(winid, function()
-              for line = 1, line_count do
-                fn.cursor(line, 1)
-                local spellbadword = fn.spellbadword()
-                if spellbadword[1] ~= '' then table.insert(lines, line) end
-              end
-            end)
-            -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-            winvars.scrollview_spell_changedtick_cached = changedtick
-            -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-            winvars.scrollview_spell_bufnr_cached = bufnr
-            -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-            winvars.scrollview_spell_cached = lines
-          end
+  scrollview.set_sign_group_callback(group, function()
+    for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
+      local bufnr = api.nvim_win_get_buf(winid)
+      local spell = api.nvim_win_get_option(winid, 'spell')
+      local winvars = vim.w[winid]
+      local lines = {}
+      if spell then
+        local changedtick = vim.b[bufnr].changedtick
+        local changedtick_cached = winvars.scrollview_spell_changedtick_cached
+        local bufnr_cached = winvars.scrollview_spell_bufnr_cached
+        local cache_hit = changedtick_cached == changedtick
+          and bufnr_cached == bufnr
+        if cache_hit then
+          lines = winvars.scrollview_spell_cached
+        else
+          local line_count = api.nvim_buf_line_count(bufnr)
+          scrollview.with_win_workspace(winid, function()
+            for line = 1, line_count do
+              fn.cursor(line, 1)
+              local spellbadword = fn.spellbadword()
+              if spellbadword[1] ~= '' then table.insert(lines, line) end
+            end
+          end)
+          -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
+          winvars.scrollview_spell_changedtick_cached = changedtick
+          -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
+          winvars.scrollview_spell_bufnr_cached = bufnr
+          -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
+          winvars.scrollview_spell_cached = lines
         end
-        -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-        winvars[name] = lines
       end
+      -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
+      winvars[name] = lines
     end
-  })
+  end)
 
   api.nvim_create_autocmd('OptionSet', {
     pattern = {'dictionary', 'spell'},

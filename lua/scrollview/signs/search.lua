@@ -12,6 +12,7 @@ function M.init(enable)
   end
 
   local group = 'search'
+  scrollview.register_sign_group(group)
   local registration = scrollview.register_sign_spec({
     group = group,
     highlight = 'ScrollViewSearch',
@@ -21,66 +22,62 @@ function M.init(enable)
   local name = registration.name
   scrollview.set_sign_group_state(group, enable)
 
-  api.nvim_create_autocmd('User', {
-    pattern = 'ScrollViewRefresh',
-    callback = function()
-      if not scrollview.is_sign_group_active(group) then return end
-      local pattern = fn.getreg('/')
-      -- Track visited buffers, to prevent duplicate computation when multiple
-      -- windows are showing the same buffer.
-      local visited = {}
-      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
-        local bufnr = api.nvim_win_get_buf(winid)
-        if not visited[bufnr] then
-          local bufvars = vim.b[bufnr]
-          local lines = {}
-          if to_bool(vim.v.hlsearch) then
-            local cache_hit = false
-            local changedtick = bufvars.changedtick
-            if bufvars.scrollview_search_pattern_cached == pattern then
-              local changedtick_cached =
-                bufvars.scrollview_search_changedtick_cached
-              cache_hit = changedtick_cached == changedtick
-            end
-            if cache_hit then
-              lines = bufvars.scrollview_search_cached
-            else
-              lines = scrollview.with_win_workspace(winid, function()
-                local result = {}
-                -- Use a pcall since searchcount() and :global throw an
-                -- exception (E383, E866) when the pattern is invalid (e.g.,
-                -- "\@a").
-                pcall(function()
-                  -- searchcount() can return {} (e.g., when launching Neovim
-                  -- with -i NONE).
-                  local searchcount_total = fn.searchcount().total or 0
-                  if searchcount_total > 0 then
-                    result = fn.split(
-                      fn.execute('keepjumps global//echo line(".")'))
-                  end
-                end)
-                return result
-              end)
-              for idx, line in ipairs(lines) do
-                lines[idx] = tonumber(line)
-              end
-              -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-              bufvars.scrollview_search_pattern_cached = pattern
-              -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-              bufvars.scrollview_search_changedtick_cached = changedtick
-              -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-              bufvars.scrollview_search_cached = lines
-            end
+  scrollview.set_sign_group_callback(group, function()
+    local pattern = fn.getreg('/')
+    -- Track visited buffers, to prevent duplicate computation when multiple
+    -- windows are showing the same buffer.
+    local visited = {}
+    for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
+      local bufnr = api.nvim_win_get_buf(winid)
+      if not visited[bufnr] then
+        local bufvars = vim.b[bufnr]
+        local lines = {}
+        if to_bool(vim.v.hlsearch) then
+          local cache_hit = false
+          local changedtick = bufvars.changedtick
+          if bufvars.scrollview_search_pattern_cached == pattern then
+            local changedtick_cached =
+              bufvars.scrollview_search_changedtick_cached
+            cache_hit = changedtick_cached == changedtick
           end
-          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-          bufvars[name] = lines
-          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-          bufvars.scrollview_search_pattern = pattern
-          visited[bufnr] = true
+          if cache_hit then
+            lines = bufvars.scrollview_search_cached
+          else
+            lines = scrollview.with_win_workspace(winid, function()
+              local result = {}
+              -- Use a pcall since searchcount() and :global throw an
+              -- exception (E383, E866) when the pattern is invalid (e.g.,
+              -- "\@a").
+              pcall(function()
+                -- searchcount() can return {} (e.g., when launching Neovim
+                -- with -i NONE).
+                local searchcount_total = fn.searchcount().total or 0
+                if searchcount_total > 0 then
+                  result = fn.split(
+                    fn.execute('keepjumps global//echo line(".")'))
+                end
+              end)
+              return result
+            end)
+            for idx, line in ipairs(lines) do
+              lines[idx] = tonumber(line)
+            end
+            -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+            bufvars.scrollview_search_pattern_cached = pattern
+            -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+            bufvars.scrollview_search_changedtick_cached = changedtick
+            -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+            bufvars.scrollview_search_cached = lines
+          end
         end
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+        bufvars[name] = lines
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+        bufvars.scrollview_search_pattern = pattern
+        visited[bufnr] = true
       end
     end
-  })
+  end)
 
   api.nvim_create_autocmd('OptionSet', {
     pattern = 'hlsearch',

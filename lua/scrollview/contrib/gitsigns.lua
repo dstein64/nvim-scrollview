@@ -86,6 +86,7 @@ function M.setup(config)
   end
 
   local group = 'gitsigns'
+  scrollview.register_sign_group(group)
 
   local add = scrollview.register_sign_spec({
     extend = true,

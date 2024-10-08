@@ -10,6 +10,7 @@ function M.init(enable)
   end
 
   local group = 'loclist'
+  scrollview.register_sign_group(group)
   local registration = scrollview.register_sign_spec({
     group = group,
     highlight = 'ScrollViewLocList',
@@ -20,33 +21,29 @@ function M.init(enable)
   local name = registration.name
   scrollview.set_sign_group_state(group, enable)
 
-  api.nvim_create_autocmd('User', {
-    pattern = 'ScrollViewRefresh',
-    callback = function()
-      if not scrollview.is_sign_group_active(group) then return end
-      local winlines = {}  -- maps winids to a list of loclist lines
-      local sign_winids = scrollview.get_sign_eligible_windows()
-      for _, winid in ipairs(sign_winids) do
-        -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-        vim.w[winid][name] = nil
-      end
-      for _, winid in ipairs(sign_winids) do
-        local bufnr = api.nvim_win_get_buf(winid)
-        for _, item in ipairs(fn.getloclist(winid)) do
-          if item.bufnr == bufnr then
-            if winlines[winid] == nil then
-              winlines[winid] = {}
-            end
-            table.insert(winlines[winid], item.lnum)
+  scrollview.set_sign_group_callback(group, function()
+    local winlines = {}  -- maps winids to a list of loclist lines
+    local sign_winids = scrollview.get_sign_eligible_windows()
+    for _, winid in ipairs(sign_winids) do
+      -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
+      vim.w[winid][name] = nil
+    end
+    for _, winid in ipairs(sign_winids) do
+      local bufnr = api.nvim_win_get_buf(winid)
+      for _, item in ipairs(fn.getloclist(winid)) do
+        if item.bufnr == bufnr then
+          if winlines[winid] == nil then
+            winlines[winid] = {}
           end
+          table.insert(winlines[winid], item.lnum)
         end
       end
-      for winid, lines in pairs(winlines) do
-        -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-        vim.w[winid][name] = lines
-      end
     end
-  })
+    for winid, lines in pairs(winlines) do
+      -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
+      vim.w[winid][name] = lines
+    end
+  end)
 
   -- WARN: QuickFixCmdPost won't fire for some cases where loclist can be
   -- updated (e.g., setloclist).
