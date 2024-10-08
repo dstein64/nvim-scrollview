@@ -2210,7 +2210,6 @@ local refresh_bars = function()
         table.insert(target_wins, winid)
       end
     end
-    local eventignore = api.nvim_get_option('eventignore')
     -- Execute sign group callbacks. We don't do this when handle_mouse is
     -- running, since it's not necessary and for the cursor sign, it can result
     -- in incorrect positioning (keeping the cursor at the same position also
