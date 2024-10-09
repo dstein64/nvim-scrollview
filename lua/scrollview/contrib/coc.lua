@@ -115,27 +115,23 @@ function M.setup(config)
   end
   scrollview.set_sign_group_state(group, config.enabled)
 
-  api.nvim_create_autocmd('User', {
-    pattern = 'ScrollViewRefresh',
-    callback = function()
-      if not scrollview.is_sign_group_active(group) then return end
-      for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
-        local bufnr = api.nvim_win_get_buf(winid)
-        for _, name in pairs(names) do
-          -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
-          -- Check if coc_diagnostic_info is set for the buffer. This will not
-          -- be set if e.g., diagnosticToggle or diagnosticToggleBuffer were
-          -- used to disable diagnostics. However, we can't use that variable's
-          -- contents to get diagnostic info. It only has the number of
-          -- diagnostics of each severity, and the minimum line number that
-          -- there is a diagnostic for each severity.
-          if vim.b[bufnr].coc_diagnostic_info == nil then
-            vim.b[bufnr][name] = {}
-          end
+  scrollview.set_sign_group_callback(group, function()
+    for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
+      local bufnr = api.nvim_win_get_buf(winid)
+      for _, name in pairs(names) do
+        -- luacheck: ignore 122 (setting read-only field b.?.? of global vim)
+        -- Check if coc_diagnostic_info is set for the buffer. This will not
+        -- be set if e.g., diagnosticToggle or diagnosticToggleBuffer were
+        -- used to disable diagnostics. However, we can't use that variable's
+        -- contents to get diagnostic info. It only has the number of
+        -- diagnostics of each severity, and the minimum line number that
+        -- there is a diagnostic for each severity.
+        if vim.b[bufnr].coc_diagnostic_info == nil then
+          vim.b[bufnr][name] = {}
         end
       end
     end
-  })
+  end)
 
   -- The last updated buffers, reset on each CocDiagnosticChange. This is a
   -- dictionary used as a set.
