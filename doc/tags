@@ -77,6 +77,7 @@ scrollview_excluded_filetypes	scrollview.txt	/*scrollview_excluded_filetypes*
 scrollview_floating_windows	scrollview.txt	/*scrollview_floating_windows*
 scrollview_folds_priority	scrollview.txt	/*scrollview_folds_priority*
 scrollview_folds_symbol	scrollview.txt	/*scrollview_folds_symbol*
+scrollview_hide_for_insert	scrollview.txt	/*scrollview_hide_for_insert*
 scrollview_hide_on_intersect	scrollview.txt	/*scrollview_hide_on_intersect*
 scrollview_hover	scrollview.txt	/*scrollview_hover*
 scrollview_include_end_region	scrollview.txt	/*scrollview_include_end_region*

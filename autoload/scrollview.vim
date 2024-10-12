@@ -30,6 +30,8 @@ let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
 let g:scrollview_floating_windows =
       \ get(g:, 'scrollview_floating_windows', v:false)
+let g:scrollview_hide_for_insert =
+      \ get(g:, 'scrollview_hide_for_insert', v:false)
 let g:scrollview_hide_on_intersect =
       \ get(g:, 'scrollview_hide_on_intersect', v:false)
 let g:scrollview_hover = get(g:, 'scrollview_hover', v:true)

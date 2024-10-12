@@ -1125,6 +1125,15 @@ end
 -- Whether scrollbar and signs should be shown. This is the first check; it
 -- only checks for conditions that apply to both the position bar and signs.
 local should_show = function(winid)
+  if to_bool(vim.g.scrollview_current_only)
+      and winid ~= api.nvim_get_current_win() then
+    return false
+  end
+  if to_bool(vim.g.scrollview_hide_for_insert)
+      and string.find(fn.mode(), 'i')
+      and winid == api.nvim_get_current_win() then
+    return false
+  end
   if is_scrollview_window(winid) then
     return false
   end
@@ -2202,13 +2211,9 @@ local refresh_bars = function()
       end
     end
     local target_wins = {}
-    if to_bool(vim.g.scrollview_current_only) then
-      table.insert(target_wins, api.nvim_get_current_win())
-    else
-      for winnr = 1, fn.winnr('$') do
-        local winid = fn.win_getid(winnr)
-        table.insert(target_wins, winid)
-      end
+    for winnr = 1, fn.winnr('$') do
+      local winid = fn.win_getid(winnr)
+      table.insert(target_wins, winid)
     end
     -- Execute sign group callbacks. We don't do this when handle_mouse is
     -- running, since it's not necessary and for the cursor sign, it can result
@@ -2418,6 +2423,11 @@ local enable = function()
             \ |   execute "lua require('scrollview').refresh_bars_async()"
             \ | endif
             \ | let g:scrollview_ins_mode_buf_lines = nvim_buf_line_count(0)
+
+      autocmd InsertEnter,InsertLeave *
+            \   if g:scrollview_hide_for_insert
+            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ | endif
 
       " The following handles when :e is used to load a file. The asynchronous
       " version handles a case where :e is used to reload an existing file, that
