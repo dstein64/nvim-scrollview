@@ -13,14 +13,15 @@ scrollview-configuration`).
 ## Features
 
 * Handling for folds
-* Scrollbars can be dragged with the mouse
 * Signs (e.g., `diagnostics` and `search` enabled by default, and `marks` too
   for `nvim>=0.10`)
+* Scrollbars can be dragged with the mouse, and signs can be clicked for
+  navigation or right-clicked for information
 
 ## Requirements
 
 * `nvim>=0.6`
-* Scrollbar mouse dragging requires mouse support (see `:help 'mouse'`)
+* Mouse functionality requires mouse support (see `:help 'mouse'`)
 * Signs require `nvim>=0.9`
 
 ## Installation
