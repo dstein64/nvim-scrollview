@@ -1547,8 +1547,8 @@ local show_signs = function(winid, sign_winids, bar_winid)
       satisfied_current_only = winid == cur_winid
     end
     local hide_for_insert =
-      vim.tbl_contains(vim.g.scrollview_hidden_signs_for_insert, sign_spec.group)
-        or vim.tbl_contains(vim.g.scrollview_hidden_signs_for_insert, 'all')
+      vim.tbl_contains(vim.g.scrollview_signs_hidden_for_insert, sign_spec.group)
+        or vim.tbl_contains(vim.g.scrollview_signs_hidden_for_insert, 'all')
     hide_for_insert = hide_for_insert
       and string.find(fn.mode(), 'i')
       and winid == api.nvim_get_current_win()
@@ -2439,7 +2439,7 @@ local enable = function()
       " <ctrl-c>. We use a key sequence callback to handle that.
       autocmd InsertEnter,InsertLeave *
             \   if g:scrollview_hide_bar_for_insert
-            \       || !empty(g:scrollview_hidden_signs_for_insert)
+            \       || !empty(g:scrollview_signs_hidden_for_insert)
             \ |   execute "lua require('scrollview').refresh_bars_async()"
             \ | endif
 
@@ -3373,7 +3373,7 @@ end
 -- a key sequence callback to accommodate.
 register_key_sequence_callback(t('<c-c>'), 'i', function()
   if vim.g.scrollview_hide_bar_for_insert
-      or not vim.tbl_isempty(vim.g.scrollview_hidden_signs_for_insert) then
+      or not vim.tbl_isempty(vim.g.scrollview_signs_hidden_for_insert) then
     refresh_bars_async()
   end
 end)
