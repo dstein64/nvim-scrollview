@@ -217,8 +217,9 @@ scrollview_column      |Number| specifying the scrollbar column (relative to
                        greater than or equal to `1`.
 
 scrollview_current_only                    *scrollview_current_only*
-                       |Boolean| specifying whether scrollbars should only be
-                       displayed in the current window. Defaults to |v:false|.
+                       |Boolean| specifying whether scrollbars and signs should
+                       only be displayed in the current window. Defaults to
+                       |v:false|.
 
 scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
                        |List| of |String|s specifying optional file types for
