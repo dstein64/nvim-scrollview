@@ -1129,11 +1129,6 @@ local should_show = function(winid)
       and winid ~= api.nvim_get_current_win() then
     return false
   end
-  if to_bool(vim.g.scrollview_hide_for_insert)
-      and string.find(fn.mode(), 'i')
-      and winid == api.nvim_get_current_win() then
-    return false
-  end
   if is_scrollview_window(winid) then
     return false
   end
@@ -1352,6 +1347,11 @@ local show_scrollbar = function(winid, bar_winid)
   if bar_position.height <= 0 then
     return -1
   end
+  if to_bool(vim.g.scrollview_hide_bar_for_insert)
+      and string.find(fn.mode(), 'i')
+      and winid == api.nvim_get_current_win() then
+    return -1
+  end
   if to_bool(vim.g.scrollview_hide_on_intersect) then
     local winrow0 = wininfo.winrow - 1
     local wincol0 = wininfo.wincol - 1
@@ -1546,7 +1546,15 @@ local show_signs = function(winid, sign_winids, bar_winid)
     if sign_spec.current_only then
       satisfied_current_only = winid == cur_winid
     end
-    local show = sign_group_state[sign_spec.group] and satisfied_current_only
+    local hide_for_insert =
+      vim.tbl_contains(vim.g.scrollview_hidden_signs_for_insert, sign_spec.group)
+        or vim.tbl_contains(vim.g.scrollview_hidden_signs_for_insert, 'all')
+    hide_for_insert = hide_for_insert
+      and string.find(fn.mode(), 'i')
+      and winid == api.nvim_get_current_win()
+    local show = sign_group_state[sign_spec.group]
+      and satisfied_current_only
+      and not hide_for_insert
     if show then
       local lines_to_show = sorted(lines_as_given)
       local show_in_folds = to_bool(vim.g.scrollview_signs_show_in_folds)
@@ -2424,8 +2432,14 @@ local enable = function()
             \ | endif
             \ | let g:scrollview_ins_mode_buf_lines = nvim_buf_line_count(0)
 
+      " The following handles hiding the scrollbar and signs in insert mode,
+      " and unhiding upon leaving insert mode, when such functionality is
+      " enabled.
+      " WARN: This does not handle the scenario where insert mode is left with
+      " <ctrl-c>. We use a key sequence callback to handle that.
       autocmd InsertEnter,InsertLeave *
-            \   if g:scrollview_hide_for_insert
+            \   if g:scrollview_hide_bar_for_insert
+            \       || !empty(g:scrollview_hidden_signs_for_insert)
             \ |   execute "lua require('scrollview').refresh_bars_async()"
             \ | endif
 
@@ -3352,6 +3366,17 @@ local fold_seqs = {
 for _, seq in ipairs(fold_seqs) do
   register_key_sequence_callback(seq, 'nv', refresh_bars_async)
 end
+
+-- === InsertLeave synchronization ===
+
+-- InsertLeave is not triggered when leaving insert mode with <ctrl-c>. We use
+-- a key sequence callback to accommodate.
+register_key_sequence_callback(t('<c-c>'), 'i', function()
+  if vim.g.scrollview_hide_bar_for_insert
+      or not vim.tbl_isempty(vim.g.scrollview_hidden_signs_for_insert) then
+    refresh_bars_async()
+  end
+end)
 
 -- *************************************************
 -- * API

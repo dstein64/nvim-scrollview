@@ -229,10 +229,16 @@ scrollview_floating_windows                *scrollview_floating_windows*
 (experimental)         |Boolean| specifying whether scrollbars and signs are
                        shown in floating windows. Defaults to |v:false|.
 
-scrollview_hide_for_insert                 *scrollview_hide_for_insert*
-                       |Boolean| specifying whether scrollbars and signs are
-                       hidden in the current window for insert mode. Defaults
-                       to |v:false|.
+scrollview_hidden_signs_for_insert         *scrollview_hidden_signs_for_insert*
+                       |List| of |String|s specifying sign groups to hide in the
+                       current window for insert mode. Set to `['all']` to hide
+                       all sign groups. Defaults to `[]`. See
+                       |scrollview_hide_bar_for_insert| for hiding the scrollbar.
+
+scrollview_hide_bar_for_insert             *scrollview_hide_bar_for_insert*
+                       |Boolean| specifying whether the scrollbar is hidden in
+                       the current window for insert mode. Defaults to |v:false|.
+                       See |scrollview_hidden_signs_for_insert| for hiding signs.
 
 scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
                        |Boolean| specifying whether each scrollbar or sign
