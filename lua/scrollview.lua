@@ -2463,7 +2463,8 @@ local enable = function()
       autocmd OptionSet number,relativenumber,signcolumn
             \ lua require('scrollview').refresh_bars_async()
 
-      " The following handles the creation of floating windows.
+      " The following handles scrollbar/sign generation for new floating
+      " windows.
       autocmd WinNew * lua require('scrollview').refresh_bars_async()
     augroup END
   ]])
