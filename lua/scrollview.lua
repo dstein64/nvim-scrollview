@@ -2462,6 +2462,9 @@ local enable = function()
       " column is added or removed (when scrollview_base=buffer).
       autocmd OptionSet number,relativenumber,signcolumn
             \ lua require('scrollview').refresh_bars_async()
+
+      " The following handles the creation of floating windows.
+      autocmd WinNew * lua require('scrollview').refresh_bars_async()
     augroup END
   ]])
   -- The initial refresh is asynchronous, since :ScrollViewEnable can be used
