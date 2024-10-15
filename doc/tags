@@ -60,6 +60,7 @@ scrollview_conflicts_middle_priority	scrollview.txt	/*scrollview_conflicts_middl
 scrollview_conflicts_middle_symbol	scrollview.txt	/*scrollview_conflicts_middle_symbol*
 scrollview_conflicts_top_priority	scrollview.txt	/*scrollview_conflicts_top_priority*
 scrollview_conflicts_top_symbol	scrollview.txt	/*scrollview_conflicts_top_symbol*
+scrollview_consider_borders	scrollview.txt	/*scrollview_consider_borders*
 scrollview_current_only	scrollview.txt	/*scrollview_current_only*
 scrollview_cursor_priority	scrollview.txt	/*scrollview_cursor_priority*
 scrollview_cursor_symbol	scrollview.txt	/*scrollview_cursor_symbol*

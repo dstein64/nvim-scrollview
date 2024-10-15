@@ -123,11 +123,11 @@ local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
 local GET_WINDOW_EDGES_KEY_PREFIX = 3
 
--- Maps window ID to a temporary highlight group name. This is reset on each
--- refresh cycle.
-local normal_highlight_lookup = {}
+-- Maps window ID and highlight group to a temporary highlight group with the
+-- corresponding definition. This is reset on each refresh cycle.
+local highlight_lookup = {}
 -- Tracks the number of entries in the preceding table.
-local normal_highlight_lookup_size = 0
+local highlight_lookup_size = 0
 
 -- *************************************************
 -- * Memoization
@@ -1063,6 +1063,20 @@ local get_topline_lookup = function(winid)
   return topline_lookup
 end
 
+local consider_borders = function(winid)
+  if vim.g.scrollview_consider_borders
+      and vim.g.scrollview_floating_windows
+      and vim.tbl_contains({'left', 'right'}, vim.g.scrollview_base) then
+    local config = api.nvim_win_get_config(winid)
+    local is_float = tbl_get(config, 'relative', '') ~= ''
+    if is_float then
+      local border = config.border
+      return border ~= nil and islist(border) and #border == 8
+    end
+  end
+  return false
+end
+
 local calculate_scrollbar_column = function(winid)
   local winwidth = fn.winwidth(winid)
   -- left is the position for the left of the scrollbar, relative to the
@@ -1080,6 +1094,20 @@ local calculate_scrollbar_column = function(winid)
   else
     -- For an unknown base, use the default position (right edge of window).
     left = left + winwidth - 1
+  end
+  if consider_borders(winid) then
+    local border = api.nvim_win_get_config(winid).border
+    if base == 'right' then
+      if border[4] ~= '' then
+        -- The floating window has a right border.
+        left = left + 1
+      end
+    elseif base == 'left' then
+      if border[8] ~= '' then
+        -- The floating window has a left border.
+        left = left - 1
+      end
+    end
   end
   return left + 1
 end
@@ -1187,6 +1215,17 @@ local is_valid_column = function(winid, col, width)
   local min_valid_col = 1
   local max_valid_col = winwidth - width + 1
   local base = vim.g.scrollview_base
+  if consider_borders(winid) then
+    local border = api.nvim_win_get_config(winid).border
+    if border[4] ~= '' then
+      -- The floating window has a right border.
+      max_valid_col = max_valid_col + 1
+    end
+    if border[8] ~= '' then
+      -- The scrollbar has a left border.
+      min_valid_col = min_valid_col - 1
+    end
+  end
   if base == 'buffer' then
     min_valid_col = buf_view_begins_col(winid)
   end
@@ -1234,40 +1273,34 @@ local is_hl_reversed = function(group)
   return false
 end
 
--- Returns the Normal highlight for the specified window, creating a new group
+-- Returns the mapped highlight for the specified window, creating a new group
 -- if nvim_win_set_hl_ns was used.
 -- WARN: 'nvim_win_set_hl_ns' "takes precedence over the 'winhighlight'
 -- option".
-local get_normal_highlight = function(winid)
+local get_mapped_highlight = function(winid, from)
   local config = api.nvim_win_get_config(winid)
-  local is_float = tbl_get(config, 'relative', '') ~= ''
-  local highlight = 'Normal'
-  if is_float then
-    highlight = 'NormalFloat'
-  end
+  local highlight = from
   local hl_ns = -1
   if api.nvim_get_hl_ns ~= nil then
     hl_ns = api.nvim_get_hl_ns({winid = winid})
   end
   if hl_ns ~= -1 then
-    highlight = normal_highlight_lookup[winid]
-    if highlight == nil then
+    if highlight_lookup[winid .. '.' .. from] ~= nil then
+      highlight = highlight_lookup[winid .. '.' .. from]
+    else
+      local hl_spec = {}
+      hl_spec = api.nvim_get_hl(
+        hl_ns, {name = from, create = false, link = true})
       -- NormalFloat takes precedence for floating windows, but if it's not
       -- specified, Normal will be used if present.
-      local hl_spec = {}
-      if is_float then
-        hl_spec = api.nvim_get_hl(
-          hl_ns, {name = 'NormalFloat', create = false, link = true})
-      end
-      if vim.tbl_isempty(hl_spec) then
+      if vim.tbl_isempty(hl_spec) and from == 'NormalFloat' then
         hl_spec = api.nvim_get_hl(
           hl_ns, {name = 'Normal', create = false, link = true})
       end
       -- Use the global namespace if the specification was not found.
       if vim.tbl_isempty(hl_spec) then
-        local hl_name = is_float and 'NormalFloat' or 'Normal'
         hl_spec = api.nvim_get_hl(
-          0, {name = hl_name, create = false, link = true})
+          0, {name = from, create = false, link = true})
       end
       local visited = {}
       while not vim.tbl_isempty(hl_spec)
@@ -1286,31 +1319,26 @@ local get_normal_highlight = function(winid)
             hl_ns, {name = link, create = false, link = true})
         end
       end
-      if not vim.tbl_isempty(hl_spec) and hl_spec.link == nil then
-        -- Create a group with a matching specification.
-        highlight = 'ScrollViewNormalHighlight' .. normal_highlight_lookup_size
-        api.nvim_set_hl(0, highlight, hl_spec)
-        normal_highlight_lookup[winid] = highlight
-        normal_highlight_lookup_size = normal_highlight_lookup_size + 1
-      end
+      -- Create a group with a matching specification.
+      highlight = 'ScrollViewHighlight' .. highlight_lookup_size
+      api.nvim_set_hl(0, highlight, hl_spec)
+      highlight_lookup[winid .. '.' .. from] = highlight
+      highlight_lookup_size = highlight_lookup_size + 1
     end
   else
     local base_winhighlight = api.nvim_win_get_option(winid, 'winhighlight')
     if base_winhighlight ~= '' then
       pcall(function()
         for _, item in ipairs(fn.split(base_winhighlight, ',')) do
-          local from, to = unpack(fn.split(item, ':'))
-          if from == 'NormalFloat' and is_float then
-            -- NormalFloat takes precedence for floating windows, but if it's not
-            -- specified, Normal will be used if present.
-            highlight = to
+          local lhs, rhs = unpack(fn.split(item, ':'))
+          if lhs == from then
+            highlight = rhs
             break
           end
-          if from == 'Normal' then
-            highlight = to
-            if not is_float then
-              break
-            end
+          -- NormalFloat takes precedence for floating windows, but if it's not
+          -- specified, Normal will be used if present.
+          if lhs == 'Normal' and from == 'NormalFloat' then
+            highlight = rhs
           end
         end
       end)
@@ -1470,15 +1498,28 @@ local show_scrollbar = function(winid, bar_winid)
       winblend = 0
     end
     set_window_option(bar_winid, 'winblend', winblend)
+    -- Set the Normal highlight to match the base window. It's not sufficient to
+    -- just specify Normal highlighting. With just that, a color scheme's
+    -- specification of EndOfBuffer would be used to color the bottom of the
+    -- scrollbar.
+    target = is_float and 'NormalFloat' or 'Normal'
+    if consider_borders(winid) then
+      local border = api.nvim_win_get_config(winid).border
+      local winwidth = fn.winwidth(winid)
+      if border[4] ~= ''  -- right border
+          and winwidth + 1 == bar_position.col then
+        target = 'FloatBorder'
+      end
+      if border[8] ~= ''  -- left border
+          and 0 == bar_position.col then
+        target = 'FloatBorder'
+      end
+    end
+    target = get_mapped_highlight(winid, target)
+    local winhighlight = string.format(
+      'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
+    set_window_option(bar_winid, 'winhighlight', winhighlight)
   end
-  -- Set the Normal highlight to match the base window. It's not sufficient to
-  -- just specify Normal highlighting. With just that, a color scheme's
-  -- specification of EndOfBuffer would be used to color the bottom of the
-  -- scrollbar.
-  local target = get_normal_highlight(winid)
-  local winhighlight = string.format(
-    'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
-  set_window_option(bar_winid, 'winhighlight', winhighlight)
   set_window_option(bar_winid, 'foldcolumn', '0')  -- foldcolumn takes a string
   set_window_option(bar_winid, 'foldenable', false)
   -- Don't inherit 'foldmethod'. It could slow down scrolling. #135
@@ -1790,8 +1831,23 @@ local show_signs = function(winid, sign_winids, bar_winid)
             if over_scrollbar then
               target = 'ScrollView'
             else
-              target = get_normal_highlight(winid)
+              target = is_float and 'NormalFloat' or 'Normal'
+              if consider_borders(winid) then
+                local border = api.nvim_win_get_config(winid).border
+                local winwidth = fn.winwidth(winid)
+                if border[4] ~= ''  -- right border
+                    and winwidth + 1 >= col
+                    and winwidth + 1 <= col + sign_width - 1 then
+                  target = 'FloatBorder'
+                end
+                if border[8] ~= ''  -- left border
+                    and 0 >= col
+                    and 0 <= col + sign_width - 1 then
+                  target = 'FloatBorder'
+                end
+              end
             end
+            target = get_mapped_highlight(winid, target)
             local winhighlight = string.format(
               'Normal:%s,EndOfBuffer:%s,NormalFloat:%s', target, target, target)
             set_window_option(sign_winid, 'winhighlight', winhighlight)
@@ -2242,8 +2298,8 @@ local refresh_bars = function()
     end
     -- Reset highlight group name mapping (and table size) for each refresh
     -- cycle.
-    normal_highlight_lookup = {}
-    normal_highlight_lookup_size = 0
+    highlight_lookup = {}
+    highlight_lookup_size = 0
     -- Delete all signs and highlights in the sign buffer.
     if sign_bufnr ~= -1 and to_bool(fn.bufexists(sign_bufnr)) then
       api.nvim_buf_set_option(sign_bufnr, 'modifiable', true)

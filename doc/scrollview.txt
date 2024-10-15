@@ -216,6 +216,18 @@ scrollview_column      |Number| specifying the scrollbar column (relative to
                        |scrollview_base|). Defaults to `1`. Must be an integer
                        greater than or equal to `1`.
 
+scrollview_consider_borders                *scrollview_consider_borders*
+(experimental)         |Boolean| specifying whether floating window borders are
+                       taken into account for positioning scrollbars and signs.
+                       When set to |v:true|, borders are considered as part of
+                       the window; scrollbars and signs can be positioned
+                       where there are borders. When set to |v:false|, borders
+                       are ignored. Defaults to |v:false|. The setting is only
+                       applicable for floating windows that have borders, and
+                       only relevant when |scrollview_floating_windows| is
+                       turned on and |scrollview_base| is set to `'left'` or
+                       `'right'`.
+
 scrollview_current_only                    *scrollview_current_only*
                        |Boolean| specifying whether scrollbars and signs should
                        only be displayed in the current window. Defaults to
