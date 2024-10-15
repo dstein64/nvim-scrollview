@@ -1063,8 +1063,8 @@ local get_topline_lookup = function(winid)
   return topline_lookup
 end
 
-local consider_borders = function(winid)
-  if vim.g.scrollview_consider_borders
+local consider_border = function(winid)
+  if vim.g.scrollview_consider_border
       and vim.g.scrollview_floating_windows
       and vim.tbl_contains({'left', 'right'}, vim.g.scrollview_base) then
     local config = api.nvim_win_get_config(winid)
@@ -1095,7 +1095,7 @@ local calculate_scrollbar_column = function(winid)
     -- For an unknown base, use the default position (right edge of window).
     left = left + winwidth - 1
   end
-  if consider_borders(winid) then
+  if consider_border(winid) then
     local border = api.nvim_win_get_config(winid).border
     if base == 'right' then
       if border[4] ~= '' then
@@ -1215,7 +1215,7 @@ local is_valid_column = function(winid, col, width)
   local min_valid_col = 1
   local max_valid_col = winwidth - width + 1
   local base = vim.g.scrollview_base
-  if consider_borders(winid) then
+  if consider_border(winid) then
     local border = api.nvim_win_get_config(winid).border
     if border[4] ~= '' then
       -- The floating window has a right border.
@@ -1503,7 +1503,7 @@ local show_scrollbar = function(winid, bar_winid)
     -- specification of EndOfBuffer would be used to color the bottom of the
     -- scrollbar.
     target = is_float and 'NormalFloat' or 'Normal'
-    if consider_borders(winid) then
+    if consider_border(winid) then
       local border = api.nvim_win_get_config(winid).border
       local winwidth = fn.winwidth(winid)
       if border[4] ~= ''  -- right border
@@ -1832,7 +1832,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
               target = 'ScrollView'
             else
               target = is_float and 'NormalFloat' or 'Normal'
-              if consider_borders(winid) then
+              if consider_border(winid) then
                 local border = api.nvim_win_get_config(winid).border
                 local winwidth = fn.winwidth(winid)
                 if border[4] ~= ''  -- right border

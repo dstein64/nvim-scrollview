@@ -216,7 +216,7 @@ scrollview_column      |Number| specifying the scrollbar column (relative to
                        |scrollview_base|). Defaults to `1`. Must be an integer
                        greater than or equal to `1`.
 
-scrollview_consider_borders                *scrollview_consider_borders*
+scrollview_consider_border                 *scrollview_consider_border*
 (experimental)         |Boolean| specifying whether floating window borders are
                        taken into account for positioning scrollbars and signs.
                        When set to |v:true|, borders are considered as part of

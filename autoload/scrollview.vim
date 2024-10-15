@@ -25,8 +25,8 @@ let g:scrollview_base = get(g:, 'scrollview_base', 'right')
 let g:scrollview_byte_limit = get(g:, 'scrollview_byte_limit', 1000000)
 let g:scrollview_character = get(g:, 'scrollview_character', '')
 let g:scrollview_column = get(g:, 'scrollview_column', 1)
-let g:scrollview_consider_borders =
-      \ get(g:, 'scrollview_consider_borders', v:false)
+let g:scrollview_consider_border =
+      \ get(g:, 'scrollview_consider_border', v:false)
 let g:scrollview_current_only = get(g:, 'scrollview_current_only', v:false)
 let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
