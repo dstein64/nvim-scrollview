@@ -2269,7 +2269,7 @@ local refresh_bars = function()
         local bar_winid = show_scrollbar(winid, existing_winid)
         -- If an existing window was successfully reused, remove it from the
         -- existing window list.
-        if bar_winid ~= -1 and existing_winid ~= -1 then
+        if bar_winid ~= -1 and existing_winid == bar_winid then
           table.remove(existing_barids)
         end
         -- Repeat a similar process for signs.
