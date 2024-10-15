@@ -1420,11 +1420,9 @@ local show_scrollbar = function(winid, bar_winid)
     zindex = zindex
   }
   -- Create a new window if one is not available for re-use. Also, create a new
-  -- window if the base window is a floating window, to avoid a z-index issue
-  -- (#139). But don't do this while the mouse is dragging a scrollbar, since
-  -- it breaks dragging functionality (this works since the z-index issue
-  -- hasn't been observed to occur during dragging).
-  if bar_winid == -1 or (is_float and not handling_mouse) then
+  -- window if the base window is a floating window, to avoid a z-index issue.
+  -- #139
+  if bar_winid == -1 or is_float then
     bar_winid = api.nvim_open_win(bar_bufnr, false, bar_config)
   else
     api.nvim_win_set_config(bar_winid, bar_config)
@@ -3067,6 +3065,7 @@ local handle_mouse = function(button, primary)
             -- switched intersection state with scrollbar. This is fast, from
             -- caching.
             refresh_bars()
+            props = get_scrollview_bar_props(winid)
             -- Apply appropriate highlighting where relevant.
             if mousemove_received
                 and to_bool(fn.exists('&mousemoveevent'))
