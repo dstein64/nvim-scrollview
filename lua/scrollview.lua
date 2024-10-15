@@ -3060,7 +3060,7 @@ local handle_mouse = function(button, primary)
               refresh_bars()
               props = get_scrollview_bar_props(winid)
             end
-            props = move_scrollbar(props, row)
+            props = move_scrollbar(props, row)  -- luacheck: ignore
             -- Refresh since sign backgrounds might be stale, for signs that
             -- switched intersection state with scrollbar. This is fast, from
             -- caching.
