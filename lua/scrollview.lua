@@ -1419,7 +1419,12 @@ local show_scrollbar = function(winid, bar_winid)
     col = bar_position.col - 1,
     zindex = zindex
   }
-  if bar_winid == -1 then
+  -- Create a new window if one is not available for re-use. Also, create a new
+  -- window if the base window is a floating window, to avoid a z-index issue
+  -- (#139). But don't do this while the mouse is dragging a scrollbar, since
+  -- it breaks dragging functionality (this works since the z-index issue
+  -- hasn't been observed to occur during dragging).
+  if bar_winid == -1 or (is_float and not handling_mouse) then
     bar_winid = api.nvim_open_win(bar_bufnr, false, bar_config)
   else
     api.nvim_win_set_config(bar_winid, bar_config)
