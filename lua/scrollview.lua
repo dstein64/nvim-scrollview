@@ -1278,7 +1278,6 @@ end
 -- WARN: 'nvim_win_set_hl_ns' "takes precedence over the 'winhighlight'
 -- option".
 local get_mapped_highlight = function(winid, from)
-  local config = api.nvim_win_get_config(winid)
   local highlight = from
   local hl_ns = -1
   if api.nvim_get_hl_ns ~= nil then
@@ -1288,8 +1287,7 @@ local get_mapped_highlight = function(winid, from)
     if highlight_lookup[winid .. '.' .. from] ~= nil then
       highlight = highlight_lookup[winid .. '.' .. from]
     else
-      local hl_spec = {}
-      hl_spec = api.nvim_get_hl(
+      local hl_spec = api.nvim_get_hl(
         hl_ns, {name = from, create = false, link = true})
       -- NormalFloat takes precedence for floating windows, but if it's not
       -- specified, Normal will be used if present.
@@ -1502,7 +1500,7 @@ local show_scrollbar = function(winid, bar_winid)
     -- just specify Normal highlighting. With just that, a color scheme's
     -- specification of EndOfBuffer would be used to color the bottom of the
     -- scrollbar.
-    target = is_float and 'NormalFloat' or 'Normal'
+    local target = is_float and 'NormalFloat' or 'Normal'
     if consider_border(winid) then
       local border = api.nvim_win_get_config(winid).border
       local winwidth = fn.winwidth(winid)
