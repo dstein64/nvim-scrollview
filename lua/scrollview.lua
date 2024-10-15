@@ -1732,7 +1732,10 @@ local show_signs = function(winid, sign_winids, bar_winid)
           col = col - 1,
           zindex = zindex,
         }
-        if vim.tbl_isempty(sign_winids) then
+        -- Create a new window if none are available for re-use. Also, create a
+        -- new window if the base window is a floating window, to avoid a
+        -- z-index issue. #139
+        if vim.tbl_isempty(sign_winids) or is_float then
           sign_winid = api.nvim_open_win(sign_bufnr, false, sign_config)
         else
           sign_winid = table.remove(sign_winids)
