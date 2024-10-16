@@ -129,6 +129,14 @@ local highlight_lookup = {}
 -- Tracks the number of entries in the preceding table.
 local highlight_lookup_size = 0
 
+-- The indices for the array of border elements in the config returned by
+-- nvim_win_get_config. The array specifies the eight characters that comprise
+-- the border, in a clockwise order starting from the top-left corner.
+local BORDER_TOP = 2
+local BORDER_RIGHT = 4
+local BORDER_BOTTOM = 6
+local BORDER_LEFT = 8
+
 -- *************************************************
 -- * Memoization
 -- *************************************************
@@ -278,20 +286,16 @@ local get_window_edges = function(winid)
   -- positions calculated above; only the bottom and right positions.
   local border = api.nvim_win_get_config(winid).border
   if border ~= nil and islist(border) and #border == 8 then
-    if border[2] ~= '' then
-      -- There is a top border.
+    if border[BORDER_TOP] ~= '' then
       bottom = bottom + 1
     end
-    if border[4] ~= '' then
-      -- There is a right border.
+    if border[BORDER_RIGHT] ~= '' then
       right = right + 1
     end
-    if border[6] ~= '' then
-      -- There is a bottom border.
+    if border[BORDER_BOTTOM] ~= '' then
       bottom = bottom + 1
     end
-    if border[8] ~= '' then
-      -- There is a left border.
+    if border[BORDER_LEFT] ~= '' then
       right = right + 1
     end
   end
@@ -354,12 +358,10 @@ local is_mouse_over_scrollview_win = function(winid)
   if parent_is_float then
     local border = parent_config.border
     if border ~= nil and islist(border) and #border == 8 then
-      if border[2] ~= '' then
-        -- There is a top border.
+      if border[BORDER_TOP] ~= '' then
         row = row + 1
       end
-      if border[8] ~= '' then
-        -- There is a left border.
+      if border[BORDER_LEFT] ~= '' then
         col = col + 1
       end
     end
@@ -1098,13 +1100,11 @@ local calculate_scrollbar_column = function(winid)
   if consider_border(winid) then
     local border = api.nvim_win_get_config(winid).border
     if base == 'right' then
-      if border[4] ~= '' then
-        -- The floating window has a right border.
+      if border[BORDER_RIGHT] ~= '' then
         left = left + 1
       end
     elseif base == 'left' then
-      if border[8] ~= '' then
-        -- The floating window has a left border.
+      if border[BORDER_LEFT] ~= '' then
         left = left - 1
       end
     end
@@ -1217,12 +1217,10 @@ local is_valid_column = function(winid, col, width)
   local base = vim.g.scrollview_base
   if consider_border(winid) then
     local border = api.nvim_win_get_config(winid).border
-    if border[4] ~= '' then
-      -- The floating window has a right border.
+    if border[BORDER_RIGHT] ~= '' then
       max_valid_col = max_valid_col + 1
     end
-    if border[8] ~= '' then
-      -- The scrollbar has a left border.
+    if border[BORDER_LEFT] ~= '' then
       min_valid_col = min_valid_col - 1
     end
   end
@@ -1504,11 +1502,11 @@ local show_scrollbar = function(winid, bar_winid)
     if consider_border(winid) then
       local border = api.nvim_win_get_config(winid).border
       local winwidth = fn.winwidth(winid)
-      if border[4] ~= ''  -- right border
+      if border[BORDER_RIGHT] ~= ''
           and winwidth + 1 == bar_position.col then
         target = 'FloatBorder'
       end
-      if border[8] ~= ''  -- left border
+      if border[BORDER_LEFT] ~= ''
           and 0 == bar_position.col then
         target = 'FloatBorder'
       end
@@ -1833,12 +1831,12 @@ local show_signs = function(winid, sign_winids, bar_winid)
               if consider_border(winid) then
                 local border = api.nvim_win_get_config(winid).border
                 local winwidth = fn.winwidth(winid)
-                if border[4] ~= ''  -- right border
+                if border[BORDER_RIGHT] ~= ''
                     and winwidth + 1 >= col
                     and winwidth + 1 <= col + sign_width - 1 then
                   target = 'FloatBorder'
                 end
-                if border[8] ~= ''  -- left border
+                if border[BORDER_LEFT] ~= ''
                     and 0 >= col
                     and 0 <= col + sign_width - 1 then
                   target = 'FloatBorder'
