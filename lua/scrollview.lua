@@ -2067,12 +2067,10 @@ local read_input_stream = function()
       if is_float then
         local border = config.border
         if border ~= nil and islist(border) and #border == 8 then
-          if border[2] ~= '' then
-            -- There is a top border.
+          if border[BORDER_TOP] ~= '' then
             mouse_row = mouse_row - 1
           end
-          if border[8] ~= '' then
-            -- There is a left border.
+          if border[BORDER_LEFT] ~= '' then
             mouse_col = mouse_col - 1
           end
         end
