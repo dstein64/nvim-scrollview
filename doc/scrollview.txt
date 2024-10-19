@@ -110,6 +110,8 @@ The following |<Plug>| mappings are defined for convenience.
 * `<Plug>(ScrollViewEnable)`
 * `<Plug>(ScrollViewFirst)`
 * `<Plug>(ScrollViewLast)`
+* `<Plug>(ScrollViewLegend)`
+* `<Plug>(ScrollViewLegend!)`
 * `<Plug>(ScrollViewNext)`
 * `<Plug>(ScrollViewPrev)`
 * `<Plug>(ScrollViewRefresh)`

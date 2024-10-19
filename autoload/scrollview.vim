@@ -455,6 +455,10 @@ noremap  <silent> <plug>(ScrollViewFirst)   <cmd>ScrollViewFirst<cr>
 inoremap <silent> <plug>(ScrollViewFirst)   <cmd>ScrollViewFirst<cr>
 noremap  <silent> <plug>(ScrollViewLast)    <cmd>ScrollViewLast<cr>
 inoremap <silent> <plug>(ScrollViewLast)    <cmd>ScrollViewLast<cr>
+noremap  <silent> <plug>(ScrollViewLegend)  <cmd>ScrollViewLegend<cr>
+inoremap <silent> <plug>(ScrollViewLegend)  <cmd>ScrollViewLegend<cr>
+noremap  <silent> <plug>(ScrollViewLegend!) <cmd>ScrollViewLegend!<cr>
+inoremap <silent> <plug>(ScrollViewLegend!) <cmd>ScrollViewLegend!<cr>
 noremap  <silent> <plug>(ScrollViewNext)    <cmd>ScrollViewNext<cr>
 inoremap <silent> <plug>(ScrollViewNext)    <cmd>ScrollViewNext<cr>
 noremap  <silent> <plug>(ScrollViewPrev)    <cmd>ScrollViewPrev<cr>
