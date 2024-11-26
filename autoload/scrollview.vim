@@ -419,7 +419,8 @@ function! s:SetUpMouseMappings(button, primary) abort
       let l:button =
             \ strcharpart(l:button, 0, strchars(l:button, 1) - 1)
     endif
-    for l:mapmode in ['n', 'v', 'i']
+    " scrollview mouse handling is not supported in select-mode. #140
+    for l:mapmode in ['n', 'x', 'i']
       execute printf(
             \   'silent! %snoremap %s <silent> <%smouse>'
             \   .. ' <cmd>lua require("scrollview").handle_mouse("%s", %s)<cr>',
