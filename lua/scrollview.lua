@@ -2789,7 +2789,6 @@ end
 -- handling is for navigation (dragging scrollbars and navigating to signs).
 -- If primary is false, the handling is for context (showing popups with info).
 local handle_mouse = function(button, primary)
-  handling_mouse = true
   local valid_buttons = {
     'left', 'middle', 'right', 'x1', 'x2',
     'c-left', 'c-middle', 'c-right', 'c-x1', 'c-x2',
@@ -2813,6 +2812,7 @@ local handle_mouse = function(button, primary)
   local resume_memoize = memoize
   start_memoize()
   pcall(function()
+    handling_mouse = true
     -- Re-send the click, so its position can be obtained through
     -- read_input_stream().
     fn.feedkeys(mousedown, 'ni')
