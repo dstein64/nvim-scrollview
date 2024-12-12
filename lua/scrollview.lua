@@ -1444,9 +1444,10 @@ local show_scrollbar = function(winid, bar_winid)
     zindex = zindex
   }
   -- Create a new window if one is not available for re-use. Also, create a new
-  -- window if the base window is a floating window, to avoid a z-index issue.
-  -- #139
-  if bar_winid == -1 or is_float then
+  -- window if the base window is a floating window, to avoid Neovim Issue #18142,
+  -- a z-index issue (#139) that was fixed in Neovim PR #30259.
+  local issue_18142 = is_float and not to_bool(fn.has('nvim-0.11'))
+  if bar_winid == -1 or issue_18142 then
     bar_winid = api.nvim_open_win(bar_bufnr, false, bar_config)
   else
     api.nvim_win_set_config(bar_winid, bar_config)
@@ -1773,9 +1774,10 @@ local show_signs = function(winid, sign_winids, bar_winid)
           zindex = zindex,
         }
         -- Create a new window if none are available for re-use. Also, create a
-        -- new window if the base window is a floating window, to avoid a
-        -- z-index issue. #139
-        if vim.tbl_isempty(sign_winids) or is_float then
+        -- new window if the base window is a floating window, to avoid Neovim
+        -- Issue #18142, a z-index issue (#139) that was fixed in Neovim PR #30259.
+        local issue_18142 = is_float and not to_bool(fn.has('nvim-0.11'))
+        if vim.tbl_isempty(sign_winids) or issue_18142 then
           sign_winid = api.nvim_open_win(sign_bufnr, false, sign_config)
         else
           sign_winid = table.remove(sign_winids)
