@@ -16,27 +16,29 @@ function M.init(enable)
     highlight = 'ScrollViewTrail',
     priority = vim.g.scrollview_trail_priority,
     symbol = vim.g.scrollview_trail_symbol,
-    type = 'w',
   })
   local name = registration.name
   scrollview.set_sign_group_state(group, enable)
 
   scrollview.set_sign_group_callback(group, function()
+    -- Track visited buffers, to prevent duplicate computation when multiple
+    -- windows are showing the same buffer.
+    local visited = {}
     for _, winid in ipairs(scrollview.get_sign_eligible_windows()) do
-      local winvars = vim.w[winid]
+      local bufnr = api.nvim_win_get_buf(winid)
       -- Don't update when in insert mode. This way, pressing 'o' to start a
       -- new line won't trigger a new sign when there is indentation.
       local mode = api.nvim_win_call(winid, fn.mode)
-      if mode ~= 'i' then
+      if not visited[bufnr] and mode ~= 'i' then
+        local bufvars = vim.b[bufnr]
         local lines = {}
-        local bufnr = api.nvim_win_get_buf(winid)
         local changedtick = vim.b[bufnr].changedtick
-        local changedtick_cached = winvars.scrollview_trail_changedtick_cached
-        local bufnr_cached = winvars.scrollview_trail_bufnr_cached
+        local changedtick_cached = bufvars.scrollview_trail_changedtick_cached
+        local bufnr_cached = bufvars.scrollview_trail_bufnr_cached
         local cache_hit = changedtick_cached == changedtick
           and bufnr_cached == bufnr
         if cache_hit then
-          lines = winvars.scrollview_trail_cached
+          lines = bufvars.scrollview_trail_cached
         else
           local line_count = api.nvim_buf_line_count(bufnr)
           for line = 1, line_count do
@@ -46,14 +48,15 @@ function M.init(enable)
             end
           end
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-          winvars.scrollview_trail_changedtick_cached = changedtick
+          bufvars.scrollview_trail_changedtick_cached = changedtick
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-          winvars.scrollview_trail_bufnr_cached = bufnr
+          bufvars.scrollview_trail_bufnr_cached = bufnr
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-          winvars.scrollview_trail_cached = lines
+          bufvars.scrollview_trail_cached = lines
         end
         -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-        winvars[name] = lines
+        bufvars[name] = lines
+        visited[bufnr] = true
       end
     end
   end)
