@@ -70,13 +70,13 @@ function M.init(enable)
             local line_count = api.nvim_buf_line_count(bufnr)
             for line = 1, line_count do
               local match = false
-              local string = fn.getbufline(bufnr, line)[1]
+              local str = fn.getbufline(bufnr, line)[1]
               if position == TOP then
-                match = vim.startswith(string, '<<<<<<< ')
+                match = vim.startswith(str, '<<<<<<< ')
               elseif position == MIDDLE then
-                match = string == '======='
+                match = str == '======='
               elseif position == BOTTOM then
-                match = vim.startswith(string, '>>>>>>> ')
+                match = vim.startswith(str, '>>>>>>> ')
               else
                 error('Unknown position: ' .. position)
               end

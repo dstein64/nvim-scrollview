@@ -2093,8 +2093,8 @@ local read_input_stream = function()
       break
     end
   end
-  local string = table.concat(chars, '')
-  local result = {string, chars_props}
+  local str = table.concat(chars, '')
+  local result = {str, chars_props}
   return unpack(result)
 end
 
@@ -2829,7 +2829,7 @@ local handle_mouse = function(button, primary)
     local scrollbar_offset
     local previous_row
     local idx = 1
-    local string, chars_props = '', {}
+    local str, chars_props = '', {}
     local str_idx, char, mouse_winid, mouse_row, mouse_col
     local props
     -- Computing this prior to the first mouse event could distort the location
@@ -2844,7 +2844,7 @@ local handle_mouse = function(button, primary)
         idx = idx + 1
         if idx > #chars_props then
           idx = 1
-          string, chars_props = read_input_stream()
+          str, chars_props = read_input_stream()
         end
         local char_props = chars_props[idx]
         str_idx = char_props.str_idx
@@ -2866,7 +2866,7 @@ local handle_mouse = function(button, primary)
         end
       end
       if char == t'<esc>' then
-        fn.feedkeys(string.sub(string, str_idx + #char), 'ni')
+        fn.feedkeys(string.sub(str, str_idx + #char), 'ni')
         return
       end
       -- In select-mode, mouse usage results in the mode intermediately
@@ -2882,18 +2882,18 @@ local handle_mouse = function(button, primary)
       if char ~= '\x80\xf5X' or count == 0 then
         if mouse_winid == 0 then
           -- There was no mouse event.
-          fn.feedkeys(string.sub(string, str_idx), 'ni')
+          fn.feedkeys(string.sub(str, str_idx), 'ni')
           return
         end
         if char == mouseup then
           if count == 0 then
             -- No initial mousedown was captured.
-            fn.feedkeys(string.sub(string, str_idx), 'ni')
+            fn.feedkeys(string.sub(str, str_idx), 'ni')
           elseif count == 1 then
             -- A scrollbar was clicked, but there was no corresponding drag.
             -- Allow the interaction to be processed as it would be with no
             -- scrollbar.
-            fn.feedkeys(mousedown .. string.sub(string, str_idx), 'ni')
+            fn.feedkeys(mousedown .. string.sub(str, str_idx), 'ni')
           else
             -- A scrollbar was clicked and there was a corresponding drag.
             -- 'feedkeys' is not called, since the full mouse interaction has
@@ -2913,7 +2913,7 @@ local handle_mouse = function(button, primary)
         if count == 0 then
           if mouse_winid < 0 then
             -- The mouse event was on the tabline or command line.
-            fn.feedkeys(string.sub(string, str_idx), 'ni')
+            fn.feedkeys(string.sub(str, str_idx), 'ni')
             return
           end
           props = get_scrollview_bar_props(mouse_winid)
@@ -2941,7 +2941,7 @@ local handle_mouse = function(button, primary)
           if not clicked_bar and not clicked_sign then
             -- There was either no scrollbar or signs in the window where a
             -- click occurred or the click was not on a scrollbar or sign.
-            fn.feedkeys(string.sub(string, str_idx), 'ni')
+            fn.feedkeys(string.sub(str, str_idx), 'ni')
             return
           end
           if clicked_sign and primary then
