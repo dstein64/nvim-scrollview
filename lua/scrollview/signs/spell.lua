@@ -125,6 +125,12 @@ function M.init(enable)
       local str = fn.getbufline(bufnr, line)[1]
       local spellbadword = fn.spellbadword(str)
       local expect_sign = spellbadword[1] ~= ''
+      -- Wait until leaving insert mode before showing spell signs. This way,
+      -- signs won't show while entering a word (which will temporarily be
+      -- misspelled).
+      if expect_sign then
+        return
+      end
       local idx = -1
       local lines = vim.w[winid][name]
       if lines ~= nil then
