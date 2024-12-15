@@ -2,7 +2,6 @@ local api = vim.api
 local fn = vim.fn
 local scrollview = require('scrollview')
 local utils = require('scrollview.utils')
-local binary_search = utils.binary_search
 
 local M = {}
 
