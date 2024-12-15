@@ -1,6 +1,8 @@
 local api = vim.api
 local fn = vim.fn
 local scrollview = require('scrollview')
+local utils = require('scrollview.utils')
+local binary_search = utils.binary_search
 
 local M = {}
 
@@ -71,6 +73,30 @@ function M.init(enable)
     callback = function()
       if not scrollview.is_sign_group_active(group) then return end
       scrollview.refresh()
+    end
+  })
+
+  api.nvim_create_autocmd('TextChangedI', {
+    callback = function()
+      if not scrollview.is_sign_group_active(group) then return end
+      local bufnr = api.nvim_get_current_buf()
+      local textwidth = api.nvim_buf_get_option(bufnr, 'textwidth')
+      local line = fn.line('.')
+      local str = fn.getbufline(bufnr, line)[1]
+      local line_length = fn.strchars(str, 1)
+      local expect_sign = textwidth > 0 and line_length > textwidth
+      local idx = -1
+      local lines = vim.b[bufnr][name]
+      if lines ~= nil then
+        idx = utils.binary_search(lines, line)
+        if lines[idx] ~= line then
+          idx = -1
+        end
+      end
+      local has_sign = idx ~= -1
+      if expect_sign ~= has_sign then
+        scrollview.refresh()
+      end
     end
   })
 end

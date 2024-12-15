@@ -1,6 +1,8 @@
 local api = vim.api
 local fn = vim.fn
 local scrollview = require('scrollview')
+local utils = require('scrollview.utils')
+local binary_search = utils.binary_search
 
 local M = {}
 
@@ -93,6 +95,40 @@ function M.init(enable)
       end
     end
   end)
+
+  api.nvim_create_autocmd('TextChangedI', {
+    callback = function()
+      if not scrollview.is_sign_group_active(group) then return end
+      local bufnr = api.nvim_get_current_buf()
+      local line = fn.line('.')
+      local str = fn.getbufline(bufnr, line)[1]
+      for position, name in pairs(names) do
+        local expect_sign = nil
+        if position == TOP then
+          expect_sign = vim.startswith(str, '<<<<<<< ')
+        elseif position == MIDDLE then
+          expect_sign = str == '======='
+        elseif position == BOTTOM then
+          expect_sign = vim.startswith(str, '>>>>>>> ')
+        else
+          error('Unknown position: ' .. position)
+        end
+        local idx = -1
+        local lines = vim.b[bufnr][name]
+        if lines ~= nil then
+          idx = utils.binary_search(lines, line)
+          if lines[idx] ~= line then
+            idx = -1
+          end
+        end
+        local has_sign = idx ~= -1
+        if expect_sign ~= has_sign then
+          scrollview.refresh()
+          break
+        end
+      end
+    end
+  })
 end
 
 return M

@@ -115,6 +115,30 @@ function M.init(enable)
       end
     end
   })
+
+  api.nvim_create_autocmd('TextChangedI', {
+    callback = function()
+      if not scrollview.is_sign_group_active(group) then return end
+      local winid = api.nvim_get_current_win()
+      local bufnr = api.nvim_get_current_buf()
+      local line = fn.line('.')
+      local str = fn.getbufline(bufnr, line)[1]
+      local spellbadword = fn.spellbadword(str)
+      local expect_sign = spellbadword[1] ~= ''
+      local idx = -1
+      local lines = vim.w[winid][name]
+      if lines ~= nil then
+        idx = utils.binary_search(lines, line)
+        if lines[idx] ~= line then
+          idx = -1
+        end
+      end
+      local has_sign = idx ~= -1
+      if expect_sign ~= has_sign then
+        scrollview.refresh()
+      end
+    end
+  })
 end
 
 return M
