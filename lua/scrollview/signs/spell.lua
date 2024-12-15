@@ -127,8 +127,20 @@ function M.init(enable)
       local expect_sign = spellbadword[1] ~= ''
       -- Wait until leaving insert mode before showing spell signs. This way,
       -- signs won't show while entering a word (which will temporarily be
-      -- misspelled).
+      -- misspelled). Such a word won't be highlighted by Neovim, but it will
+      -- be returned by spellbadword(). The approach here could still cause a
+      -- synchronization issue, since the word would be highlighted when
+      -- starting to type the next word, and there would be no sign until
+      -- leaving insert mode. But I couldn't find a preferable solution, since
+      -- there doesn't appear to be any functions for retrieving just the
+      -- highlighted misspelled words.
       if expect_sign then
+        api.nvim_create_autocmd('InsertLeave', {
+          callback = function()
+            scrollview.refresh()
+          end,
+          once = true,
+        })
         return
       end
       local idx = -1
