@@ -82,6 +82,12 @@ scrollview_hide_bar_for_insert	scrollview.txt	/*scrollview_hide_bar_for_insert*
 scrollview_hide_on_intersect	scrollview.txt	/*scrollview_hide_on_intersect*
 scrollview_hover	scrollview.txt	/*scrollview_hover*
 scrollview_include_end_region	scrollview.txt	/*scrollview_include_end_region*
+scrollview_indent_spaces_condition	scrollview.txt	/*scrollview_indent_spaces_condition*
+scrollview_indent_spaces_priority	scrollview.txt	/*scrollview_indent_spaces_priority*
+scrollview_indent_spaces_symbol	scrollview.txt	/*scrollview_indent_spaces_symbol*
+scrollview_indent_tabs_condition	scrollview.txt	/*scrollview_indent_tabs_condition*
+scrollview_indent_tabs_priority	scrollview.txt	/*scrollview_indent_tabs_priority*
+scrollview_indent_tabs_symbol	scrollview.txt	/*scrollview_indent_tabs_symbol*
 scrollview_latestchange_priority	scrollview.txt	/*scrollview_latestchange_priority*
 scrollview_latestchange_symbol	scrollview.txt	/*scrollview_latestchange_symbol*
 scrollview_line_limit	scrollview.txt	/*scrollview_line_limit*

@@ -86,6 +86,8 @@ with the same positioning logic as the scrollbar.
 * `cursor`: cursor position
 * `diagnostics`: errors, warnings, info, and hints
 * `folds`: closed folds
+* `indent`: unexpected indentation characters (e.g., tabs when `expandtab` is
+  set)
 * `latestchange`: latest change
 * `loclist`: items on the location list
 * `marks`

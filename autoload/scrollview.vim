@@ -215,6 +215,20 @@ let g:scrollview_folds_priority = get(g:, 'scrollview_folds_priority', 30)
 let g:scrollview_folds_symbol =
       \ get(g:, 'scrollview_folds_symbol', nr2char(0x25b6))
 
+" *** Indent signs ***
+let g:scrollview_indent_spaces_condition =
+      \ get(g:, 'scrollview_indent_spaces_condition', 'noexpandtab')
+let g:scrollview_indent_spaces_priority =
+      \ get(g:, 'scrollview_indent_spaces_priority', 25)
+let g:scrollview_indent_spaces_symbol =
+      \ get(g:, 'scrollview_indent_spaces_symbol', '-')
+let g:scrollview_indent_tabs_condition =
+      \ get(g:, 'scrollview_indent_tabs_condition', 'expandtab')
+let g:scrollview_indent_tabs_priority =
+      \ get(g:, 'scrollview_indent_tabs_priority', 25)
+let g:scrollview_indent_tabs_symbol =
+      \ get(g:, 'scrollview_indent_tabs_symbol', '>')
+
 " *** Latest change signs ***
 let g:scrollview_latestchange_priority =
       \ get(g:, 'scrollview_latestchange_priority', 10)

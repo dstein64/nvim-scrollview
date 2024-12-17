@@ -57,6 +57,8 @@ if has('nvim-0.9.2')
 else
   highlight default link ScrollViewHover WildMenu
 endif
+highlight default link ScrollViewIndentSpaces LineNr
+highlight default link ScrollViewIndentTabs LineNr
 highlight default link ScrollViewLatestChange SpecialKey
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks Identifier

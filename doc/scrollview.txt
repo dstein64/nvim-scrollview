@@ -173,6 +173,8 @@ Group        Information
 `cursor`        cursor position
 `diagnostics`   errors, warnings, info, and hints via |vim.diagnostic|
 `folds`         closed folds
+`indent`        unexpected indentation characters (e.g., tabs when |expandtab|
+              is set)
 `latestchange`  latest change
 `loclist`       items on the location list
 `marks`
@@ -528,6 +530,38 @@ scrollview_folds_symbol                    *scrollview_folds_symbol*
                        or the last element when the retrieval would be
                        out-of-bounds. Considered only when the plugin is
                        loaded.
+
+scrollview_indent_spaces_condition         *scrollview_indent_spaces_condition*
+                       |String| specifying the condition when signs will be
+                       shown for leading spaces. Possible values are `'always'`
+                       `'never'`, `'expandtab'`, and `'noexpandtab'`. Defaults to
+                       `'noexpandtab'`, which will show signs for leading
+                       spaces when the |expandtab| option is off.
+
+scrollview_indent_spaces_priority          *scrollview_indent_spaces_priority*
+                       |Number| specifying the priority for indent spaces signs.
+                       Defaults to `25`. Considered only when the plugin is
+                       loaded.
+
+scrollview_indent_spaces_symbol            *scrollview_indent_spaces_symbol*
+                       |String| specifying the symbol for indent spaces signs.
+                       Defaults to `'-'`.
+
+scrollview_indent_tabs_condition           *scrollview_indent_tabs_condition*
+                       |String| specifying the condition when signs will be
+                       shown for leading tabs. Possible values are `'always'`
+                       `'never'`, `'expandtab'`, and `'noexpandtab'`. Defaults to
+                       `'expandtab'`, which will show signs for leading
+                       tabs when the |expandtab| option is set.
+
+scrollview_indent_tabs_priority            *scrollview_indent_tabs_priority*
+                       |Number| specifying the priority for indent tabs signs.
+                       Defaults to `25`. Considered only when the plugin is
+                       loaded.
+
+scrollview_indent_tabs_symbol              *scrollview_indent_tabs_symbol*
+                       |String| specifying the symbol for indent tabs signs.
+                       Defaults to `'>'`.
 
 scrollview_latestchange_priority           *scrollview_latestchange_priority*
                        |Number| specifying the priority for latestchange signs.
