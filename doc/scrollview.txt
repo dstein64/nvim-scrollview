@@ -780,6 +780,10 @@ colors.
 `ScrollViewHover`               scrollbar and signs on hover
   CurSearch for nvim>=0.9.2
   and WildMenu otherwise
+`ScrollViewIndentSpaces`        indent spaces signs
+  LineNr
+`ScrollViewIndentTabs`          indent spaces tabs
+  LineNr
 `ScrollViewLatestChange`        latestchange signs
   SpecialKey
 `ScrollViewLocList`             loclist signs
