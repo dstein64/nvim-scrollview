@@ -190,11 +190,16 @@ for [s:key, s:fallback, s:sign, s:severity, s:name] in s:diagnostics_symbol_data
         " keys or contain only string key"). When the same type of diagnostic
         " has both a code and name key, the code key takes precedence.
         " https://github.com/neovim/neovim/pull/26193#issue-2009346914
-        let g:[s:key] = luaeval(
-              \ printf('vim.diagnostic.config().signs.text[%d]', s:severity))
-        if g:[s:key] is# v:null
-          let g:[s:key] = luaeval(
-                \ printf('vim.diagnostic.config().signs.text["%s"]', s:name))
+        " WARN: Neovim diagnostic signs can be configured with a function
+        " (that takes namespace and bufnr). That's not supported here.
+        if luaeval('type(vim.diagnostic.config().signs)') ==# 'table'
+              \ && luaeval('vim.diagnostic.config().signs.text') isnot# v:null
+          let g:[s:key] =
+                \ luaeval('vim.diagnostic.config().signs.text[_A]', s:severity)
+          if g:[s:key] is# v:null
+            let g:[s:key] =
+                  \ luaeval('vim.diagnostic.config().signs.text[_A]', s:name)
+          endif
         endif
         if g:[s:key] is# v:null
           let g:[s:key] = s:fallback
