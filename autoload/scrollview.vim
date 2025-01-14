@@ -192,6 +192,7 @@ for [s:key, s:fallback, s:sign, s:severity, s:name] in s:diagnostics_symbol_data
         " https://github.com/neovim/neovim/pull/26193#issue-2009346914
         " WARN: Neovim diagnostic signs can be configured with a function
         " (that takes namespace and bufnr). That's not supported here.
+        " The value can also be a boolean.
         if luaeval('type(vim.diagnostic.config().signs)') ==# 'table'
               \ && luaeval('vim.diagnostic.config().signs.text') isnot# v:null
           let g:[s:key] =
