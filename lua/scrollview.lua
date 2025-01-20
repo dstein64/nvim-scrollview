@@ -1209,6 +1209,19 @@ local should_show = function(winid)
   return true
 end
 
+local cursor_intersects_scrollview = function()
+  local cursor_pos = api.nvim_win_get_cursor(0)
+  local cursor_screen_pos = fn.screenpos(winid, cursor_pos[1], cursor_pos[2] + 1)
+  local float_overlaps = get_float_overlaps(
+    cursor_screen_pos.row, cursor_screen_pos.row,
+    cursor_screen_pos.col, cursor_screen_pos.col
+  )
+  float_overlaps = vim.tbl_filter(function(x)
+    return is_scrollview_window(x)
+  end, float_overlaps)
+  return not vim.tbl_isempty(float_overlaps)
+end
+
 -- Indicates whether the column is valid for showing a scrollbar or signs.
 local is_valid_column = function(winid, col, width)
   local winwidth = fn.winwidth(winid)
@@ -1365,6 +1378,7 @@ local show_scrollbar = function(winid, bar_winid)
   if not is_valid_column(winid, bar_position.col, bar_width) then
     return -1
   end
+  local cur_winid = api.nvim_get_current_win()
   -- Height has to be positive for the call to nvim_open_win. When opening a
   -- terminal, the topline and botline can be set such that height is negative
   -- when you're using scrollview document mode.
@@ -1373,18 +1387,17 @@ local show_scrollbar = function(winid, bar_winid)
   end
   if to_bool(vim.g.scrollview_hide_bar_for_insert)
       and string.find(fn.mode(), 'i')
-      and winid == api.nvim_get_current_win() then
+      and winid == cur_winid then
     return -1
   end
+  local winrow0 = wininfo.winrow - 1
+  local wincol0 = wininfo.wincol - 1
+  local top = winrow0 + bar_position.row
+  local bottom = winrow0 + bar_position.row + bar_position.height - 1
+  local left = wincol0 + bar_position.col
+  local right = wincol0 + bar_position.col
   if to_bool(vim.g.scrollview_hide_on_float_intersect) then
-    local winrow0 = wininfo.winrow - 1
-    local wincol0 = wininfo.wincol - 1
-    local float_overlaps = get_float_overlaps(
-      winrow0 + bar_position.row,
-      winrow0 + bar_position.row + bar_position.height - 1,
-      wincol0 + bar_position.col,
-      wincol0 + bar_position.col
-    )
+    local float_overlaps = get_float_overlaps(top, bottom, left, right)
     float_overlaps = vim.tbl_filter(function(x)
       return not is_scrollview_window(x)
     end, float_overlaps)
@@ -1392,6 +1405,30 @@ local show_scrollbar = function(winid, bar_winid)
       if #float_overlaps > 1 or float_overlaps[1] ~= winid then
         return -1
       end
+    end
+  end
+  if to_bool(vim.g.scrollview_hide_on_cursor_intersect)
+      and to_bool(fn.has('nvim-0.7'))  -- for Neovim autocmd API
+      and winid == cur_winid then
+    local cursor_pos = api.nvim_win_get_cursor(winid)
+    local cursor_screen_pos = fn.screenpos(winid, cursor_pos[1], cursor_pos[2] + 1)
+    if top <= cursor_screen_pos.row
+        and bottom >= cursor_screen_pos.row
+        and left <= cursor_screen_pos.col
+        and right >= cursor_screen_pos.col then
+      -- Refresh scrollview for next cursor move, in case it moves away.
+      -- Overwrite an existing autocmd configured to already do this.
+      local augroup = api.nvim_create_augroup('scrollview_cursor_intersect', {
+        clear = true
+      })
+      api.nvim_create_autocmd('CursorMoved', {
+        group = augroup,
+        callback = function()
+          require('scrollview').refresh()
+        end,
+        once = true,
+      })
+      return -1
     end
   end
   if bar_bufnr == -1 or not to_bool(fn.bufloaded(bar_bufnr)) then
@@ -1708,16 +1745,15 @@ local show_signs = function(winid, sign_winids, bar_winid)
       end
       total_width = total_width + sign_width
       local show = is_valid_column(winid, col, sign_width)
+      local winrow0 = wininfo.winrow - 1
+      local wincol0 = wininfo.wincol - 1
+      local top = winrow0 + row
+      local bottom = winrow0 + row
+      local left = wincol0 + col
+      local right = wincol0 + col + sign_width - 1
       if to_bool(vim.g.scrollview_hide_on_float_intersect)
           and show then
-        local winrow0 = wininfo.winrow - 1
-        local wincol0 = wininfo.wincol - 1
-        local float_overlaps = get_float_overlaps(
-          winrow0 + row,
-          winrow0 + row,
-          wincol0 + col,
-          wincol0 + col + sign_width - 1
-        )
+        local float_overlaps = get_float_overlaps(top, bottom, left, right)
         float_overlaps = vim.tbl_filter(function(x)
           return not is_scrollview_window(x)
         end, float_overlaps)
@@ -1725,6 +1761,31 @@ local show_signs = function(winid, sign_winids, bar_winid)
           if #float_overlaps > 1 or float_overlaps[1] ~= winid then
             show = false
           end
+        end
+      end
+      if to_bool(vim.g.scrollview_hide_on_cursor_intersect)
+          and to_bool(fn.has('nvim-0.7'))  -- for Neovim autocmd API
+          and winid == cur_winid
+          and show then
+        local cursor_pos = api.nvim_win_get_cursor(winid)
+        local cursor_screen_pos = fn.screenpos(winid, cursor_pos[1], cursor_pos[2] + 1)
+        if top <= cursor_screen_pos.row
+            and bottom >= cursor_screen_pos.row
+            and left <= cursor_screen_pos.col
+            and right >= cursor_screen_pos.col then
+          -- Refresh scrollview for next cursor move, in case it moves away.
+          -- Overwrite an existing autocmd configured to already do this.
+          local augroup = api.nvim_create_augroup('scrollview_cursor_intersect', {
+            clear = true
+          })
+          api.nvim_create_autocmd('CursorMoved', {
+            group = augroup,
+            callback = function()
+              require('scrollview').refresh()
+            end,
+            once = true,
+          })
+          show = false
         end
       end
       if show then
@@ -2498,6 +2559,16 @@ local enable = function()
       autocmd InsertEnter,InsertLeave *
             \   if g:scrollview_hide_bar_for_insert
             \       || !empty(g:scrollview_signs_hidden_for_insert)
+            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ | endif
+
+      " Refresh bars if the cursor intersects a scrollview window (and the
+      " corresponding option is set). We check for Neovim 0.7 since this
+      " functionality utilizes the Neovim autocmd API.
+      autocmd CursorMoved *
+            \   if g:scrollview_hide_on_cursor_intersect
+            \       && has('nvim-0.7')
+            \       && luaeval('require("scrollview").cursor_intersects_scrollview()')
             \ |   execute "lua require('scrollview').refresh_bars_async()"
             \ | endif
 
@@ -3447,6 +3518,7 @@ end)
 
 return {
   -- Functions called internally (by autocmds and operatorfunc).
+  cursor_intersects_scrollview = cursor_intersects_scrollview,
   refresh_bars_async = refresh_bars_async,
   remove_bars = remove_bars,
   remove_if_command_line_window = remove_if_command_line_window,
