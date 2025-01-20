@@ -1209,9 +1209,23 @@ local should_show = function(winid)
   return true
 end
 
+-- Returns the cursor screen position, accounting for concealed text
+-- (screenpos, screencol, and screenrow don't account for concealed text).
+local get_cursor_screen_pos = function()
+  local winid = api.nvim_get_current_win()
+  local wininfo = fn.getwininfo(winid)[1]
+  local winrow0 = wininfo.winrow - 1
+  local wincol0 = wininfo.wincol - 1
+  local screenrow, screencol
+  api.nvim_win_call(winid, function()
+    screenrow = winrow0 + fn.winline()
+    screencol = wincol0 + fn.wincol()
+  end)
+  return {row = screenrow, col = screencol}
+end
+
 local cursor_intersects_scrollview = function()
-  local cursor_pos = api.nvim_win_get_cursor(0)
-  local cursor_screen_pos = fn.screenpos(winid, cursor_pos[1], cursor_pos[2] + 1)
+  local cursor_screen_pos = get_cursor_screen_pos()
   local float_overlaps = get_float_overlaps(
     cursor_screen_pos.row, cursor_screen_pos.row,
     cursor_screen_pos.col, cursor_screen_pos.col
@@ -1410,8 +1424,7 @@ local show_scrollbar = function(winid, bar_winid)
   if to_bool(vim.g.scrollview_hide_on_cursor_intersect)
       and to_bool(fn.has('nvim-0.7'))  -- for Neovim autocmd API
       and winid == cur_winid then
-    local cursor_pos = api.nvim_win_get_cursor(winid)
-    local cursor_screen_pos = fn.screenpos(winid, cursor_pos[1], cursor_pos[2] + 1)
+    local cursor_screen_pos = get_cursor_screen_pos()
     if top <= cursor_screen_pos.row
         and bottom >= cursor_screen_pos.row
         and left <= cursor_screen_pos.col
@@ -1767,8 +1780,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
           and to_bool(fn.has('nvim-0.7'))  -- for Neovim autocmd API
           and winid == cur_winid
           and show then
-        local cursor_pos = api.nvim_win_get_cursor(winid)
-        local cursor_screen_pos = fn.screenpos(winid, cursor_pos[1], cursor_pos[2] + 1)
+        local cursor_screen_pos = get_cursor_screen_pos()
         if top <= cursor_screen_pos.row
             and bottom >= cursor_screen_pos.row
             and left <= cursor_screen_pos.col
