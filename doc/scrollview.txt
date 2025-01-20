@@ -251,7 +251,7 @@ scrollview_hide_bar_for_insert             *scrollview_hide_bar_for_insert*
                        the current window for insert mode. Defaults to |v:false|.
                        See |scrollview_signs_hidden_for_insert| for hiding signs.
 
-scrollview_hide_on_intersect               *scrollview_hide_on_intersect*
+scrollview_hide_on_float_intersect         *scrollview_hide_on_float_intersect*
                        |Boolean| specifying whether each scrollbar or sign
                        becomes hidden (not shown) when it would otherwise
                        intersect with a floating window. Defaults to |v:false|.

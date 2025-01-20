@@ -36,8 +36,12 @@ let g:scrollview_signs_hidden_for_insert =
       \ get(g:, 'scrollview_signs_hidden_for_insert', [])
 let g:scrollview_hide_bar_for_insert =
       \ get(g:, 'scrollview_hide_bar_for_insert', v:false)
-let g:scrollview_hide_on_intersect =
-      \ get(g:, 'scrollview_hide_on_intersect', v:false)
+" Use the old option, scrollview_hide_on_intersect, if it's set.
+if has_key(g:, 'scrollview_hide_on_intersect')
+  let g:scrollview_hide_on_float_intersect = g:scrollview_hide_on_intersect
+endif
+let g:scrollview_hide_on_float_intersect =
+      \ get(g:, 'scrollview_hide_on_float_intersect', v:false)
 let g:scrollview_hover = get(g:, 'scrollview_hover', v:true)
 let g:scrollview_include_end_region =
       \ get(g:, 'scrollview_include_end_region', v:false)

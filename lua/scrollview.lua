@@ -1376,7 +1376,7 @@ local show_scrollbar = function(winid, bar_winid)
       and winid == api.nvim_get_current_win() then
     return -1
   end
-  if to_bool(vim.g.scrollview_hide_on_intersect) then
+  if to_bool(vim.g.scrollview_hide_on_float_intersect) then
     local winrow0 = wininfo.winrow - 1
     local wincol0 = wininfo.wincol - 1
     local float_overlaps = get_float_overlaps(
@@ -1708,7 +1708,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
       end
       total_width = total_width + sign_width
       local show = is_valid_column(winid, col, sign_width)
-      if to_bool(vim.g.scrollview_hide_on_intersect)
+      if to_bool(vim.g.scrollview_hide_on_float_intersect)
           and show then
         local winrow0 = wininfo.winrow - 1
         local wincol0 = wininfo.wincol - 1
@@ -2900,8 +2900,8 @@ local handle_mouse = function(button, primary)
             -- already been processed. The current window (from prior to
             -- scrolling) is not changed.
             -- Refresh scrollbars to handle the scenario where
-            -- scrollview_hide_on_intersect is enabled and dragging resulted in
-            -- a scrollbar overlapping a floating window.
+            -- scrollview_hide_on_float_intersect is enabled and dragging
+            -- resulted in a scrollbar overlapping a floating window.
             refresh_bars()
             -- We only restore the cursor after dragging is finished. The
             -- cursor position can't be changed while dragging (but it stays in
