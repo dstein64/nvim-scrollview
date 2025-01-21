@@ -1434,7 +1434,7 @@ local show_scrollbar = function(winid, bar_winid)
       local augroup = api.nvim_create_augroup('scrollview_cursor_intersect', {
         clear = true
       })
-      api.nvim_create_autocmd('CursorMoved', {
+      api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
         group = augroup,
         callback = function()
           require('scrollview').refresh()
@@ -1790,7 +1790,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
           local augroup = api.nvim_create_augroup('scrollview_cursor_intersect', {
             clear = true
           })
-          api.nvim_create_autocmd('CursorMoved', {
+          api.nvim_create_autocmd({'CursorMoved', 'CursorMovedI'}, {
             group = augroup,
             callback = function()
               require('scrollview').refresh()
@@ -2577,7 +2577,7 @@ local enable = function()
       " Refresh bars if the cursor intersects a scrollview window (and the
       " corresponding option is set). We check for Neovim 0.7 since this
       " functionality utilizes the Neovim autocmd API.
-      autocmd CursorMoved *
+      autocmd CursorMoved,CursorMovedI *
             \   if g:scrollview_hide_on_cursor_intersect
             \       && has('nvim-0.7')
             \       && luaeval('require("scrollview").cursor_intersects_scrollview()')
