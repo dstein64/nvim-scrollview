@@ -44,6 +44,8 @@ if has_key(g:, 'scrollview_hide_on_intersect')
 endif
 let g:scrollview_hide_on_float_intersect =
       \ get(g:, 'scrollview_hide_on_float_intersect', v:false)
+let g:scrollview_hide_on_text_intersect =
+      \ get(g:, 'scrollview_hide_on_text_intersect', v:false)
 let g:scrollview_hover = get(g:, 'scrollview_hover', v:true)
 let g:scrollview_include_end_region =
       \ get(g:, 'scrollview_include_end_region', v:false)

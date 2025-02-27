@@ -122,6 +122,7 @@ local VIRTUAL_LINE_COUNT_KEY_PREFIX = 0
 local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
 local GET_WINDOW_EDGES_KEY_PREFIX = 3
+local ROW_LENGTH_LOOKUP_KEY_PREFIX = 4
 
 -- Maps window ID and highlight group to a temporary highlight group with the
 -- corresponding definition. This is reset on each refresh cycle.
@@ -437,7 +438,7 @@ local with_win_workspace = function(winid, fun)
           -- winbar-omitted height where applicable.
           height = math.max(1, get_window_height(winid)),
           row = 0,
-          col = 0
+          col = 0,
         })
       end)
       win_workspace_lookup[winid] = workspace_winid
@@ -1379,6 +1380,52 @@ local get_scrollbar_character = function()
   return character
 end
 
+-- Returns a table that maps window rows to the length of text on that row.
+-- WARN: When a multi-cell character is the last character on a row, the length
+-- returned by this function represents the first cell of that character.
+local get_row_length_lookup = function(winid)
+  local memoize_key =
+    table.concat({ROW_LENGTH_LOOKUP_KEY_PREFIX, winid}, ':')
+  if memoize and cache[memoize_key] then return cache[memoize_key] end
+  local result = {}
+  with_win_workspace(winid, function()
+    local scrolloff = api.nvim_win_get_option(0, 'scrolloff')
+    local virtualedit = api.nvim_win_get_option(0, 'virtualedit')
+    set_window_option(0, 'scrolloff', 0)
+    set_window_option(0, 'virtualedit', 'none')
+    fn.winrestview(api.nvim_win_call(winid, fn.winsaveview))
+    vim.cmd('keepjumps normal! H')
+    local prior
+    -- Limit the number of steps as a precaution. The doubling of window height
+    -- is to be safe.
+    local max_steps = fn.winheight(0) * 2
+    local steps = 0
+    while fn.winline() > 1
+        and prior ~= fn.winline()
+        and steps < max_steps do
+      steps = steps + 1
+      prior = fn.winline()
+      vim.cmd('keepjumps normal! g0gk')
+    end
+    prior = nil
+    steps = 0
+    local winheight = get_window_height(0)
+    while fn.winline() <= winheight
+        and prior ~= fn.winline()
+        and steps < max_steps do
+      steps = steps + 1
+      prior = fn.winline()
+      vim.cmd('keepjumps normal! g$')
+      result[fn.winline()] = fn.wincol()
+      vim.cmd('keepjumps normal! g0gj')
+    end
+    set_window_option(0, 'scrolloff', scrolloff)
+    set_window_option(0, 'virtualedit', virtualedit)
+  end)
+  if memoize then cache[memoize_key] = result end
+  return result
+end
+
 -- Show a scrollbar for the specified 'winid' window ID, using the specified
 -- 'bar_winid' floating window ID (a new floating window will be created if
 -- this is -1). Returns -1 if the bar is not shown, and the floating window ID
@@ -1442,6 +1489,15 @@ local show_scrollbar = function(winid, bar_winid)
         once = true,
       })
       return -1
+    end
+  end
+  if to_bool(vim.g.scrollview_hide_on_text_intersect) then
+    local row_length_lookup = get_row_length_lookup(winid)
+    for row = bar_position.row, bar_position.row + bar_position.height - 1 do
+      if row_length_lookup[row] ~= nil
+          and row_length_lookup[row] >= bar_position.col then
+        return -1
+      end
     end
   end
   if bar_bufnr == -1 or not to_bool(fn.bufloaded(bar_bufnr)) then
@@ -1798,6 +1854,16 @@ local show_signs = function(winid, sign_winids, bar_winid)
             once = true,
           })
           show = false
+        end
+      end
+      if to_bool(vim.g.scrollview_hide_on_text_intersect) then
+        local row_length_lookup = get_row_length_lookup(winid)
+        for c = col, col + sign_width - 1 do
+          if row_length_lookup[row] ~= nil
+              and row_length_lookup[row] >= c then
+            show = false
+            break
+          end
         end
       end
       if show then
@@ -2581,6 +2647,13 @@ local enable = function()
             \   if g:scrollview_hide_on_cursor_intersect
             \       && has('nvim-0.7')
             \       && luaeval('require("scrollview").cursor_intersects_scrollview()')
+            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ | endif
+
+      " Refresh scrollview when text is changed in insert mode. This way,
+      " scrollbars and signs will appear/hide accordingly when modifying text.
+      autocmd TextChangedI *
+            \   if g:scrollview_hide_on_text_intersect
             \ |   execute "lua require('scrollview').refresh_bars_async()"
             \ | endif
 
