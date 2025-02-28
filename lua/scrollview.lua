@@ -2650,8 +2650,9 @@ local enable = function()
             \ |   execute "lua require('scrollview').refresh_bars_async()"
             \ | endif
 
-      " Refresh scrollview when text is changed in insert mode. This way,
-      " scrollbars and signs will appear/hide accordingly when modifying text.
+      " Refresh scrollview when text is changed in insert mode (and
+      " scrollview_hide_on_text_intersect is set). This way, scrollbars and
+      " signs will appear/hide accordingly when modifying text.
       autocmd TextChangedI *
             \   if g:scrollview_hide_on_text_intersect
             \ |   execute "lua require('scrollview').refresh_bars_async()"
