@@ -270,8 +270,8 @@ scrollview_hide_on_text_intersect          *scrollview_hide_on_text_intersect*
                        (only the first cell of the character would be
                        considered for intersection). The processing demands
                        when enabling this option may result in noticeable lag
-                       under certain environents, especially on older hardware.
-                       Defaults to |v:false|.
+                       under certain environments, especially on older
+                       hardware. Defaults to |v:false|.
 
 scrollview_hover                           *scrollview_hover*
                        |Boolean| specifying whether the highlighting of
