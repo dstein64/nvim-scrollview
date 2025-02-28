@@ -1394,7 +1394,7 @@ local get_row_length_lookup = function(winid)
     set_window_option(0, 'scrolloff', 0)
     set_window_option(0, 'virtualedit', 'none')
     fn.winrestview(api.nvim_win_call(winid, fn.winsaveview))
-    vim.cmd('keepjumps normal! H')
+    vim.cmd('keepjumps normal! Hg0')
     local prior
     -- Limit the number of steps as a precaution. The doubling of window height
     -- is to be safe.
