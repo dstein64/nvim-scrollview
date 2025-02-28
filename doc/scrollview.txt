@@ -262,6 +262,17 @@ scrollview_hide_on_float_intersect         *scrollview_hide_on_float_intersect*
                        becomes hidden (not shown) when it would otherwise
                        intersect with a floating window. Defaults to |v:false|.
 
+scrollview_hide_on_text_intersect          *scrollview_hide_on_text_intersect*
+(experimental)         |Boolean| specifying whether each scrollbar or sign
+                       becomes hidden (not shown) when it would otherwise
+                       intersect with text. The functionality may not work for
+                       lines where the last character spans multiple cells
+                       (only the first cell of the character would be
+                       considered for intersection). The processing demands
+                       when enabling this option may result in noticeable lag
+                       under certain environents, especially on older hardware.
+                       Defaults to |v:false|.
+
 scrollview_hover                           *scrollview_hover*
                        |Boolean| specifying whether the highlighting of
                        scrollbars and signs should change when hovering with
