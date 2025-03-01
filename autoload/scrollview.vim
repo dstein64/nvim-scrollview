@@ -432,42 +432,6 @@ endif
 " * Mappings
 " *************************************************
 
-function! s:SetUpMouseMappings(button, primary) abort
-  if a:button isnot# v:null
-    " Create a mouse mapping only if mappings don't already exist and "!" is
-    " not used at the end of the button. For example, a mapping may already
-    " exist if the user uses swapped buttons from $VIMRUNTIME/pack/dist/opt
-    " /swapmouse/plugin/swapmouse.vim. Handling for that scenario would
-    " require modifications (e.g., possibly by updating the non-initial
-    " feedkeys calls in handle_mouse() to remap keys).
-    let l:force = v:false
-    let l:button = a:button
-    if strcharpart(l:button, strchars(l:button, 1) - 1, 1) ==# '!'
-      let l:force = v:true
-      let l:button =
-            \ strcharpart(l:button, 0, strchars(l:button, 1) - 1)
-    endif
-    " scrollview mouse handling is not supported in select-mode. #140
-    for l:mapmode in ['n', 'x', 'i']
-      execute printf(
-            \   'silent! %snoremap %s <silent> <%smouse>'
-            \   .. ' <cmd>lua require("scrollview").handle_mouse("%s", %s)<cr>',
-            \   l:mapmode,
-            \   l:force ? '' : '<unique>',
-            \   l:button,
-            \   l:button,
-            \   a:primary ? 'true' : 'false',
-            \ )
-    endfor
-  endif
-endfunction
-
-call s:SetUpMouseMappings(g:scrollview_mouse_primary, v:true)
-" :popup doesn't work for nvim<0.8.
-if has('nvim-0.8')
-  call s:SetUpMouseMappings(g:scrollview_mouse_secondary, v:false)
-endif
-
 " Additional <plug> mappings are defined for convenience of creating
 " user-defined mappings that call nvim-scrollview functionality. However,
 " since the usage of <plug> mappings requires recursive map commands, this

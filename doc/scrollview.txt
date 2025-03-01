@@ -20,7 +20,8 @@ signs. The plugin is customizable (see |scrollview-configuration|).
 1. Requirements                            *scrollview-requirements*
 
 * `nvim>=0.6`
-* Scrollbar mouse dragging requires mouse support (see |'mouse'|)
+* Scrollbar mouse functionality requires mouse support (see |'mouse'|) and
+  `nvim>=0.11`
 * Signs require `nvim>=0.9`
 
 ============================================================================
@@ -301,19 +302,15 @@ scrollview_mouse_primary                   *scrollview_mouse_primary*
                        Possible values include `'left'`, `'middle'`, `'right'`,
                        `'x1'`, and `'x2'`. These can be prepended with `'c-'` or
                        `'m-'` for the control-key and alt-key variants (e.g.,
-                       `'c-left'` for control-left). An existing mapping will
-                       not be clobbered, unless `'!'` is added at the end (e.g.,
-                       `'left!'`). Set to `v:null` to disable the functionality.
-                       Defaults to `'left'`. Considered only when the plugin is
-                       loaded.
+                       `'c-left'` for control-left). Set to `v:null` to disable
+                       the functionality. Defaults to `'left'`.
 
 scrollview_mouse_secondary                 *scrollview_mouse_secondary*
                        |String| specifying the button for secondary mouse
                        operations (clicking signs for additional information).
                        See |scrollview_mouse_primary| for the possible values,
-                       including how `'c-'`, `'m-'`, `'!'`, and `v:null` can be
-                       utilized. Defaults to `'right'`. Considered only when the
-                       plugin is loaded.
+                       including how `'c-'`, `'m-'`, and `v:null` can be utilized.
+                       Defaults to `'right'`.
 
                                            *scrollview_on_startup*
 scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on

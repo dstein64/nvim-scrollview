@@ -138,6 +138,20 @@ local BORDER_RIGHT = 4
 local BORDER_BOTTOM = 6
 local BORDER_LEFT = 8
 
+-- Maps mouse buttons (e.g., 'left') to the Neovim key representation.
+local MOUSE_LOOKUP = (function()
+  local valid_buttons = {
+    'left', 'middle', 'right', 'x1', 'x2',
+    'c-left', 'c-middle', 'c-right', 'c-x1', 'c-x2',
+    'm-left', 'm-middle', 'm-right', 'm-x1', 'm-x2',
+  }
+  local result = {}
+  for _, button in ipairs(valid_buttons) do
+    result[button] = t('<' .. button .. 'mouse>')
+  end
+  return result
+end)()
+
 -- *************************************************
 -- * Memoization
 -- *************************************************
@@ -2962,9 +2976,14 @@ local handle_mouse = function(button, primary)
   local mousedown = t('<' .. button .. 'mouse>')
   local mouseup = t('<' .. button .. 'release>')
   if not vim.g.scrollview_enabled then
-    -- nvim-scrollview is disabled. Process the click as it would ordinarily be
-    -- processed, by re-sending the click and returning.
+    -- We have to temporarily set handling_mouse to true so that the on_key
+    -- handler doesn't call handle_mouse. Setting it back to false is deferred
+    -- (a later comment explains why, where the same type of handling is used).
+    handling_mouse = true
     fn.feedkeys(mousedown, 'ni')
+    vim.defer_fn(function()
+      handling_mouse = false
+    end, 0)
     return
   end
   local state = init()
@@ -3312,7 +3331,45 @@ local handle_mouse = function(button, primary)
     reset_memoize()
   end
   restore(state)
-  handling_mouse = false
+  -- The processing of feedkeys calls initiated above (that aren't consumed by
+  -- read_input_stream) does not happen immediately. Defer the setting of
+  -- handling_mouse to false, to prevent an infinite loop of calls to
+  -- handle_mouse (e.g., for an ordinary click not on a sign or scrollbar).
+  vim.defer_fn(function()
+    handling_mouse = false
+  end, 0)
+end
+
+-- pcall is not necessary here to avoid an error in some cases (Neovim
+-- #17273), since that would be necessary for nvim<0.8, where this code would
+-- not execute (the on_key handling for the mouse requires nvim==0.11, for the
+-- ability to ignore the key by returning the empty string).
+if to_bool(fn.has('nvim-0.11')) then  -- Neovim 0.11 for ignoring keys
+  vim.on_key(function(str)
+    local normalize = function(button)
+      if button == vim.NIL then
+        button = nil
+      elseif button:sub(-1) == '!' then
+        -- Remove a trailing "!", which was supported in older versions of the
+        -- plugin for clobbering mappings.
+        button = button:sub(1, -2)
+      end
+      return button
+    end
+    local primary = normalize(vim.g.scrollview_mouse_primary)
+    local secondary = normalize(vim.g.scrollview_mouse_secondary)
+    if primary ~= nil
+        and not handling_mouse
+        and str == MOUSE_LOOKUP[primary] then
+      handle_mouse(primary, true)
+      return ''  -- ignore the mousedown
+    elseif secondary ~= nil
+        and not handling_mouse
+        and str == MOUSE_LOOKUP[secondary] then
+      handle_mouse(secondary, false)
+      return ''  -- ignore the mousedown
+    end
+  end)
 end
 
 -- A convenience function for setting global options with
