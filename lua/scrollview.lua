@@ -2996,8 +2996,8 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
     local scrollbar_offset
     local previous_row
     local idx = 1
-    local str, chars_props = '', {}
-    local str_idx, char, mouse_winid, mouse_row, mouse_col
+    local chars_props = {}
+    local char, mouse_winid, mouse_row
     local props
     -- Computing this prior to the first mouse event could distort the location
     -- since this could be an expensive operation (and the mouse could move).
@@ -3009,7 +3009,6 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
     while true do
       while true do
         if count == 0 then
-          str = mousedown
           chars_props = {{
             char = mousedown,
             str_idx = 1,
@@ -3022,15 +3021,13 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
           idx = idx + 1
           if idx > #chars_props then
             idx = 1
-            str, chars_props = read_input_stream()
+            chars_props = select(2, read_input_stream())
           end
         end
         local char_props = chars_props[idx]
-        str_idx = char_props.str_idx
         char = char_props.char
         mouse_winid = char_props.mouse_winid
         mouse_row = char_props.mouse_row
-        mouse_col = char_props.mouse_col
         -- Break unless it's a mouse drag followed by another mouse drag, so
         -- that the first drag is skipped.
         if mouse_winid == 0
@@ -3064,7 +3061,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
           return
         end
         if char == mouseup then
-          if count == 1 then
+          if count == 1 then  -- luacheck: ignore 542 (an empty if branch)
             -- A scrollbar was clicked, but there was no corresponding drag.
           else
             -- A scrollbar was clicked and there was a corresponding drag.
