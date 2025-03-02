@@ -3290,77 +3290,92 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
   handling_mouse = false
 end
 
+-- Checks if an input event is over a scrollview window and should be handled.
+-- TODO: Finish documentation (including inputs/outputs).
+local should_handle_mouse = function(str)
+  if not vim.g.scrollview_enabled then
+    return false
+  end
+  if handling_mouse then
+    return false
+  end
+  local normalize = function(button)
+    if button == vim.NIL then
+      button = nil
+    elseif button:sub(-1) == '!' then
+      -- Remove a trailing "!", which was supported in older versions of the
+      -- plugin for clobbering mappings.
+      button = button:sub(1, -2)
+    end
+    return button
+  end
+  local primary = normalize(vim.g.scrollview_mouse_primary)
+  local secondary = normalize(vim.g.scrollview_mouse_secondary)
+  if primary == nil and secondary == nil then
+    return false
+  end
+  if str ~= MOUSE_LOOKUP[primary] and str ~= MOUSE_LOOKUP[secondary] then
+    return false
+  end
+  local mousepos = fn.getmousepos()
+  local mouse_winid = mousepos.winid
+  -- TODO: return if mouse over tabline, winbar, command line, etc. (see read_input_stream)
+  local mouse_row = mousepos.winrow
+  local mouse_col = mousepos.wincol
+  local props = get_scrollview_bar_props(mouse_winid)
+  local clicked_bar = false
+  local clicked_sign = false
+  if not vim.tbl_isempty(props) then
+    clicked_bar = mouse_row >= props.row
+      and mouse_row < props.row + props.height
+      and mouse_col >= props.col
+      and mouse_col <= props.col
+  end
+  -- First check for a click on a sign and handle accordingly.
+  for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
+    if mouse_row == sign_props.row
+        and mouse_col >= sign_props.col
+        and mouse_col <= sign_props.col + sign_props.width - 1
+        and (not clicked_bar or sign_props.zindex > props.zindex) then
+      clicked_sign = true
+      clicked_bar = false
+      props = sign_props
+      break
+    end
+  end
+  if not clicked_bar and not clicked_sign then
+    return false
+  end
+  local button, is_primary
+  if str == MOUSE_LOOKUP[primary] then
+    button, is_primary = primary, true
+  elseif str == MOUSE_LOOKUP[secondary] then
+    button, is_primary = secondary, false
+  else
+    -- This should not be reached, since there's a return earlier for this
+    -- scenario.
+    return false
+  end
+  local data = {
+    button = button,
+    is_primary = is_primary,
+    props = props,
+    mousepos = mousepos,
+  }
+  return true, data
+end
+
 -- pcall is not necessary here to avoid an error in some cases (Neovim
 -- #17273), since that would be necessary for nvim<0.8, where this code would
 -- not execute (the on_key handling for the mouse requires nvim==0.11, for the
 -- ability to ignore the key by returning the empty string).
 if to_bool(fn.has('nvim-0.11')) then  -- Neovim 0.11 for ignoring keys
   vim.on_key(function(str)
-    if not vim.g.scrollview_enabled then
-      return
+    local should_handle, data = should_handle_mouse(str)
+    if should_handle then
+      handle_mouse(data.button, data.is_primary, data.props, data.mousepos)
+      return ''  -- ignore the mouse event
     end
-    if handling_mouse then
-      return
-    end
-    local normalize = function(button)
-      if button == vim.NIL then
-        button = nil
-      elseif button:sub(-1) == '!' then
-        -- Remove a trailing "!", which was supported in older versions of the
-        -- plugin for clobbering mappings.
-        button = button:sub(1, -2)
-      end
-      return button
-    end
-    local primary = normalize(vim.g.scrollview_mouse_primary)
-    local secondary = normalize(vim.g.scrollview_mouse_secondary)
-    if primary == nil and secondary == nil then
-      return
-    end
-    if str ~= MOUSE_LOOKUP[primary] and str ~= MOUSE_LOOKUP[secondary] then
-      return
-    end
-    local mousepos = fn.getmousepos()
-    local mouse_winid = mousepos.winid
-    -- TODO: return if mouse over tabline, winbar, command line, etc. (see read_input_stream)
-    local mouse_row = mousepos.winrow
-    local mouse_col = mousepos.wincol
-    local props = get_scrollview_bar_props(mouse_winid)
-    local clicked_bar = false
-    local clicked_sign = false
-    if not vim.tbl_isempty(props) then
-      clicked_bar = mouse_row >= props.row
-        and mouse_row < props.row + props.height
-        and mouse_col >= props.col
-        and mouse_col <= props.col
-    end
-    -- First check for a click on a sign and handle accordingly.
-    for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
-      if mouse_row == sign_props.row
-          and mouse_col >= sign_props.col
-          and mouse_col <= sign_props.col + sign_props.width - 1
-          and (not clicked_bar or sign_props.zindex > props.zindex) then
-        clicked_sign = true
-        clicked_bar = false
-        props = sign_props
-        break
-      end
-    end
-    if not clicked_bar and not clicked_sign then
-      return
-    end
-    local button, is_primary
-    if str == MOUSE_LOOKUP[primary] then
-      button, is_primary = primary, true
-    elseif str == MOUSE_LOOKUP[secondary] then
-      button, is_primary = secondary, false
-    else
-      -- This should not be reached, since there's a return earlier for this
-      -- scenario.
-      return
-    end
-    handle_mouse(button, is_primary, props, mousepos)
-    return ''  -- ignore the mouse event
   end)
 end
 
