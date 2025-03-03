@@ -3044,7 +3044,6 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
       if char == t'<esc>' then
         return
       end
-      -- TODO: Can you remove this check?
       -- In select-mode, mouse usage results in the mode intermediately
       -- switching to visual mode, accompanied by a call to this function.
       -- After the initial mouse event, the next getchar() character is
@@ -3055,13 +3054,18 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
       -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/getchar.c#L2660-L2672)
       -- Ignore this character after scrolling has started.
       -- NOTE: "\x80\xf5X" (hex) ==# "\200\365X" (octal)
+      -- WARN: This handling may no longer be necessary after addressing Issue
+      -- #140, but was kept as a precaution.
       if char ~= '\x80\xf5X' or count == 0 then
         if mouse_winid == 0 then
           -- There was no mouse event.
           return
         end
         if char == mouseup then
-          if count == 1 then  -- luacheck: ignore 542 (an empty if branch)
+          if count == 0 then  -- luacheck: ignore 542 (an empty if branch)
+            -- No initial mousedown was captured. This can't happen with the
+            -- approach used to resolve Issue #140.
+          elseif count == 1 then  -- luacheck: ignore 542 (an empty if branch)
             -- A scrollbar was clicked, but there was no corresponding drag.
           else
             -- A scrollbar was clicked and there was a corresponding drag.
@@ -3288,7 +3292,11 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
 end
 
 -- Checks if an input event is over a scrollview window and should be handled.
--- TODO: Finish documentation (including inputs/outputs).
+-- 'str' is the representation of a key press (as represented by the argument
+-- to on_key, which e.g., would be "\<leftmouse>" or
+-- nvim_replace_termcodes('<leftmouse>', 1, 1, 1)). Returns either a single
+-- value, false, or multiple values, true along with a table containing
+-- 'button', 'is_primary', 'props', and 'mousepos'.
 local should_handle_mouse = function(str)
   if not vim.g.scrollview_enabled then
     return false
@@ -3306,17 +3314,56 @@ local should_handle_mouse = function(str)
     end
     return button
   end
-  local primary = normalize(vim.g.scrollview_mouse_primary)
-  local secondary = normalize(vim.g.scrollview_mouse_secondary)
+  local primary = vim.g.scrollview_mouse_primary
+  local secondary = vim.g.scrollview_mouse_secondary
+  if not to_bool(fn.has('nvim-0.11')) then
+    -- On nvim<0.11, mouse mappings are created when the plugin starts, so we
+    -- don't support changes to the settings.
+    primary = vim.g.scrollview_init_mouse_primary
+    secondary = vim.g.scrollview_init_mouse_secondary
+  end
+  primary = normalize(primary)
+  secondary = normalize(secondary)
   if primary == nil and secondary == nil then
     return false
   end
   if str ~= MOUSE_LOOKUP[primary] and str ~= MOUSE_LOOKUP[secondary] then
     return false
   end
-  local mousepos = fn.getmousepos()
+  local mousepos = vim.deepcopy(fn.getmousepos())
+  -- Ignore clicks on the command line.
+  if mousepos.screenrow > vim.go.lines - vim.go.cmdheight then
+    return false
+  end
+  -- Ignore clicks on the tabline. When the click is on a floating window
+  -- covering the tabline, mousepos.winid will be set to that floating window's
+  -- winid. Otherwise, mousepos.winid would correspond to an ordinary window ID
+  -- (seemingly for the window below the tabline).
+  if fn.win_screenpos(1) == {2, 1}  -- Checks for presence of a tabline.
+      and mousepos.screenrow == 1
+      and is_ordinary_window(mousepos.winid) then
+    return false
+  end
+  -- Adjust for a winbar.
+  if mousepos.winid > 0
+      and to_bool(tbl_get(fn.getwininfo(mousepos.winid)[1], 'winbar', 0)) then
+    mousepos.winrow = mousepos.winrow - 1
+  end
+  -- Adjust for floating window borders.
   local mouse_winid = mousepos.winid
-  -- TODO: return if mouse over tabline, winbar, command line, etc. (see read_input_stream)
+  local config = api.nvim_win_get_config(mouse_winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
+  if is_float then
+    local border = config.border
+    if border ~= nil and islist(border) and #border == 8 then
+      if border[BORDER_TOP] ~= '' then
+        mousepos.winrow = mousepos.winrow - 1
+      end
+      if border[BORDER_LEFT] ~= '' then
+        mousepos.wincol = mousepos.wincol - 1
+      end
+    end
+  end
   local mouse_row = mousepos.winrow
   local mouse_col = mousepos.wincol
   local props = get_scrollview_bar_props(mouse_winid)
@@ -3362,11 +3409,13 @@ local should_handle_mouse = function(str)
   return true, data
 end
 
--- pcall is not necessary here to avoid an error in some cases (Neovim
--- #17273), since that would be necessary for nvim<0.8, where this code would
--- not execute (the on_key handling for the mouse requires nvim==0.11, for the
--- ability to ignore the key by returning the empty string).
+-- With nvim<0.11, mouse functionality is handled with mappings, not
+-- vim.on_key, since the on_key handling for the mouse requires nvim==0.11,
+-- for the ability to ignore the key by returning the empty string.
 if to_bool(fn.has('nvim-0.11')) then  -- Neovim 0.11 for ignoring keys
+  -- pcall is not necessary here to avoid an error in some cases (Neovim
+  -- #17273), since that would be necessary for nvim<0.8, where this code
+  -- would not execute (this only runs on nvim>=0.11).
   vim.on_key(function(str)
     local should_handle, data = should_handle_mouse(str)
     if should_handle then
@@ -3676,12 +3725,14 @@ return {
   first = first,
   fold_count_exceeds = fold_count_exceeds,
   get_sign_eligible_windows = get_sign_eligible_windows,
+  handle_mouse = handle_mouse,
   last = last,
   legend = legend,
   next = next,
   prev = prev,
   refresh = refresh,
   set_state = set_state,
+  should_handle_mouse = should_handle_mouse,
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
