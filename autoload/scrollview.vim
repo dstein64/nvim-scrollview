@@ -322,6 +322,10 @@ let g:scrollview_ins_mode_buf_lines = 0
 " escaping.
 let g:scrollview_echo_string = v:null
 
+" Keep track of the initial mouse settings. These are only used for nvim<0.11.
+let g:scrollview_init_mouse_primary = g:scrollview_mouse_primary
+let g:scrollview_init_mouse_secondary = g:scrollview_mouse_secondary
+
 " *************************************************
 " * Versioning
 " *************************************************
@@ -432,6 +436,23 @@ endif
 " * Mappings
 " *************************************************
 
+function! scrollview#HandleMouseFromMapping(button, is_primary) abort
+  let l:button_repr = nvim_replace_termcodes(
+        \ printf('<%smouse>', a:button), v:true, v:true, v:true)
+  let l:packed = luaeval(
+        \ '{require("scrollview").should_handle_mouse(_A)}', l:button_repr)
+  let l:should_handle = l:packed[0]
+  if l:should_handle
+    let l:data = l:packed[1]
+    call luaeval(
+          \ 'require("scrollview").handle_mouse('
+          \ .. '_A.button, _A.is_primary, _A.props, _A.mousepos)', l:data)
+  else
+    " Process the click as it would ordinarily be processed.
+    call feedkeys(l:button_repr, 'ni')
+  endif
+endfunction
+
 function! s:SetUpMouseMappings(button, primary) abort
   if a:button isnot# v:null
     " Create a mouse mapping only if mappings don't already exist and "!" is
@@ -447,25 +468,28 @@ function! s:SetUpMouseMappings(button, primary) abort
       let l:button =
             \ strcharpart(l:button, 0, strchars(l:button, 1) - 1)
     endif
-    " scrollview mouse handling is not supported in select-mode. #140
-    for l:mapmode in ['n', 'x', 'i']
+    for l:mapmode in ['n', 'v', 'i']
       execute printf(
             \   'silent! %snoremap %s <silent> <%smouse>'
-            \   .. ' <cmd>lua require("scrollview").handle_mouse("%s", %s)<cr>',
+            \   .. ' <cmd>call scrollview#HandleMouseFromMapping("%s", %s)<cr>',
             \   l:mapmode,
             \   l:force ? '' : '<unique>',
             \   l:button,
             \   l:button,
-            \   a:primary ? 'true' : 'false',
+            \   a:primary,
             \ )
     endfor
   endif
 endfunction
 
-call s:SetUpMouseMappings(g:scrollview_mouse_primary, v:true)
-" :popup doesn't work for nvim<0.8.
-if has('nvim-0.8')
-  call s:SetUpMouseMappings(g:scrollview_mouse_secondary, v:false)
+" With Neovim 0.11, mouse functionality is handled with vim.on_key, not
+" mappings.
+if !has('nvim-0.11')
+  call s:SetUpMouseMappings(g:scrollview_mouse_primary, v:true)
+  " :popup doesn't work for nvim<0.8.
+  if has('nvim-0.8')
+    call s:SetUpMouseMappings(g:scrollview_mouse_secondary, v:false)
+  endif
 endif
 
 " Additional <plug> mappings are defined for convenience of creating

@@ -138,6 +138,20 @@ local BORDER_RIGHT = 4
 local BORDER_BOTTOM = 6
 local BORDER_LEFT = 8
 
+-- Maps mouse buttons (e.g., 'left') to the Neovim key representation.
+local MOUSE_LOOKUP = (function()
+  local valid_buttons = {
+    'left', 'middle', 'right', 'x1', 'x2',
+    'c-left', 'c-middle', 'c-right', 'c-x1', 'c-x2',
+    'm-left', 'm-middle', 'm-right', 'm-x1', 'm-x2',
+  }
+  local result = {}
+  for _, button in ipairs(valid_buttons) do
+    result[button] = t('<' .. button .. 'mouse>')
+  end
+  return result
+end)()
+
 -- *************************************************
 -- * Memoization
 -- *************************************************
@@ -2947,7 +2961,7 @@ end
 -- prepended for the control-key and alt-key variants. If primary is true, the
 -- handling is for navigation (dragging scrollbars and navigating to signs).
 -- If primary is false, the handling is for context (showing popups with info).
-local handle_mouse = function(button, primary)
+local handle_mouse = function(button, is_primary, init_props, init_mousepos)
   local valid_buttons = {
     'left', 'middle', 'right', 'x1', 'x2',
     'c-left', 'c-middle', 'c-right', 'c-x1', 'c-x2',
@@ -2956,25 +2970,21 @@ local handle_mouse = function(button, primary)
   if not vim.tbl_contains(valid_buttons, button) then
     error('Unsupported button: ' .. button)
   end
-  if primary == nil then
-    primary = true
+  if is_primary == nil then
+    is_primary = true
   end
   local mousedown = t('<' .. button .. 'mouse>')
   local mouseup = t('<' .. button .. 'release>')
-  if not vim.g.scrollview_enabled then
-    -- nvim-scrollview is disabled. Process the click as it would ordinarily be
-    -- processed, by re-sending the click and returning.
-    fn.feedkeys(mousedown, 'ni')
-    return
+  -- We don't support mouse functionality in visual nor select mode.
+  if is_visual_mode(fn.mode()) or is_select_mode(fn.mode()) then
+    vim.cmd('normal! ' .. t'<esc>')
+    vim.cmd('redraw')
   end
   local state = init()
   local resume_memoize = memoize
   start_memoize()
   pcall(function()
     handling_mouse = true
-    -- Re-send the click, so its position can be obtained through
-    -- read_input_stream().
-    fn.feedkeys(mousedown, 'ni')
     -- Mouse handling is not relevant in the command line window since
     -- scrollbars are not shown. Additionally, the overlay cannot be closed
     -- from that mode.
@@ -2986,8 +2996,8 @@ local handle_mouse = function(button, primary)
     local scrollbar_offset
     local previous_row
     local idx = 1
-    local str, chars_props = '', {}
-    local str_idx, char, mouse_winid, mouse_row, mouse_col
+    local chars_props = {}
+    local char, mouse_winid, mouse_row
     local props
     -- Computing this prior to the first mouse event could distort the location
     -- since this could be an expensive operation (and the mouse could move).
@@ -2998,17 +3008,26 @@ local handle_mouse = function(button, primary)
     local init_winline
     while true do
       while true do
-        idx = idx + 1
-        if idx > #chars_props then
-          idx = 1
-          str, chars_props = read_input_stream()
+        if count == 0 then
+          chars_props = {{
+            char = mousedown,
+            str_idx = 1,
+            charmod = 0,
+            mouse_winid = init_mousepos.winid,
+            mouse_row = init_mousepos.winrow,
+            mouse_col = init_mousepos.wincol,
+          }}
+        else
+          idx = idx + 1
+          if idx > #chars_props then
+            idx = 1
+            chars_props = select(2, read_input_stream())
+          end
         end
         local char_props = chars_props[idx]
-        str_idx = char_props.str_idx
         char = char_props.char
         mouse_winid = char_props.mouse_winid
         mouse_row = char_props.mouse_row
-        mouse_col = char_props.mouse_col
         -- Break unless it's a mouse drag followed by another mouse drag, so
         -- that the first drag is skipped.
         if mouse_winid == 0
@@ -3023,7 +3042,6 @@ local handle_mouse = function(button, primary)
         end
       end
       if char == t'<esc>' then
-        fn.feedkeys(string.sub(str, str_idx + #char), 'ni')
         return
       end
       -- In select-mode, mouse usage results in the mode intermediately
@@ -3036,26 +3054,22 @@ local handle_mouse = function(button, primary)
       -- c54f347d63bcca97ead673d01ac6b59914bb04e5/src/getchar.c#L2660-L2672)
       -- Ignore this character after scrolling has started.
       -- NOTE: "\x80\xf5X" (hex) ==# "\200\365X" (octal)
+      -- WARN: This handling may no longer be necessary after addressing Issue
+      -- #140, but was kept as a precaution.
       if char ~= '\x80\xf5X' or count == 0 then
         if mouse_winid == 0 then
           -- There was no mouse event.
-          fn.feedkeys(string.sub(str, str_idx), 'ni')
           return
         end
         if char == mouseup then
-          if count == 0 then
-            -- No initial mousedown was captured.
-            fn.feedkeys(string.sub(str, str_idx), 'ni')
-          elseif count == 1 then
+          if count == 0 then  -- luacheck: ignore 542 (an empty if branch)
+            -- No initial mousedown was captured. This can't happen with the
+            -- approach used to resolve Issue #140.
+          elseif count == 1 then  -- luacheck: ignore 542 (an empty if branch)
             -- A scrollbar was clicked, but there was no corresponding drag.
-            -- Allow the interaction to be processed as it would be with no
-            -- scrollbar.
-            fn.feedkeys(mousedown .. string.sub(str, str_idx), 'ni')
           else
             -- A scrollbar was clicked and there was a corresponding drag.
-            -- 'feedkeys' is not called, since the full mouse interaction has
-            -- already been processed. The current window (from prior to
-            -- scrolling) is not changed.
+            -- The current window (from prior to scrolling) is not changed.
             -- Refresh scrollbars to handle the scenario where
             -- scrollview_hide_on_float_intersect is enabled and dragging
             -- resulted in a scrollbar overlapping a floating window.
@@ -3068,51 +3082,21 @@ local handle_mouse = function(button, primary)
           return
         end
         if count == 0 then
-          if mouse_winid < 0 then
-            -- The mouse event was on the tabline or command line.
-            fn.feedkeys(string.sub(str, str_idx), 'ni')
-            return
-          end
-          props = get_scrollview_bar_props(mouse_winid)
-          local clicked_bar = false
-          local clicked_sign = false
-          local sign_props = nil  -- set when clicked_sign is true
-          if not vim.tbl_isempty(props) then
-            clicked_bar = mouse_row >= props.row
-              and mouse_row < props.row + props.height
-              and mouse_col >= props.col
-              and mouse_col <= props.col
-          end
-          -- First check for a click on a sign and handle accordingly.
-          for _, sign_props2 in ipairs(get_scrollview_sign_props(mouse_winid)) do
-            if mouse_row == sign_props2.row
-                and mouse_col >= sign_props2.col
-                and mouse_col <= sign_props2.col + sign_props2.width - 1
-                and (not clicked_bar or sign_props2.zindex > props.zindex) then
-              clicked_sign = true
-              clicked_bar = false
-              sign_props = sign_props2
-              break
-            end
-          end
-          if not clicked_bar and not clicked_sign then
-            -- There was either no scrollbar or signs in the window where a
-            -- click occurred or the click was not on a scrollbar or sign.
-            fn.feedkeys(string.sub(str, str_idx), 'ni')
-            return
-          end
-          if clicked_sign and primary then
+          props = init_props
+          local clicked_bar = props.type == BAR_TYPE
+          local clicked_sign = props.type == SIGN_TYPE
+          if clicked_sign and is_primary then
             -- There was a primary click on a sign. Navigate to the next
             -- sign_props line after the cursor.
             api.nvim_win_call(mouse_winid, function()
               local current = fn.line('.')
-              local target = subsequent(sign_props.lines, current, 1, true)
+              local target = subsequent(props.lines, current, 1, true)
               vim.cmd('normal!' .. target .. 'G')
             end)
             refresh_bars()
             return
           end
-          if not primary then
+          if not is_primary then
             -- There was a secondary click on either a scrollbar or sign. Show
             -- a popup accordingly.
             -- Menus starting with ']' are excluded from the main menu bar
@@ -3121,11 +3105,11 @@ local handle_mouse = function(button, primary)
             local lhs, rhs
             local mousepos = fn.getmousepos()
             if clicked_sign then
-              local group = sign_specs[sign_props.sign_spec_id].group
+              local group = sign_specs[props.sign_spec_id].group
               lhs = menu_name .. '.' .. group
               rhs = '<nop>'
               vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
-              local variant = sign_specs[sign_props.sign_spec_id].variant
+              local variant = sign_specs[props.sign_spec_id].variant
               if variant ~= nil then
                 lhs = menu_name .. '.' .. variant
                 rhs = '<nop>'
@@ -3150,7 +3134,7 @@ local handle_mouse = function(button, primary)
                 menu_slots_available = menu_slots_available
                   - #fn.menu_info(menu_name).submenus
               end
-              for line_idx, line in ipairs(sign_props.lines) do
+              for line_idx, line in ipairs(props.lines) do
                 if menu_slots_available ~= nil
                     and line_idx > menu_slots_available then
                   break
@@ -3158,7 +3142,7 @@ local handle_mouse = function(button, primary)
                 lhs = menu_name .. '.' .. line
                 rhs = string.format(
                   '<cmd>call win_execute(%d, "normal! %dG")<cr>',
-                  sign_props.parent_winid,
+                  props.parent_winid,
                   line
                 )
                 vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
@@ -3225,10 +3209,6 @@ local handle_mouse = function(button, primary)
             return
           end
           -- By this point, the click on a scrollbar was successful.
-          if is_visual_mode(fn.mode()) then
-            -- Exit visual mode.
-            vim.cmd('normal! ' .. t'<esc>')
-          end
           winid = mouse_winid
           api.nvim_win_call(winid, function()
             init_wincol = fn.wincol()
@@ -3237,70 +3217,66 @@ local handle_mouse = function(button, primary)
           scrollbar_offset = props.row - mouse_row
           previous_row = props.row
         end
-        -- Only consider a scrollbar update for mouse events on windows (i.e.,
-        -- not on the tabline or command line).
-        if mouse_winid > 0 then
-          local winheight = get_window_height(winid)
-          local mouse_winrow = fn.getwininfo(mouse_winid)[1].winrow
-          local winrow = fn.getwininfo(winid)[1].winrow
-          local window_offset = mouse_winrow - winrow
-          local row = mouse_row + window_offset + scrollbar_offset
-          row = math.min(row, winheight)
-          row = math.max(1, row)
-          if vim.g.scrollview_include_end_region then
-            -- Don't allow scrollbar to overflow.
-            row = math.min(row, winheight - props.height + 1)
+        local winheight = get_window_height(winid)
+        local mouse_winrow = fn.getwininfo(mouse_winid)[1].winrow
+        local winrow = fn.getwininfo(winid)[1].winrow
+        local window_offset = mouse_winrow - winrow
+        local row = mouse_row + window_offset + scrollbar_offset
+        row = math.min(row, winheight)
+        row = math.max(1, row)
+        if vim.g.scrollview_include_end_region then
+          -- Don't allow scrollbar to overflow.
+          row = math.min(row, winheight - props.height + 1)
+        end
+        -- Only update scrollbar if the row changed.
+        if previous_row ~= row then
+          if topline_lookup == nil then
+            topline_lookup = get_topline_lookup(winid)
           end
-          -- Only update scrollbar if the row changed.
-          if previous_row ~= row then
-            if topline_lookup == nil then
-              topline_lookup = get_topline_lookup(winid)
-            end
-            local topline = topline_lookup[row]
-            topline = math.max(1, topline)
-            if row == 1 then
-              -- If the scrollbar was dragged to the top of the window, always
-              -- show the first line.
-              topline = 1
-            end
-            set_topline(winid, topline)
-            if api.nvim_win_get_option(winid, 'scrollbind')
-                or api.nvim_win_get_option(winid, 'cursorbind') then
-              refresh_bars()
-              props = get_scrollview_bar_props(winid)
-            end
-            props = move_scrollbar(props, row)  -- luacheck: ignore
-            -- Refresh since sign backgrounds might be stale, for signs that
-            -- switched intersection state with scrollbar. This is fast, from
-            -- caching.
+          local topline = topline_lookup[row]
+          topline = math.max(1, topline)
+          if row == 1 then
+            -- If the scrollbar was dragged to the top of the window, always
+            -- show the first line.
+            topline = 1
+          end
+          set_topline(winid, topline)
+          if api.nvim_win_get_option(winid, 'scrollbind')
+              or api.nvim_win_get_option(winid, 'cursorbind') then
             refresh_bars()
             props = get_scrollview_bar_props(winid)
-            -- Apply appropriate highlighting where relevant.
-            if mousemove_received
-                and to_bool(fn.exists('&mousemoveevent'))
-                and vim.o.mousemoveevent then
-              -- But be sure to keep the scrollbar highlighted.
-              if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
-                props.highlight_fn(true)
-              end
-              -- Be sure that signs are not highlighted. Without this handling,
-              -- signs could be higlighted if a sign is moved to the same
-              -- position as the cursor while dragging a scrollbar.
-              for _, winid2 in ipairs(get_scrollview_windows()) do
-                local props2 = api.nvim_win_get_var(winid2, PROPS_VAR)
-                if not vim.tbl_isempty(props2)
-                    and props2.highlight_fn ~= nil
-                    and props2.type == SIGN_TYPE then
-                  props2.highlight_fn(false)
-                end
+          end
+          props = move_scrollbar(props, row)  -- luacheck: ignore
+          -- Refresh since sign backgrounds might be stale, for signs that
+          -- switched intersection state with scrollbar. This is fast, from
+          -- caching.
+          refresh_bars()
+          props = get_scrollview_bar_props(winid)
+          -- Apply appropriate highlighting where relevant.
+          if mousemove_received
+              and to_bool(fn.exists('&mousemoveevent'))
+              and vim.o.mousemoveevent then
+            -- But be sure to keep the scrollbar highlighted.
+            if not vim.tbl_isempty(props) and props.highlight_fn ~= nil then
+              props.highlight_fn(true)
+            end
+            -- Be sure that signs are not highlighted. Without this handling,
+            -- signs could be higlighted if a sign is moved to the same
+            -- position as the cursor while dragging a scrollbar.
+            for _, winid2 in ipairs(get_scrollview_windows()) do
+              local props2 = api.nvim_win_get_var(winid2, PROPS_VAR)
+              if not vim.tbl_isempty(props2)
+                  and props2.highlight_fn ~= nil
+                  and props2.type == SIGN_TYPE then
+                props2.highlight_fn(false)
               end
             end
-            -- Window workspaces may still be present as a result of the
-            -- earlier commands. Remove prior to redrawing.
-            reset_win_workspaces()
-            vim.cmd('redraw')
-            previous_row = row
           end
+          -- Window workspaces may still be present as a result of the
+          -- earlier commands. Remove prior to redrawing.
+          reset_win_workspaces()
+          vim.cmd('redraw')
+          previous_row = row
         end
         count = count + 1
       end  -- end if
@@ -3313,6 +3289,140 @@ local handle_mouse = function(button, primary)
   end
   restore(state)
   handling_mouse = false
+end
+
+-- Checks if an input event is over a scrollview window and should be handled.
+-- 'str' is the representation of a key press (as represented by the argument
+-- to on_key, which e.g., would be "\<leftmouse>" or
+-- nvim_replace_termcodes('<leftmouse>', 1, 1, 1)). Returns either a single
+-- value, false, or multiple values, true along with a table containing
+-- 'button', 'is_primary', 'props', and 'mousepos'.
+local should_handle_mouse = function(str)
+  if not vim.g.scrollview_enabled then
+    return false
+  end
+  if handling_mouse then
+    return false
+  end
+  local normalize = function(button)
+    if button == vim.NIL then
+      button = nil
+    elseif button:sub(-1) == '!' then
+      -- Remove a trailing "!", which was supported in older versions of the
+      -- plugin for clobbering mappings.
+      button = button:sub(1, -2)
+    end
+    return button
+  end
+  local primary = vim.g.scrollview_mouse_primary
+  local secondary = vim.g.scrollview_mouse_secondary
+  if not to_bool(fn.has('nvim-0.11')) then
+    -- On nvim<0.11, mouse mappings are created when the plugin starts, so we
+    -- don't support changes to the settings.
+    primary = vim.g.scrollview_init_mouse_primary
+    secondary = vim.g.scrollview_init_mouse_secondary
+  end
+  primary = normalize(primary)
+  secondary = normalize(secondary)
+  if primary == nil and secondary == nil then
+    return false
+  end
+  if str ~= MOUSE_LOOKUP[primary] and str ~= MOUSE_LOOKUP[secondary] then
+    return false
+  end
+  local mousepos = vim.deepcopy(fn.getmousepos())
+  -- Ignore clicks on the command line.
+  if mousepos.screenrow > vim.go.lines - vim.go.cmdheight then
+    return false
+  end
+  -- Ignore clicks on the tabline. When the click is on a floating window
+  -- covering the tabline, mousepos.winid will be set to that floating window's
+  -- winid. Otherwise, mousepos.winid would correspond to an ordinary window ID
+  -- (seemingly for the window below the tabline).
+  if fn.win_screenpos(1) == {2, 1}  -- Checks for presence of a tabline.
+      and mousepos.screenrow == 1
+      and is_ordinary_window(mousepos.winid) then
+    return false
+  end
+  -- Adjust for a winbar.
+  if mousepos.winid > 0
+      and to_bool(tbl_get(fn.getwininfo(mousepos.winid)[1], 'winbar', 0)) then
+    mousepos.winrow = mousepos.winrow - 1
+  end
+  -- Adjust for floating window borders.
+  local mouse_winid = mousepos.winid
+  local config = api.nvim_win_get_config(mouse_winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
+  if is_float then
+    local border = config.border
+    if border ~= nil and islist(border) and #border == 8 then
+      if border[BORDER_TOP] ~= '' then
+        mousepos.winrow = mousepos.winrow - 1
+      end
+      if border[BORDER_LEFT] ~= '' then
+        mousepos.wincol = mousepos.wincol - 1
+      end
+    end
+  end
+  local mouse_row = mousepos.winrow
+  local mouse_col = mousepos.wincol
+  local props = get_scrollview_bar_props(mouse_winid)
+  local clicked_bar = false
+  local clicked_sign = false
+  if not vim.tbl_isempty(props) then
+    clicked_bar = mouse_row >= props.row
+      and mouse_row < props.row + props.height
+      and mouse_col >= props.col
+      and mouse_col <= props.col
+  end
+  -- First check for a click on a sign and handle accordingly.
+  for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
+    if mouse_row == sign_props.row
+        and mouse_col >= sign_props.col
+        and mouse_col <= sign_props.col + sign_props.width - 1
+        and (not clicked_bar or sign_props.zindex > props.zindex) then
+      clicked_sign = true
+      clicked_bar = false
+      props = sign_props
+      break
+    end
+  end
+  if not clicked_bar and not clicked_sign then
+    return false
+  end
+  local button, is_primary
+  if str == MOUSE_LOOKUP[primary] then
+    button, is_primary = primary, true
+  elseif str == MOUSE_LOOKUP[secondary] then
+    button, is_primary = secondary, false
+  else
+    -- This should not be reached, since there's a return earlier for this
+    -- scenario.
+    return false
+  end
+  local data = {
+    button = button,
+    is_primary = is_primary,
+    props = props,
+    mousepos = mousepos,
+  }
+  return true, data
+end
+
+-- With nvim<0.11, mouse functionality is handled with mappings, not
+-- vim.on_key, since the on_key handling for the mouse requires nvim==0.11,
+-- for the ability to ignore the key by returning the empty string.
+if to_bool(fn.has('nvim-0.11')) then  -- Neovim 0.11 for ignoring keys
+  -- pcall is not necessary here to avoid an error in some cases (Neovim
+  -- #17273), since that would be necessary for nvim<0.8, where this code
+  -- would not execute (this only runs on nvim>=0.11).
+  vim.on_key(function(str)
+    local should_handle, data = should_handle_mouse(str)
+    if should_handle then
+      handle_mouse(data.button, data.is_primary, data.props, data.mousepos)
+      return ''  -- ignore the mouse event
+    end
+  end)
 end
 
 -- A convenience function for setting global options with
@@ -3622,6 +3732,7 @@ return {
   prev = prev,
   refresh = refresh,
   set_state = set_state,
+  should_handle_mouse = should_handle_mouse,
   with_win_workspace = with_win_workspace,
 
   -- Sign registration/configuration
