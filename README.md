@@ -21,8 +21,7 @@ scrollview-configuration`).
 ## Requirements
 
 * `nvim>=0.6`
-* Mouse functionality requires mouse support (see `:help 'mouse'`) and
-  `nvim>=0.11`
+* Mouse functionality requires mouse support (see `:help 'mouse'`)
 * Signs require `nvim>=0.9`
 
 ## Installation
