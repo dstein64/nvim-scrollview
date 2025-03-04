@@ -152,6 +152,12 @@ local MOUSE_LOOKUP = (function()
   return result
 end)()
 
+-- Fake window IDs are used by read_input_stream for representing the command
+-- line and tabline. These are negative so they can be distinguished from
+-- valid IDs for actual windows.
+local COMMAND_LINE_WINID = -1
+local TABLINE_WINID = -2
+
 -- *************************************************
 -- * Memoization
 -- *************************************************
@@ -2156,10 +2162,11 @@ end
 --   5) mouse_row (1-indexed)
 --   6) mouse_col (1-indexed)
 -- The mouse values are 0 when there was no mouse event or getmousepos is not
--- available. The mouse_winid is set to -1 when a mouse event was on the
--- command line. The mouse_winid is set to -2 when a mouse event was on the
--- tabline. For floating windows with borders, the left border is considered
--- column 0 and the top border is considered row 0.
+-- available. The mouse_winid is set to COMMAND_LINE_WINID (negative) when a
+-- mouse event was on the command line. The mouse_winid is set to TABLINE_WINID
+-- (negative) when a mouse event was on the tabline. For floating windows with
+-- borders, the left border is considered column 0 and the top border is
+-- considered row 0.
 local read_input_stream = function()
   local chars = {}
   local chars_props = {}
@@ -2196,7 +2203,7 @@ local read_input_stream = function()
       mouse_col = mousepos.wincol
       -- Handle a mouse event on the command line.
       if mousepos.screenrow > vim.go.lines - vim.go.cmdheight then
-        mouse_winid = -1
+        mouse_winid = COMMAND_LINE_WINID
         mouse_row = mousepos.screenrow - vim.go.lines + vim.go.cmdheight
         mouse_col = mousepos.screencol
       end
@@ -2207,7 +2214,7 @@ local read_input_stream = function()
       if vim.deep_equal(fn.win_screenpos(1), {2, 1})  -- Checks for presence of a tabline.
           and mousepos.screenrow == 1
           and is_ordinary_window(mousepos.winid) then
-        mouse_winid = -2
+        mouse_winid = TABLINE_WINID
         mouse_row = mousepos.screenrow
         mouse_col = mousepos.screencol
       end
@@ -2217,16 +2224,18 @@ local read_input_stream = function()
         mouse_row = mouse_row - 1
       end
       -- Adjust for floating window borders.
-      local config = api.nvim_win_get_config(mouse_winid)
-      local is_float = tbl_get(config, 'relative', '') ~= ''
-      if is_float then
-        local border = config.border
-        if border ~= nil and islist(border) and #border == 8 then
-          if border[BORDER_TOP] ~= '' then
-            mouse_row = mouse_row - 1
-          end
-          if border[BORDER_LEFT] ~= '' then
-            mouse_col = mouse_col - 1
+      if mouse_winid > 0 then
+        local config = api.nvim_win_get_config(mouse_winid)
+        local is_float = tbl_get(config, 'relative', '') ~= ''
+        if is_float then
+          local border = config.border
+          if border ~= nil and islist(border) and #border == 8 then
+            if border[BORDER_TOP] ~= '' then
+              mouse_row = mouse_row - 1
+            end
+            if border[BORDER_LEFT] ~= '' then
+              mouse_col = mouse_col - 1
+            end
           end
         end
       end
@@ -3218,7 +3227,14 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
           previous_row = props.row
         end
         local winheight = get_window_height(winid)
-        local mouse_winrow = fn.getwininfo(mouse_winid)[1].winrow
+        local mouse_winrow
+        if mouse_winid == COMMAND_LINE_WINID then
+          mouse_winrow = vim.go.lines - vim.go.cmdheight + 1
+        elseif mouse_winid == TABLINE_WINID then
+          mouse_winrow = 1
+        else
+          mouse_winrow = fn.getwininfo(mouse_winid)[1].winrow
+        end
         local winrow = fn.getwininfo(winid)[1].winrow
         local window_offset = mouse_winrow - winrow
         local row = mouse_row + window_offset + scrollbar_offset
