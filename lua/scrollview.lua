@@ -1879,12 +1879,9 @@ local show_signs = function(winid, sign_winids, bar_winid)
       end
       if to_bool(vim.g.scrollview_hide_on_text_intersect) then
         local row_length_lookup = get_row_length_lookup(winid)
-        for c = col, col + sign_width - 1 do
-          if row_length_lookup[row] ~= nil
-              and row_length_lookup[row] >= c then
-            show = false
-            break
-          end
+        if row_length_lookup[row] ~= nil
+            and row_length_lookup[row] >= col then
+          show = false
         end
       end
       if show then
