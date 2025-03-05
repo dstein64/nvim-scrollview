@@ -1430,6 +1430,7 @@ local get_row_length_lookup = function(winid)
     prior = nil
     steps = 0
     local winheight = get_window_height(0)
+    -- It may not be possible to get to every winline (e.g., virtual lines).
     while fn.winline() <= winheight
         and prior ~= fn.winline()
         and steps < max_steps do
