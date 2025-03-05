@@ -270,10 +270,10 @@ scrollview_hide_on_text_intersect          *scrollview_hide_on_text_intersect*
                        (only the first cell of the character would be
                        considered for intersection). For lines with concealed
                        text, signs and the scrollbar can become hidden when
-                       they otherwise wouldn't intersect text. The processing
-                       demands when enabling this option may result in
-                       noticeable lag under certain environments, especially
-                       on older hardware. Defaults to |v:false|.
+                       they don't intersect text. The processing demands when
+                       enabling this option may result in noticeable lag under
+                       certain environments, especially on older hardware.
+                       Defaults to |v:false|.
 
 scrollview_hover                           *scrollview_hover*
                        |Boolean| specifying whether the highlighting of
