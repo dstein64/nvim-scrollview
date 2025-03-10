@@ -62,9 +62,8 @@ function M.init(enable)
           [SPACES] = {},
           [TABS] = {},
         }
-        local changedtick = vim.b[bufnr].changedtick
+        local changedtick = bufvars.changedtick
         local changedtick_cached = bufvars.scrollview_indent_changedtick_cached
-        local bufnr_cached = bufvars.scrollview_indent_bufnr_cached
         local spaces_condition_cached =
           bufvars.scrollview_indent_spaces_condition_cached
         local tabs_condition_cached =
@@ -72,7 +71,6 @@ function M.init(enable)
         local expandtab_cached =
           bufvars.scrollview_indent_expandtab_option_cached
         local cache_hit = changedtick_cached == changedtick
-          and bufnr_cached == bufnr
           and expandtab_cached == expandtab
           and spaces_condition_cached == vim.g.scrollview_indent_spaces_condition
           and tabs_condition_cached == vim.g.scrollview_indent_tabs_condition
@@ -108,8 +106,6 @@ function M.init(enable)
             vim.g.scrollview_indent_tabs_condition
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
           bufvars.scrollview_indent_changedtick_cached = changedtick
-          -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-          bufvars.scrollview_indent_bufnr_cached = bufnr
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
           bufvars.scrollview_indent_spaces_cached = lines[SPACES]
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)

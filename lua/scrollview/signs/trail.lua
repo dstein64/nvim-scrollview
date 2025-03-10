@@ -32,11 +32,9 @@ function M.init(enable)
       if not visited[bufnr] and mode ~= 'i' then
         local bufvars = vim.b[bufnr]
         local lines = {}
-        local changedtick = vim.b[bufnr].changedtick
+        local changedtick = bufvars.changedtick
         local changedtick_cached = bufvars.scrollview_trail_changedtick_cached
-        local bufnr_cached = bufvars.scrollview_trail_bufnr_cached
         local cache_hit = changedtick_cached == changedtick
-          and bufnr_cached == bufnr
         if cache_hit then
           lines = bufvars.scrollview_trail_cached
         else
@@ -49,8 +47,6 @@ function M.init(enable)
           end
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
           bufvars.scrollview_trail_changedtick_cached = changedtick
-          -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
-          bufvars.scrollview_trail_bufnr_cached = bufnr
           -- luacheck: ignore 122 (setting read-only field w.?.? of global vim)
           bufvars.scrollview_trail_cached = lines
         end
