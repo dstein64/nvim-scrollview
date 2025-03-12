@@ -3114,7 +3114,8 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
             if clicked_sign then
               local group = sign_specs[props.sign_spec_id].group
               lhs = menu_name .. '.' .. group
-              rhs = '<nop>'
+              rhs = '<cmd>let g:scrollview_disable_sign_group = "'
+                .. group .. '"<cr>'
               vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
               local variant = sign_specs[props.sign_spec_id].variant
               if variant ~= nil then
@@ -3194,6 +3195,16 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
             })
             api.nvim_set_current_win(popup_win)
             vim.cmd('popup ' .. menu_name)
+            if vim.g.scrollview_disable_sign_group ~= vim.NIL then
+              local group = vim.g.scrollview_disable_sign_group
+              vim.g.scrollview_disable_sign_group = vim.NIL
+              vim.cmd('silent! aunmenu ' .. menu_name)
+              lhs = menu_name .. '.disable'
+              rhs = '<cmd>call timer_start('
+                .. '0, {-> execute("ScrollViewDisable ' .. group .. '")})<cr>'
+              vim.cmd('anoremenu ' .. lhs .. ' ' .. rhs)
+              vim.cmd('popup ' .. menu_name)
+            end
             vim.cmd('silent! aunmenu ' .. menu_name)
             api.nvim_win_close(popup_win, true)
             refresh_bars()
