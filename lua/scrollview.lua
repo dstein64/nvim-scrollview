@@ -3164,7 +3164,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
             -- at the mouse pointer. This way, the popup opens where the click
             -- occurs.
             if popup_bufnr == -1
-              or not to_bool(fn.bufloaded(popup_bufnr)) then
+                or not to_bool(fn.bufloaded(popup_bufnr)) then
               if popup_bufnr == -1 then
                 popup_bufnr = api.nvim_create_buf(false, true)
               end
@@ -3178,7 +3178,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
               -- Don't turn off undo for Neovim 0.9.0 and 0.9.1 since Neovim
               -- could crash, presumably from Neovim #24289. #111, #115
               if not to_bool(fn.has('nvim-0.9'))
-                or to_bool(fn.has('nvim-0.9.2')) then
+                  or to_bool(fn.has('nvim-0.9.2')) then
                 api.nvim_buf_set_option(popup_bufnr, 'undolevels', -1)
               end
             end
