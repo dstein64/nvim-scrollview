@@ -326,6 +326,10 @@ let g:scrollview_echo_string = v:null
 let g:scrollview_init_mouse_primary = g:scrollview_mouse_primary
 let g:scrollview_init_mouse_secondary = g:scrollview_mouse_secondary
 
+" Stores the sign group that should be disabled (from right-clicking a sign,
+" clicking the group name, then selecting 'disable').
+let g:scrollview_disable_sign_group = v:null
+
 " *************************************************
 " * Versioning
 " *************************************************
