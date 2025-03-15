@@ -403,7 +403,7 @@ scrollview_changelist_previous_priority    *scrollview_changelist_previous_prior
 scrollview_changelist_previous_symbol      *scrollview_changelist_previous_symbol*
                        |String| specifying the symbol for the previous item
                        changelist sign. Defaults to an upwards arrow with tip
-                       leftwards.
+                       leftwards. Considered only when the plugin is loaded.
 
 scrollview_changelist_current_priority     *scrollview_changelist_current_priority*
                        |Number| specifying the priority for the current item
@@ -412,7 +412,8 @@ scrollview_changelist_current_priority     *scrollview_changelist_current_priori
 
 scrollview_changelist_current_symbol       *scrollview_changelist_current_symbol*
                        |String| specifying the symbol for the current item
-                       changelist sign. Defaults to `'@'`.
+                       changelist sign. Defaults to `'@'`. Considered only when
+                       the plugin is loaded.
 
 scrollview_changelist_next_priority        *scrollview_changelist_next_priority*
                        |Number| specifying the priority for the next item
@@ -422,7 +423,7 @@ scrollview_changelist_next_priority        *scrollview_changelist_next_priority*
 scrollview_changelist_next_symbol          *scrollview_changelist_next_symbol*
                        |String| specifying the symbol for the next item
                        changelist sign. Defaults to a downwards arrow with tip
-                       rightwards.
+                       rightwards. Considered only when the plugin is loaded.
 
 scrollview_conflicts_bottom_priority       *scrollview_conflicts_bottom_priority*
                        |Number| specifying the priority for conflict bottom
@@ -471,6 +472,7 @@ scrollview_cursor_priority                 *scrollview_cursor_priority*
 scrollview_cursor_symbol                   *scrollview_cursor_symbol*
                        |String| specifying the symbol for cursor signs. Defaults
                        to a small square, resembling a block cursor.
+                       Considered only when the plugin is loaded.
 
 scrollview_diagnostics_error_priority      *scrollview_diagnostics_error_priority*
                        |Number| specifying the priority for diagnostic error
@@ -566,7 +568,8 @@ scrollview_indent_spaces_priority          *scrollview_indent_spaces_priority*
 
 scrollview_indent_spaces_symbol            *scrollview_indent_spaces_symbol*
                        |String| specifying the symbol for indent spaces signs.
-                       Defaults to `'-'`.
+                       Defaults to `'-'`. Considered only when the plugin is
+                       loaded.
 
 scrollview_indent_tabs_condition           *scrollview_indent_tabs_condition*
                        |String| specifying the condition when signs will be
@@ -582,7 +585,8 @@ scrollview_indent_tabs_priority            *scrollview_indent_tabs_priority*
 
 scrollview_indent_tabs_symbol              *scrollview_indent_tabs_symbol*
                        |String| specifying the symbol for indent tabs signs.
-                       Defaults to `'>'`.
+                       Defaults to `'>'`. Considered only when the plugin is
+                       loaded.
 
 scrollview_keywords_built_ins              *scrollview_keywords_built_ins*
                        |List| of |String|s specifying the enabled built-in
@@ -598,7 +602,8 @@ scrollview_keywords_fix_priority           *scrollview_keywords_fix_priority*
 
 scrollview_keywords_fix_symbol             *scrollview_keywords_fix_symbol*
                        |String| specifying the symbol for fix keyword signs.
-                       Defaults to `'F'`.
+                       Defaults to `'F'`. Considered only when the plugin is
+                       loaded.
 
 scrollview_keywords_hack_priority          *scrollview_keywords_hack_priority*
                        |Number| specifying the priority for hack keyword signs.
@@ -607,7 +612,8 @@ scrollview_keywords_hack_priority          *scrollview_keywords_hack_priority*
 
 scrollview_keywords_hack_symbol            *scrollview_keywords_hack_symbol*
                        |String| specifying the symbol for hack keyword signs.
-                       Defaults to `'H'`.
+                       Defaults to `'H'`. Considered only when the plugin is
+                       loaded.
 
 scrollview_keywords_todo_priority          *scrollview_keywords_todo_priority*
                        |Number| specifying the priority for todo keyword signs.
@@ -616,7 +622,8 @@ scrollview_keywords_todo_priority          *scrollview_keywords_todo_priority*
 
 scrollview_keywords_todo_symbol            *scrollview_keywords_todo_symbol*
                        |String| specifying the symbol for todo keyword signs.
-                       Defaults to `'T'`.
+                       Defaults to `'T'`. Considered only when the plugin is
+                       loaded.
 
 scrollview_keywords_warn_priority          *scrollview_keywords_warn_priority*
                        |Number| specifying the priority for warn keyword signs.
@@ -625,7 +632,8 @@ scrollview_keywords_warn_priority          *scrollview_keywords_warn_priority*
 
 scrollview_keywords_warn_symbol            *scrollview_keywords_warn_symbol*
                        |String| specifying the symbol for warn keyword signs.
-                       Defaults to `'W'`.
+                       Defaults to `'W'`. Considered only when the plugin is
+                       loaded.
 
 scrollview_keywords_xxx_priority           *scrollview_keywords_xxx_priority*
                        |Number| specifying the priority for xxx keyword signs.
@@ -634,7 +642,8 @@ scrollview_keywords_xxx_priority           *scrollview_keywords_xxx_priority*
 
 scrollview_keywords_xxx_symbol             *scrollview_keywords_xxx_symbol*
                        |String| specifying the symbol for xxx keyword signs.
-                       Defaults to `'X'`.
+                       Defaults to `'X'`. Considered only when the plugin is
+                       loaded.
 
 scrollview_latestchange_priority           *scrollview_latestchange_priority*
                        |Number| specifying the priority for latestchange signs.
@@ -643,7 +652,8 @@ scrollview_latestchange_priority           *scrollview_latestchange_priority*
 
 scrollview_latestchange_symbol             *scrollview_latestchange_symbol*
                        |String| specifying the symbol for latestchange signs.
-                       Defaults to a Greek uppercase delta.
+                       Defaults to a Greek uppercase delta. Considered only
+                       when the plugin is loaded.
 
 scrollview_loclist_priority                *scrollview_loclist_priority*
                        |Number| specifying the priority for loclist signs.
