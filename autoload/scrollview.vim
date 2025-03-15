@@ -75,7 +75,7 @@ let g:scrollview_zindex = get(g:, 'scrollview_zindex', 40)
 
 " === Signs ===
 
-" Internal list of all builtin sign groups, populated automatically.
+" Internal list of all built-in sign groups, populated automatically.
 let s:available_signs = readdir(expand('<sfile>:p:h') .. '/../lua/scrollview/signs')
 let s:available_signs = filter(s:available_signs, 'v:val =~# "\\.lua$"')
 call map(s:available_signs, {_, val -> fnamemodify(val, ':r')})
@@ -93,8 +93,8 @@ endif
 let g:scrollview_signs_max_per_row =
       \ get(g:, 'scrollview_signs_max_per_row', -1)
 " Sign groups to enable on startup. If 'all' is included, it effectively
-" expands to all builtin plugins. If 'defaults' is included, it effectively
-" expands to builtin plugins that would ordinarily be enabled by default.
+" expands to all built-in plugins. If 'defaults' is included, it effectively
+" expands to built-in plugins that would ordinarily be enabled by default.
 let g:scrollview_signs_on_startup =
       \ get(g:, 'scrollview_signs_on_startup', s:default_signs)
 " Specifies the sign overflow direction ('left' or 'right').
@@ -242,6 +242,52 @@ let g:scrollview_indent_tabs_priority =
       \ get(g:, 'scrollview_indent_tabs_priority', 25)
 let g:scrollview_indent_tabs_symbol =
       \ get(g:, 'scrollview_indent_tabs_symbol', '>')
+
+" *** Keyword signs ***
+let g:scrollview_keywords_fix_priority =
+      \ get(g:, 'scrollview_keywords_fix_priority', 20)
+let g:scrollview_keywords_fix_symbol =
+      \ get(g:, 'scrollview_keywords_fix_symbol', 'F')
+let g:scrollview_keywords_hack_priority =
+      \ get(g:, 'scrollview_keywords_hack_priority', 20)
+let g:scrollview_keywords_hack_symbol =
+      \ get(g:, 'scrollview_keywords_hack_symbol', 'H')
+let g:scrollview_keywords_todo_priority =
+      \ get(g:, 'scrollview_keywords_todo_priority', 20)
+let g:scrollview_keywords_todo_symbol =
+      \ get(g:, 'scrollview_keywords_todo_symbol', 'T')
+let g:scrollview_keywords_warn_priority =
+      \ get(g:, 'scrollview_keywords_warn_priority', 20)
+let g:scrollview_keywords_warn_symbol =
+      \ get(g:, 'scrollview_keywords_warn_symbol', 'W')
+let g:scrollview_keywords_xxx_priority =
+      \ get(g:, 'scrollview_keywords_xxx_priority', 20)
+let g:scrollview_keywords_xxx_symbol =
+      \ get(g:, 'scrollview_keywords_xxx_symbol', 'X')
+
+let s:scrollview_keywords_fix_patterns =
+      \ ['%f[%w_]FIX%f[^%w_]', '%f[%w_]FIXME%f[^%w_]']
+let s:scrollview_keywords_hack_patterns = ['%f[%w_]HACK%f[^%w_]']
+let s:scrollview_keywords_todo_patterns = ['%f[%w_]TODO%f[^%w_]']
+let s:scrollview_keywords_warn_patterns =
+      \ ['%f[%w_]WARN%f[^%w_]', '%f[%w_]WARNING%f[^%w_]']
+let s:scrollview_keywords_xxx_patterns = ['%f[%w_]XXX%f[^%w_]']
+
+let s:default_built_ins = ['fix', 'hack', 'todo', 'warn', 'xxx']
+let g:scrollview_keywords_built_ins =
+      \ get(g:, 'scrollview_keywords_built_ins', s:default_built_ins)
+
+for s:built_in in g:scrollview_keywords_built_ins
+  let s:capitalized= substitute(s:built_in, '\v^.', '\u&', '')
+  let s:spec = {
+        \   'highlight': 'ScrollViewKeywords' .. s:capitalized,
+        \   'patterns': s:['scrollview_keywords_' .. s:built_in .. '_patterns'],
+        \   'priority': g:['scrollview_keywords_' .. s:built_in .. '_priority'],
+        \   'symbol': g:['scrollview_keywords_' .. s:built_in .. '_symbol'],
+        \ }
+  let s:key = 'scrollview_keywords_' .. s:built_in .. '_spec'
+  let g:[s:key] = get(g:, s:key, s:spec)
+endfor
 
 " *** Latest change signs ***
 let g:scrollview_latestchange_priority =

@@ -59,6 +59,11 @@ else
 endif
 highlight default link ScrollViewIndentSpaces LineNr
 highlight default link ScrollViewIndentTabs LineNr
+highlight default link ScrollViewKeywordsFix ColorColumn
+highlight default link ScrollViewKeywordsHack ColorColumn
+highlight default link ScrollViewKeywordsTodo ColorColumn
+highlight default link ScrollViewKeywordsWarn ColorColumn
+highlight default link ScrollViewKeywordsXxx ColorColumn
 highlight default link ScrollViewLatestChange SpecialKey
 highlight default link ScrollViewLocList LineNr
 highlight default link ScrollViewMarks Identifier

@@ -166,8 +166,8 @@ the sign group can be helpful if you are unsure what a sign represents.
 
 Built-in Sign Groups ~
                                            *scrollview-signs-built-in*
-Group        Information
------        -----------
+Group         Information
+-----         -----------
 `changelist`    change list items (previous, current, and next)
 `conflicts`     git merge conflicts
 `cursor`        cursor position
@@ -176,6 +176,8 @@ Group        Information
 `indent`        unexpected indentation characters (e.g., tabs when |expandtab|
               is set)
 `latestchange`  latest change
+`keywords`      FIX, FIXME, HACK, TODO, WARN, WARNING, and XXX (see
+              |scrollview-signs-keywords| for customization info)
 `loclist`       items on the location list
 `marks`
 `quickfix`      items on the quickfix list
@@ -582,6 +584,58 @@ scrollview_indent_tabs_symbol              *scrollview_indent_tabs_symbol*
                        |String| specifying the symbol for indent tabs signs.
                        Defaults to `'>'`.
 
+scrollview_keywords_built_ins              *scrollview_keywords_built_ins*
+                       |List| of |String|s specifying the enabled built-in
+                       keyword groups for the keyword sign group (see
+                       |scrollview-signs-keywords|). Defaults to `['fix', 'hack',`
+                       `'todo', 'warn', 'xxx']`. Considered only when the plugin
+                       is loaded.
+
+scrollview_keywords_fix_priority           *scrollview_keywords_fix_priority*
+                       |Number| specifying the priority for fix keyword signs.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_keywords_fix_symbol             *scrollview_keywords_fix_symbol*
+                       |String| specifying the symbol for fix keyword signs.
+                       Defaults to `'F'`.
+
+scrollview_keywords_hack_priority          *scrollview_keywords_hack_priority*
+                       |Number| specifying the priority for hack keyword signs.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_keywords_hack_symbol            *scrollview_keywords_hack_symbol*
+                       |String| specifying the symbol for hack keyword signs.
+                       Defaults to `'H'`.
+
+scrollview_keywords_todo_priority          *scrollview_keywords_todo_priority*
+                       |Number| specifying the priority for todo keyword signs.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_keywords_todo_symbol            *scrollview_keywords_todo_symbol*
+                       |String| specifying the symbol for todo keyword signs.
+                       Defaults to `'T'`.
+
+scrollview_keywords_warn_priority          *scrollview_keywords_warn_priority*
+                       |Number| specifying the priority for warn keyword signs.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_keywords_warn_symbol            *scrollview_keywords_warn_symbol*
+                       |String| specifying the symbol for warn keyword signs.
+                       Defaults to `'W'`.
+
+scrollview_keywords_xxx_priority           *scrollview_keywords_xxx_priority*
+                       |Number| specifying the priority for xxx keyword signs.
+                       Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_keywords_xxx_symbol             *scrollview_keywords_xxx_symbol*
+                       |String| specifying the symbol for xxx keyword signs.
+                       Defaults to `'X'`.
+
 scrollview_latestchange_priority           *scrollview_latestchange_priority*
                        |Number| specifying the priority for latestchange signs.
                        Defaults to `10`. Considered only when the plugin is
@@ -803,6 +857,16 @@ colors.
   LineNr
 `ScrollViewIndentTabs`          indent spaces tabs
   LineNr
+`ScrollViewKeywordsFix`         fix keyword signs
+  ColorColumn
+`ScrollViewKeywordsHack`        hack keyword signs
+  ColorColumn
+`ScrollViewKeywordsTodo`        todo keyword signs
+  ColorColumn
+`ScrollViewKeywordsWarn`        warn keyword signs
+  ColorColumn
+`ScrollViewKeywordsXxx`         xxx keyword signs
+  ColorColumn
 `ScrollViewLatestChange`        latestchange signs
   SpecialKey
 `ScrollViewLocList`             loclist signs
@@ -974,7 +1038,69 @@ already built in to `nvim-scrollview` (enable with `:ScrollViewEnable cursor`).
     })
 <
 ============================================================================
-6. Issues                                  *scrollview-issues*
+6. Keyword Signs                           *scrollview-signs-keywords*
+
+The keyword sign group has built-in support for a set of keyword groups
+(not to be confused with sign groups).
+
+Group  Keywords
+-----  --------
+`fix`    FIX, FIXME
+`hack`   HACK
+`todo`   TODO
+`warn`   WARN, WARNING
+`xxx`    XXX
+
+The signs for keywords can be customized. The settings described here are
+considered only when the plugin is loaded (e.g., through an |init.vim| or
+|init.lua| configuration file).
+
+The built-in keyword signs can be customized by modifying their configuration
+variables (see those starting with `'scrollview_keywords_'` under
+|scrollview-signs-built-in-config|). For example, the following code changes the
+symbols for the "fix" and "todo" keyword signs.
+
+Vimscript: >
+    let g:scrollview_keywords_fix_symbol = nr2char(0x1F527)
+    let g:scrollview_keywords_todo_symbol = nr2char(0x2705)
+
+Lua: >
+    vim.g.scrollview_keywords_fix_symbol = vim.fn.nr2char(0x1F527)
+    vim.g.scrollview_keywords_todo_symbol = vim.fn.nr2char(0x2705)
+<
+The built-in keyword signs can be disabled by modifying
+|scrollview_keywords_built_ins|. For example, the following code disables some
+keyword signs by enabling only a specfic subset.
+
+Vimscript: >
+    let g:scrollview_keywords_built_ins = ['fix', 'todo']
+
+Lua: >
+    vim.g.scrollview_keywords_built_ins = {'fix', 'todo'}
+<
+Additional groups of keyword signs can be added by creating a dictionary with
+a specific form for its name, `g:scrollview_keywords_GROUP_spec` (with `GROUP`
+replaced accordingly). It is comprised of the following items.
+
+* `patterns`: a list of strings, each containing a Lua pattern that will be
+  searched for
+* `highlight`: an optional highlight group
+* `priority`: an optional number indicating sign priority
+* `symbol`: an optional string to use for the sign symbol
+
+For example, with the following Vimscript code, |nvim-scrollview| will show
+signs for lines that have the text `'NOTE'`.
+>
+    highlight ScrollViewKeywordsNote ctermfg=4 guibg=Blue
+    let g:scrollview_keywords_note_spec = {
+          \   'patterns': ['NOTE'],
+          \   'highlight': 'ScrollViewKeywordsNote',
+          \   'priority': 20,
+          \   'symbol': 'N',
+          \ }
+<
+============================================================================
+7. Issues                                  *scrollview-issues*
 
 Synchronization Issues ~
                                            *scrollview-synchronization-issues*
