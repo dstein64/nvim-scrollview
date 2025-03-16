@@ -88,7 +88,8 @@ with the same positioning logic as the scrollbar.
 * `folds`: closed folds
 * `indent`: unexpected indentation characters (e.g., tabs when `expandtab` is
   set)
-* `keywords`: FIX, FIXME, HACK, TODO, WARN, WARNING, and XXX
+* `keywords`: FIX, FIXME, HACK, TODO, WARN, WARNING, and XXX (see `:help
+  scrollview-signs-keywords` for customization info)
 * `latestchange`: latest change
 * `loclist`: items on the location list
 * `marks`
