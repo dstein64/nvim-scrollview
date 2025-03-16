@@ -1201,10 +1201,6 @@ local should_show = function(winid)
       and is_float then
     return false
   end
-  -- Scrollview doesn't work properly for floating windows with nvim<0.6.
-  if is_float and not to_bool(fn.has('nvim-0.6')) then
-    return false
-  end
   -- Skip if the filetype is on the list of exclusions.
   local excluded_filetypes = vim.g.scrollview_excluded_filetypes
   if vim.tbl_contains(excluded_filetypes, buf_filetype) then
