@@ -453,6 +453,7 @@ local with_win_workspace = function(winid, fun)
         return api.nvim_open_win(bufnr, false, {
           relative = 'editor',
           focusable = false,
+          border = 'none',
           width = math.max(1, api.nvim_win_get_width(winid)),
           -- The floating window doesn't inherit a winbar. Use the
           -- winbar-omitted height where applicable.
@@ -1560,6 +1561,7 @@ local show_scrollbar = function(winid, bar_winid)
     relative = 'win',
     focusable = false,
     style = 'minimal',
+    border = 'none',
     height = height,
     width = bar_width,
     row = bar_position.row - 1,
@@ -1920,6 +1922,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
           relative = 'win',
           focusable = false,
           style = 'minimal',
+          border = 'none',
           height = 1,
           width = sign_width,
           row = row - 1,
@@ -3182,6 +3185,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
             local popup_win = api.nvim_open_win(popup_bufnr, false, {
               relative = 'editor',
               focusable = false,
+              border = 'none',
               width = 1,
               height = 1,
               row = mousepos.screenrow - 1,
