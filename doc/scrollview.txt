@@ -1162,7 +1162,7 @@ Error Message Issues ~
           \ silent! ScrollViewDisable
           \ | bdelete
           \ | silent! ScrollViewEnable
-
+<
 Other Issues ~
                                            *scrollview-other-issues*
 * For `nvim<=0.7.0`, sessions cannot be properly restored by |:mksession| scripts
