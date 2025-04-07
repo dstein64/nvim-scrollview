@@ -69,8 +69,9 @@ A package manager can be used to install `nvim-scrollview`.
   which sign groups are considered.
 * `:ScrollViewLegend` shows a legend for the plugin. This can be helpful if
   you're unsure what a sign represents. With the `!` variant of the command,
-  the legend will include the scrollbar and all registered signs (even those
-  from disabled groups), regardless of their display status.
+  `:ScrollViewLegend!`, the legend will include the scrollbar and all
+  registered signs (even those from disabled groups), regardless of their
+  display status.
 * The scrollbars are draggable with a mouse. Signs can be clicked for
   navigation or right-clicked for information. If `mousemoveevent` is set,
   scrollbars and signs are highlighted when the mouse pointer hovers.
