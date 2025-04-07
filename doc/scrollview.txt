@@ -135,7 +135,7 @@ are being refreshed, and |v:false| otherwise. It can be accessed from Lua
 The plugin executes commands with `:normal!`, which are treated as if they are
 typed. `scrollview_refreshing` may be useful for ignoring the corresponding keys
 when using |vim.on_key()|.
- >
+>
     vim.on_key(function(char)
         if vim.g.scrollview_refreshing then return end
         ...
@@ -750,7 +750,7 @@ Configuration Example ~
                                            *scrollview-configuration-example*
 The variables can be customized in your |init.vim|, as shown in the following
 example.
- >
+>
     let g:scrollview_excluded_filetypes = ['nerdtree']
     let g:scrollview_current_only = v:true
     " Position the scrollbar at the 80th character of the buffer
@@ -763,7 +763,7 @@ Lua Configuration ~
                                            *scrollview.setup()*
 A Lua `setup()` function is provided for convenience, to set globally scoped
 options (the 'scrollview_' prefix is omitted). For example:
- >
+>
     require('scrollview').setup({
       excluded_filetypes = {'nerdtree'},
       current_only = true,
@@ -774,7 +774,7 @@ options (the 'scrollview_' prefix is omitted). For example:
     })
 
 Alternatively, configuration variables can be set without calling `setup()`.
- >
+>
     vim.g.scrollview_excluded_filetypes = {'nerdtree'},
     vim.g.scrollview_current_only = true,
     -- Position the scrollbar at the 80th character of the buffer
@@ -897,7 +897,7 @@ colors.
 
 The highlight groups can be customized in your |init.vim|, as shown in the
 following example.
- >
+>
     " Link ScrollView highlight to Pmenu highlight
     highlight link ScrollView Pmenu
 
@@ -937,7 +937,7 @@ deregister_sign_spec({spec_id}, {refresh})
 
                                            *scrollview-signs-functions*
 Lua code is necessary for adding new sign functionality to `nvim-scrollview`.
- >
+>
   local scrollview = require('scrollview')
 
 get_sign_eligible_windows()                *scrollview.get_sign_eligible_windows()*
@@ -1016,7 +1016,7 @@ Example ~
 The following example shows how to implement sign functionality for showing
 the cursor position. This is for the purpose of illustration; cursor signs are
 already built in to `nvim-scrollview` (enable with `:ScrollViewEnable cursor`).
- >
+>
     local scrollview = require('scrollview')
 
     local group = 'cursor'
