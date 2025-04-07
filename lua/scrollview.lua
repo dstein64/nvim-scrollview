@@ -1608,7 +1608,7 @@ local show_scrollbar = function(winid, bar_winid)
     -- Add a workaround for Neovim #14624.
     if is_float then
       -- Disable winblend for base windows that are floating. The scrollbar would
-      -- blend with an orinary window, not the base floating window.
+      -- blend with an ordinary window, not the base floating window.
       winblend = 0
     end
     -- Add a workaround for Neovim #24159.
@@ -1965,7 +1965,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
             -- Add a workaround for Neovim #14624.
             if is_float then
               -- Disable winblend for base windows that are floating. The sign
-              -- would blend with an orinary window, not the base floating
+              -- would blend with an ordinary window, not the base floating
               -- window.
               winblend = 0
             end
