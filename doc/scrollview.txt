@@ -967,29 +967,29 @@ register_sign_spec({spec})                 *scrollview.register_sign_spec()*
 
     Parameters: ~
       * {spec}  (table) Keyword arguments |kwargs|:
-                - current_only (boolean): Show only in an current window (the
+                + current_only (boolean): Show only in an current window (the
                   window with the cursor at the time of display). Defaults to
                   `false`.
-                - extend (boolean): Show each sign on all corresponding rows
+                + extend (boolean): Show each sign on all corresponding rows
                   of the scrollview column, instead of just a single row. This
                   is relevant when |scrollview_always_show| is on and all lines
                   and at least one filler line are visible.
-                - group (string): Defaults to `'other'`.
-                - highlight (string): Defaults to `'Pmenu'`.
-                - priority (integer): Defaults to `50`.
-                - show_in_folds (boolean|nil): Include signs for lines in
+                + group (string): Defaults to `'other'`.
+                + highlight (string): Defaults to `'Pmenu'`.
+                + priority (integer): Defaults to `50`.
+                + show_in_folds (boolean|nil): Include signs for lines in
                   closed folds. When non-`nil`, overrides the value of
                   |scrollview_signs_show_in_folds|. Defaults to `nil`.
-                - symbol (string): Defaults to `''`.
-                - type (string): `'b'` for buffer-local signs, `'w'` for
+                + symbol (string): Defaults to `''`.
+                + type (string): `'b'` for buffer-local signs, `'w'` for
                   window-local signs. Defaults to `'b'`.
-                - variant (string|nil): Used for groups that include multiple
+                + variant (string|nil): Used for groups that include multiple
                   variants. Defaults to `nil`.
 
     Return: ~
         (table) a table with the following key-value pairs.
-                - id (integer): A unique identifier.
-                - name (string): Variable name that should be used for saving
+                + id (integer): A unique identifier.
+                + name (string): Variable name that should be used for saving
                   a list-like table with line numbers corresponding to signs.
                   The variable should be saved to the buffer if the
                   registration specified type `'b'`, or to the window if the
@@ -1131,13 +1131,13 @@ Error Message Issues ~
     E5601: Cannot close window, only floating window would remain
 <  Neovim Issue #11440 is the corresponding issue, opened November 23, 2019
   and closed February 11, 2022.
-  - Workaround 1: Use |:quit|, |ZZ|, |ZQ|, or another command that quits the
+  + Workaround 1: Use |:quit|, |ZZ|, |ZQ|, or another command that quits the
     current window (as opposed to a window-closing command).
-  - Workaround 2: Use |:only| or `<ctrl-w>o` on the last window of the tab,
+  + Workaround 2: Use |:only| or `<ctrl-w>o` on the last window of the tab,
     which has the side-effect of closing all floating windows (including
     scrollbars). A subsequent window-closing command works without error.
-  - Workaround 3: Use |:tabclose|.
-  - Workaround 4: Remap the problematic key sequence accordingly. >
+  + Workaround 3: Use |:tabclose|.
+  + Workaround 4: Remap the problematic key sequence accordingly. >
     nnoremap <silent> <c-w>c
           \ <cmd>silent! ScrollViewDisable<cr>
           \<cmd>execute "normal! \<c-w>c"<cr>
@@ -1154,10 +1154,10 @@ Error Message Issues ~
     E444: Cannot close last window
 <  The buffer may not be deleted from the buffer list. Neovim Issue #13628 is
   the corresponding issue, opened December 28, 2020 and closed March 23, 2022.
-  - Workaround 1: Use |:only| or `<ctrl-w>o`, which has the side-effect of closing
+  + Workaround 1: Use |:only| or `<ctrl-w>o`, which has the side-effect of closing
     all floating windows (including scrollbars). A subsequent |:bdelete| command
     works without error.
-  - Workaround 2: Create a `Bdelete` command that avoids the issue. >
+  + Workaround 2: Create a `Bdelete` command that avoids the issue. >
     command Bdelete
           \ silent! ScrollViewDisable
           \ | bdelete
@@ -1168,7 +1168,7 @@ Other Issues ~
 * For `nvim<=0.7.0`, sessions cannot be properly restored by |:mksession| scripts
   created when the plugin is active (Issue #71). Neovim Issue #18432 is the
   corresponding issue, opened May 5, 2022.
-  - Workaround: Create a `MkSession` command that avoids the problem. >
+  + Workaround: Create a `MkSession` command that avoids the problem. >
     command -bang -nargs=? MkSession
           \ silent! ScrollViewDisable
           \ | mksession<bang> <args>
@@ -1176,7 +1176,7 @@ Other Issues ~
 
 * Because scrollbars are floating windows, they are included in the window
   count returned by `winnr('$')`.
-  - Workaround 1: Use a Vimscript function that omits external and floating
+  + Workaround 1: Use a Vimscript function that omits external and floating
     windows in the count. >
     function! WindowCount()
       let l:result = 0
@@ -1189,7 +1189,7 @@ Other Issues ~
       endfor
       return l:result
     endfunction
-<  - Workaround 2: Use a Lua function that omits external and floating windows
+<  + Workaround 2: Use a Lua function that omits external and floating windows
     in the count. >
     local window_count = function()
       local result = 0
