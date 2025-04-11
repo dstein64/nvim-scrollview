@@ -40,6 +40,7 @@ let g:scrollview_hide_on_cursor_intersect =
       \ get(g:, 'scrollview_hide_on_cursor_intersect', v:false)
 " Use the old option, scrollview_hide_on_intersect, if it's set.
 if has_key(g:, 'scrollview_hide_on_intersect')
+      \ && !has_key(g:, 'scrollview_hide_on_float_intersect')
   let g:scrollview_hide_on_float_intersect = g:scrollview_hide_on_intersect
 endif
 let g:scrollview_hide_on_float_intersect =
