@@ -56,6 +56,27 @@ function M.echo(echo_list)
   vim.cmd('echohl None')
 end
 
+-- Given array-like tables a and b, add all elements from b to a.
+function M.extend(a, b)
+  for _, item in ipairs(b) do
+    table.insert(a, item)
+  end
+end
+
+-- Convert a list-like table to a map-like table. The output's keys are the
+-- elements of the input, and the corresponding values are the indices where
+-- the element is in the list.
+function M.mapify(l)
+  local result = {}
+  for idx, item in ipairs(l) do
+    if result[item] == nil then
+      result[item] = {}
+    end
+    table.insert(result[item], idx)
+  end
+  return result
+end
+
 -- For sorted list l with no duplicates, return the previous item before the
 -- specified item (wraps around).
 function M.preceding(l, item, count, wrapscan)

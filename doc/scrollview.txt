@@ -197,10 +197,6 @@ can be set to control when restricted mode is entered.
 4. Configuration                           *scrollview-configuration*
 
 Configuration Variables ~
-                                           *scrollview_always_show*
-scrollview_always_show |Boolean| specifying whether scrollbars and signs are
-                       shown when all lines are visible. Defaults to |v:false|.
-
                                            *scrollview_base*
 scrollview_base        |String| specifying where the scrollbar is anchored.
                        Possible values are `'left'` or `'right'` for corresponding
@@ -243,6 +239,12 @@ scrollview_excluded_filetypes              *scrollview_excluded_filetypes*
                        |List| of |String|s specifying optional file types for
                        which scrollbars should not be displayed. Defaults to
                        `[]`.
+
+scrollview_excluded_info_signs             *scrollview_excluded_info_signs*
+                       |List| of |String|s specifying sign groups to exclude from
+                       visibility consideration when |scrollview_visibility| is
+                       set to `'info'` and there is no overflow. Defaults to
+                       `['changelist', 'cursor', 'latestchange']`.
 
 scrollview_floating_windows                *scrollview_floating_windows*
 (experimental)         |Boolean| specifying whether scrollbars and signs are
@@ -323,6 +325,19 @@ scrollview_mouse_secondary                 *scrollview_mouse_secondary*
 scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
                        startup. Defaults to |v:true|. Considered only when the
                        plugin is loaded.
+
+                                           *scrollview_visibility*
+scrollview_visibility  |String| specifying the visibility level of scrollbars
+                       and signs. Possible values are `'always'`, `'overflow'`,
+                       and `'info'`. Defaults to `'overflow'`.
+                       * `always` Always show scrollbars and signs.
+                       * `overflow` Show scrollbars and signs only when content
+                         overflows the window (when there are lines that are
+                         not visible).
+                       * `info` Show scrollbars and signs when content overflows
+                         the window. Otherwise, show when there are signs to
+                         display (excluding those from sign groups included in
+                         |scrollview_excluded_info_signs|).
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
@@ -972,8 +987,8 @@ register_sign_spec({spec})                 *scrollview.register_sign_spec()*
                   `false`.
                 + extend (boolean): Show each sign on all corresponding rows
                   of the scrollview column, instead of just a single row. This
-                  is relevant when |scrollview_always_show| is on and all lines
-                  and at least one filler line are visible.
+                  is relevant when the window is not scrollable (see
+                  |scrollview_visibility|).
                 + group (string): Defaults to `'other'`.
                 + highlight (string): Defaults to `'Pmenu'`.
                 + priority (integer): Defaults to `50`.

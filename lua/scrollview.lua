@@ -8,6 +8,8 @@ local binary_search = utils.binary_search
 local concat = utils.concat
 local copy = utils.copy
 local echo = utils.echo
+local extend = utils.extend
+local mapify = utils.mapify
 local preceding = utils.preceding
 local remove_duplicates = utils.remove_duplicates
 local round = utils.round
@@ -1172,6 +1174,14 @@ local is_scrollview_window = function(winid)
   return bufnr == bar_bufnr or bufnr == sign_bufnr
 end
 
+-- Indicates whether content overflows the window.
+local has_overflow = function(winid)
+  local bufnr = api.nvim_win_get_buf(winid)
+  local topline, botline = line_range(winid)
+  local line_count = api.nvim_buf_line_count(bufnr)
+  return botline - topline + 1 ~= line_count
+end
+
 -- Whether scrollbar and signs should be shown. This is the first check; it
 -- only checks for conditions that apply to both the position bar and signs.
 local should_show = function(winid)
@@ -1215,14 +1225,8 @@ local should_show = function(winid)
   if winheight == 0 or winwidth == 0 then
     return false
   end
-  local always_show = to_bool(vim.g.scrollview_always_show)
-  if not always_show then
-    -- Don't show when all lines are on screen.
-    local topline, botline = line_range(winid)
-    local line_count = api.nvim_buf_line_count(bufnr)
-    if botline - topline + 1 == line_count then
-      return false
-    end
+  if vim.g.scrollview_visibility == 'overflow' and not has_overflow(winid) then
+    return false
   end
   return true
 end
@@ -1679,9 +1683,10 @@ end
 -- removed from the list. The bar_winid is necessary so that signs can be
 -- properly highlighted when intersecting a scrollbar.
 local show_signs = function(winid, sign_winids, bar_winid)
+  local shown = {}  -- a list winids for the signs created
   -- Neovim 0.8 has an issue with matchaddpos highlighting (similar type of
   -- issue reported in Neovim #22906).
-  if not to_bool(fn.has('nvim-0.9')) then return end
+  if not to_bool(fn.has('nvim-0.9')) then return shown end
   local bar_props
   if bar_winid ~= -1 then
     bar_props = api.nvim_win_get_var(bar_winid, PROPS_VAR)
@@ -1690,7 +1695,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
   local wininfo = fn.getwininfo(winid)[1]
   local config = api.nvim_win_get_config(winid)
   local is_float = tbl_get(config, 'relative', '') ~= ''
-  if is_restricted(winid) then return end
+  if is_restricted(winid) then return shown end
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local topline_lookup = nil  -- only set when needed
@@ -1939,6 +1944,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
           sign_winid = table.remove(sign_winids)
           api.nvim_win_set_config(sign_winid, sign_config)
         end
+        table.insert(shown, sign_winid)
         local over_scrollbar = bar_props ~= nil
           and bar_props.col >= col
           and bar_props.col <= col + sign_width - 1
@@ -2046,6 +2052,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
       end
     end
   end
+  return shown
 end
 
 -- Given a scrollbar properties dictionary and a target window row, the
@@ -2464,6 +2471,7 @@ local refresh_bars = function()
         sign_bufnr, 0, api.nvim_buf_line_count(sign_bufnr), true, {})
       api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
     end
+    local excluded_info_signs = mapify(vim.g.scrollview_excluded_info_signs)
     for _, winid in ipairs(target_wins) do
       if should_show(winid) then
         local existing_winid = -1
@@ -2484,7 +2492,25 @@ local refresh_bars = function()
           table.remove(existing_barids)
         end
         -- Repeat a similar process for signs.
-        show_signs(winid, existing_signids, bar_winid)
+        local sign_winids = show_signs(winid, existing_signids, bar_winid)
+        -- If scrollview_visibility is info, there's no overflow, and there are
+        -- no info signs, make the bar_winid and the sign_winids available for
+        -- potential re-use.
+        if vim.g.scrollview_visibility == 'info' and not has_overflow(winid) then
+          local has_info_signs = false
+          for _, sign_winid in ipairs(sign_winids) do
+            local sign_props = api.nvim_win_get_var(sign_winid, PROPS_VAR)
+            local group = sign_specs[sign_props.sign_spec_id].group
+            if excluded_info_signs[group] == nil then
+              has_info_signs = true
+              break
+            end
+          end
+          if not has_info_signs then
+            table.insert(existing_barids, bar_winid)
+            extend(existing_signids, sign_winids)
+          end
+        end
       end
     end
     local existing_wins = concat(existing_barids, existing_signids)
