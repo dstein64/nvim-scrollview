@@ -360,17 +360,6 @@ local is_mouse_over_scrollview_win = function(winid)
   -- created and not yet in the necessary state. #100
   local config = api.nvim_win_get_config(winid)
   local mousepos = fn.getmousepos()
-  -- Return false if there are any floating windows with higher zindex.
-  local float_overlaps = get_float_overlaps(
-    mousepos.screenrow, mousepos.screenrow,
-    mousepos.screencol, mousepos.screencol
-  )
-  for _, overlap_winid in ipairs(float_overlaps) do
-    local overlap_config = api.nvim_win_get_config(overlap_winid)
-    if overlap_winid ~= winid and overlap_config.zindex > config.zindex then
-      return false
-    end
-  end
   local props = api.nvim_win_get_var(winid, PROPS_VAR)
   local parent_pos = fn.win_screenpos(props.parent_winid)
   local row = props.row + parent_pos[1] - 1
@@ -393,10 +382,25 @@ local is_mouse_over_scrollview_win = function(winid)
   if to_bool(tbl_get(fn.getwininfo(props.parent_winid)[1], 'winbar', 0)) then
     row = row + 1
   end
-  return mousepos.screenrow >= row
+  local result = mousepos.screenrow >= row
     and mousepos.screenrow < row + props.height
     and mousepos.screencol >= col
     and mousepos.screencol < col + props.width
+  if result then
+    -- Return false if there are any floating windows with higher zindex.
+    local float_overlaps = get_float_overlaps(
+      mousepos.screenrow, mousepos.screenrow,
+      mousepos.screencol, mousepos.screencol
+    )
+    for _, overlap_winid in ipairs(float_overlaps) do
+      local overlap_config = api.nvim_win_get_config(overlap_winid)
+      if overlap_winid ~= winid and overlap_config.zindex > config.zindex then
+        result = false
+        break
+      end
+    end
+  end
+  return result
 end
 
 -- Set window option.
