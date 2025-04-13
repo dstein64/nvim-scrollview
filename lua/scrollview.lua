@@ -2566,7 +2566,7 @@ if to_bool(fn.exists('&mousemoveevent')) then
         start_memoize()
         pcall(function()
           pending_mousemove_callback_count =
-          math.max(0, pending_mousemove_callback_count - 1)
+            math.max(0, pending_mousemove_callback_count - 1)
           if pending_mousemove_callback_count > 0 then
             -- If there are mousemove callbacks that will occur subsequently,
             -- don't execute this one.
