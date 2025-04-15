@@ -327,10 +327,36 @@ local get_window_edges = function(winid)
   return result
 end
 
--- Return the floating windows that overlap the region corresponding to the
--- specified edges. Scrollview windows are included, but workspace windows are
--- not.
-local get_float_overlaps = function(top, bottom, left, right)
+-- Returns true for ordinary windows (not floating and not external), and false
+-- otherwise.
+local is_ordinary_window = function(winid)
+  local config = api.nvim_win_get_config(winid)
+  local not_external = not tbl_get(config, 'external', false)
+  local not_floating = tbl_get(config, 'relative', '') == ''
+  return not_external and not_floating
+end
+
+local is_scrollview_window = function(winid)
+  if is_ordinary_window(winid) then return false end
+  local has_attr = fn.getwinvar(winid, WIN_VAR, '') == WIN_VAL
+  if not has_attr then return false end
+  local bufnr = api.nvim_win_get_buf(winid)
+  return bufnr == bar_bufnr or bufnr == sign_bufnr
+end
+
+local get_scrollview_windows = function()
+  local result = {}
+  for winnr = 1, fn.winnr('$') do
+    local winid = fn.win_getid(winnr)
+    if is_scrollview_window(winid) then
+      table.insert(result, winid)
+    end
+  end
+  return result
+end
+
+-- Returns the non-workspace floating windows (including scrollview windows).
+local get_floating_windows = function()
   local result = {}
   for winnr = 1, fn.winnr('$') do
     local winid = fn.win_getid(winnr)
@@ -339,13 +365,33 @@ local get_float_overlaps = function(top, bottom, left, right)
     local workspace_win =
       fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1
     if not workspace_win and floating then
-      local top2, bottom2, left2, right2 = unpack(get_window_edges(winid))
-      if top <= bottom2
-          and bottom >= top2
-          and left <= right2
-          and right >= left2 then
-        table.insert(result, winid)
-      end
+      table.insert(result, winid)
+    end
+  end
+  return result
+end
+
+local get_non_scrollview_floats = function()
+  local result = {}
+  for _, winid in ipairs(get_floating_windows()) do
+    if not is_scrollview_window(winid) then
+      table.insert(result, winid)
+    end
+  end
+  return result
+end
+
+-- Return the candidate windows that overlap the region corresponding to the
+-- specified edges.
+local get_win_overlaps = function(top, bottom, left, right, candidates)
+  local result = {}
+  for _, winid in ipairs(candidates) do
+    local top2, bottom2, left2, right2 = unpack(get_window_edges(winid))
+    if top <= bottom2
+        and bottom >= top2
+        and left <= right2
+        and right >= left2 then
+      table.insert(result, winid)
     end
   end
   return result
@@ -388,9 +434,10 @@ local is_mouse_over_scrollview_win = function(winid)
     and mousepos.screencol < col + props.width
   if result then
     -- Return false if there are any floating windows with higher zindex.
-    local float_overlaps = get_float_overlaps(
+    local float_overlaps = get_win_overlaps(
       mousepos.screenrow, mousepos.screenrow,
-      mousepos.screencol, mousepos.screencol
+      mousepos.screencol, mousepos.screencol,
+      get_floating_windows()
     )
     for _, overlap_winid in ipairs(float_overlaps) do
       local overlap_config = api.nvim_win_get_config(overlap_winid)
@@ -508,15 +555,6 @@ end
 
 local is_select_mode = function(mode)
   return vim.tbl_contains({'s', 'S', t'<c-s>'}, mode)
-end
-
--- Returns true for ordinary windows (not floating and not external), and false
--- otherwise.
-local is_ordinary_window = function(winid)
-  local config = api.nvim_win_get_config(winid)
-  local not_external = not tbl_get(config, 'external', false)
-  local not_floating = tbl_get(config, 'relative', '') == ''
-  return not_external and not_floating
 end
 
 local in_command_line_window = function()
@@ -1170,14 +1208,6 @@ local calculate_position = function(winid)
   return result
 end
 
-local is_scrollview_window = function(winid)
-  if is_ordinary_window(winid) then return false end
-  local has_attr = fn.getwinvar(winid, WIN_VAR, '') == WIN_VAL
-  if not has_attr then return false end
-  local bufnr = api.nvim_win_get_buf(winid)
-  return bufnr == bar_bufnr or bufnr == sign_bufnr
-end
-
 -- Indicates whether content overflows the window.
 local has_overflow = function(winid)
   local bufnr = api.nvim_win_get_buf(winid)
@@ -1252,13 +1282,11 @@ end
 
 local cursor_intersects_scrollview = function()
   local cursor_screen_pos = get_cursor_screen_pos()
-  local float_overlaps = get_float_overlaps(
+  local float_overlaps = get_win_overlaps(
     cursor_screen_pos.row, cursor_screen_pos.row,
-    cursor_screen_pos.col, cursor_screen_pos.col
+    cursor_screen_pos.col, cursor_screen_pos.col,
+    get_scrollview_windows()
   )
-  float_overlaps = vim.tbl_filter(function(x)
-    return is_scrollview_window(x)
-  end, float_overlaps)
   return not vim.tbl_isempty(float_overlaps)
 end
 
@@ -1484,10 +1512,8 @@ local show_scrollbar = function(winid, bar_winid)
   local left = wincol0 + bar_position.col
   local right = wincol0 + bar_position.col
   if to_bool(vim.g.scrollview_hide_on_float_intersect) then
-    local float_overlaps = get_float_overlaps(top, bottom, left, right)
-    float_overlaps = vim.tbl_filter(function(x)
-      return not is_scrollview_window(x)
-    end, float_overlaps)
+    local float_overlaps = get_win_overlaps(
+      top, bottom, left, right, get_non_scrollview_floats())
     if not vim.tbl_isempty(float_overlaps) then
       if #float_overlaps > 1 or float_overlaps[1] ~= winid then
         return -1
@@ -1706,6 +1732,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
   local base_col = calculate_scrollbar_column(winid)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
+  local non_scrollview_floats  -- gets set when needed
   for _, sign_spec in pairs(sign_specs) do
     local name = sign_spec.name
     local lines = {}
@@ -1850,10 +1877,11 @@ local show_signs = function(winid, sign_winids, bar_winid)
       local right = wincol0 + col + sign_width - 1
       if to_bool(vim.g.scrollview_hide_on_float_intersect)
           and show then
-        local float_overlaps = get_float_overlaps(top, bottom, left, right)
-        float_overlaps = vim.tbl_filter(function(x)
-          return not is_scrollview_window(x)
-        end, float_overlaps)
+        if non_scrollview_floats == nil then
+          non_scrollview_floats = get_non_scrollview_floats()
+        end
+        local float_overlaps =
+          get_win_overlaps(top, bottom, left, right, non_scrollview_floats)
         if not vim.tbl_isempty(float_overlaps) then
           if #float_overlaps > 1 or float_overlaps[1] ~= winid then
             show = false
@@ -2081,17 +2109,6 @@ local move_scrollbar = function(props, row)
   props.height = height
   api.nvim_win_set_var(props.scrollview_winid, PROPS_VAR, props)
   return props
-end
-
-local get_scrollview_windows = function()
-  local result = {}
-  for winnr = 1, fn.winnr('$') do
-    local winid = fn.win_getid(winnr)
-    if is_scrollview_window(winid) then
-      table.insert(result, winid)
-    end
-  end
-  return result
 end
 
 local close_scrollview_window = function(winid)
