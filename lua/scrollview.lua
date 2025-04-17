@@ -1738,7 +1738,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
   local base_col = calculate_scrollbar_column(winid)
   -- lookup maps rows to a mapping of names to sign specifications (with lines).
   local lookup = {}
-  local non_scrollview_floats  -- gets set when needed
   for _, sign_spec in pairs(sign_specs) do
     local name = sign_spec.name
     local lines = {}
@@ -1883,11 +1882,8 @@ local show_signs = function(winid, sign_winids, bar_winid)
       local right = wincol0 + col + sign_width - 1
       if to_bool(vim.g.scrollview_hide_on_float_intersect)
           and show then
-        if non_scrollview_floats == nil then
-          non_scrollview_floats = get_non_scrollview_floats()
-        end
         local float_overlaps =
-          get_win_overlaps(top, bottom, left, right, non_scrollview_floats)
+          get_win_overlaps(top, bottom, left, right, get_non_scrollview_floats())
         if not vim.tbl_isempty(float_overlaps) then
           if #float_overlaps > 1 or float_overlaps[1] ~= winid then
             show = false
