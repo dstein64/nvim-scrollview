@@ -1716,14 +1716,16 @@ end
 
 -- Show signs for the specified 'winid' window ID. A list of existing sign
 -- winids, 'sign_winids', is specified for possible reuse. Reused windows are
--- removed from the list. The bar_winid is necessary so that signs can be
--- properly highlighted when intersecting a scrollbar.
+-- removed from the list. The bar_winid is necessary to correctly position
+-- signs to not intersect the scrollbar.
 local show_signs = function(winid, sign_winids, bar_winid)
   local shown = {}  -- a list winids for the signs created
   -- Neovim 0.8 has an issue with matchaddpos highlighting (similar type of
   -- issue reported in Neovim #22906).
   if not to_bool(fn.has('nvim-0.9')) then return shown end
   local bar_props
+  -- The scrollbar may not be displayed (e.g., if
+  -- scrollview_hide_on_float_intersect is set).
   if bar_winid ~= -1 then
     bar_props = api.nvim_win_get_var(bar_winid, PROPS_VAR)
   end
@@ -1979,12 +1981,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
           api.nvim_win_set_config(sign_winid, sign_config)
         end
         table.insert(shown, sign_winid)
-        local over_scrollbar = bar_props ~= nil
-          and bar_props.col >= col
-          and bar_props.col <= col + sign_width - 1
-          and row >= bar_props.row
-          and row <= bar_props.row + bar_props.height - 1
-          and zindex > bar_props.zindex
         local highlight_fn = function(hover)
           hover = hover and vim.g.scrollview_hover
           local highlight
@@ -2014,31 +2010,24 @@ local show_signs = function(winid, sign_winids, bar_winid)
               winblend = 0
             end
             -- Add a workaround for Neovim #24584 (nvim-scrollview #112).
-            if not over_scrollbar then
-              local bufline = fn.getbufline(sign_bufnr, sign_line_count)[1]
-              if string.gsub(bufline, '%s', '') ~= '' then
-                winblend = 0
-              end
+            local bufline = fn.getbufline(sign_bufnr, sign_line_count)[1]
+            if string.gsub(bufline, '%s', '') ~= '' then
+              winblend = 0
             end
             set_window_option(sign_winid, 'winblend', winblend)
-            local target
-            if over_scrollbar then
-              target = 'ScrollView'
-            else
-              target = is_float and 'NormalFloat' or 'Normal'
-              if consider_border(winid) then
-                local border = api.nvim_win_get_config(winid).border
-                local winwidth = fn.winwidth(winid)
-                if border[BORDER_RIGHT] ~= ''
-                    and winwidth + 1 >= col
-                    and winwidth + 1 <= col + sign_width - 1 then
-                  target = 'FloatBorder'
-                end
-                if border[BORDER_LEFT] ~= ''
-                    and 0 >= col
-                    and 0 <= col + sign_width - 1 then
-                  target = 'FloatBorder'
-                end
+            local target = is_float and 'NormalFloat' or 'Normal'
+            if consider_border(winid) then
+              local border = api.nvim_win_get_config(winid).border
+              local winwidth = fn.winwidth(winid)
+              if border[BORDER_RIGHT] ~= ''
+                  and winwidth + 1 >= col
+                  and winwidth + 1 <= col + sign_width - 1 then
+                target = 'FloatBorder'
+              end
+              if border[BORDER_LEFT] ~= ''
+                  and 0 >= col
+                  and 0 <= col + sign_width - 1 then
+                target = 'FloatBorder'
               end
             end
             target = get_mapped_highlight(winid, target)
