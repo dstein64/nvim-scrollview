@@ -30,6 +30,7 @@ scrollview-signs-configuration	scrollview.txt	/*scrollview-signs-configuration*
 scrollview-signs-example	scrollview.txt	/*scrollview-signs-example*
 scrollview-signs-extensibility	scrollview.txt	/*scrollview-signs-extensibility*
 scrollview-signs-functions	scrollview.txt	/*scrollview-signs-functions*
+scrollview-signs-keyword-scopes	scrollview.txt	/*scrollview-signs-keyword-scopes*
 scrollview-signs-keywords	scrollview.txt	/*scrollview-signs-keywords*
 scrollview-signs-version-global	scrollview.txt	/*scrollview-signs-version-global*
 scrollview-synchronization-issues	scrollview.txt	/*scrollview-synchronization-issues*
@@ -93,14 +94,19 @@ scrollview_indent_tabs_priority	scrollview.txt	/*scrollview_indent_tabs_priority
 scrollview_indent_tabs_symbol	scrollview.txt	/*scrollview_indent_tabs_symbol*
 scrollview_keywords_built_ins	scrollview.txt	/*scrollview_keywords_built_ins*
 scrollview_keywords_fix_priority	scrollview.txt	/*scrollview_keywords_fix_priority*
+scrollview_keywords_fix_scope	scrollview.txt	/*scrollview_keywords_fix_scope*
 scrollview_keywords_fix_symbol	scrollview.txt	/*scrollview_keywords_fix_symbol*
 scrollview_keywords_hack_priority	scrollview.txt	/*scrollview_keywords_hack_priority*
+scrollview_keywords_hack_scope	scrollview.txt	/*scrollview_keywords_hack_scope*
 scrollview_keywords_hack_symbol	scrollview.txt	/*scrollview_keywords_hack_symbol*
 scrollview_keywords_todo_priority	scrollview.txt	/*scrollview_keywords_todo_priority*
+scrollview_keywords_todo_scope	scrollview.txt	/*scrollview_keywords_todo_scope*
 scrollview_keywords_todo_symbol	scrollview.txt	/*scrollview_keywords_todo_symbol*
 scrollview_keywords_warn_priority	scrollview.txt	/*scrollview_keywords_warn_priority*
+scrollview_keywords_warn_scope	scrollview.txt	/*scrollview_keywords_warn_scope*
 scrollview_keywords_warn_symbol	scrollview.txt	/*scrollview_keywords_warn_symbol*
 scrollview_keywords_xxx_priority	scrollview.txt	/*scrollview_keywords_xxx_priority*
+scrollview_keywords_xxx_scope	scrollview.txt	/*scrollview_keywords_xxx_scope*
 scrollview_keywords_xxx_symbol	scrollview.txt	/*scrollview_keywords_xxx_symbol*
 scrollview_latestchange_priority	scrollview.txt	/*scrollview_latestchange_priority*
 scrollview_latestchange_symbol	scrollview.txt	/*scrollview_latestchange_symbol*

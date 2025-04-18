@@ -255,22 +255,32 @@ let g:scrollview_indent_tabs_symbol =
 " *** Keyword signs ***
 let g:scrollview_keywords_fix_priority =
       \ get(g:, 'scrollview_keywords_fix_priority', 20)
+let g:scrollview_keywords_fix_scope =
+      \ get(g:, 'scrollview_keywords_fix_scope', 'auto')
 let g:scrollview_keywords_fix_symbol =
       \ get(g:, 'scrollview_keywords_fix_symbol', 'F')
 let g:scrollview_keywords_hack_priority =
       \ get(g:, 'scrollview_keywords_hack_priority', 20)
+let g:scrollview_keywords_hack_scope =
+      \ get(g:, 'scrollview_keywords_hack_scope', 'auto')
 let g:scrollview_keywords_hack_symbol =
       \ get(g:, 'scrollview_keywords_hack_symbol', 'H')
 let g:scrollview_keywords_todo_priority =
       \ get(g:, 'scrollview_keywords_todo_priority', 20)
+let g:scrollview_keywords_todo_scope =
+      \ get(g:, 'scrollview_keywords_todo_scope', 'auto')
 let g:scrollview_keywords_todo_symbol =
       \ get(g:, 'scrollview_keywords_todo_symbol', 'T')
 let g:scrollview_keywords_warn_priority =
       \ get(g:, 'scrollview_keywords_warn_priority', 20)
+let g:scrollview_keywords_warn_scope =
+      \ get(g:, 'scrollview_keywords_warn_scope', 'auto')
 let g:scrollview_keywords_warn_symbol =
       \ get(g:, 'scrollview_keywords_warn_symbol', 'W')
 let g:scrollview_keywords_xxx_priority =
       \ get(g:, 'scrollview_keywords_xxx_priority', 20)
+let g:scrollview_keywords_xxx_scope =
+      \ get(g:, 'scrollview_keywords_xxx_scope', 'auto')
 let g:scrollview_keywords_xxx_symbol =
       \ get(g:, 'scrollview_keywords_xxx_symbol', 'X')
 
@@ -293,6 +303,7 @@ for s:built_in in g:scrollview_keywords_built_ins
         \   'patterns': s:['scrollview_keywords_' .. s:built_in .. '_patterns'],
         \   'priority': g:['scrollview_keywords_' .. s:built_in .. '_priority'],
         \   'symbol': g:['scrollview_keywords_' .. s:built_in .. '_symbol'],
+        \   'scope': g:['scrollview_keywords_' .. s:built_in .. '_scope'],
         \ }
   let s:key = 'scrollview_keywords_' .. s:built_in .. '_spec'
   let g:[s:key] = get(g:, s:key, s:spec)

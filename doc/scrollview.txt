@@ -615,6 +615,12 @@ scrollview_keywords_fix_priority           *scrollview_keywords_fix_priority*
                        Defaults to `20`. Considered only when the plugin is
                        loaded.
 
+scrollview_keywords_fix_scope              *scrollview_keywords_fix_scope*
+                       |String| specifying the search scope for fix keyword
+                       signs. See |scrollview-signs-keyword-scopes| for details.
+                       Defaults to `'auto'`. Considered only when the plugin is
+                       loaded.
+
 scrollview_keywords_fix_symbol             *scrollview_keywords_fix_symbol*
                        |String| specifying the symbol for fix keyword signs.
                        Defaults to `'F'`. Considered only when the plugin is
@@ -623,6 +629,12 @@ scrollview_keywords_fix_symbol             *scrollview_keywords_fix_symbol*
 scrollview_keywords_hack_priority          *scrollview_keywords_hack_priority*
                        |Number| specifying the priority for hack keyword signs.
                        Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_keywords_hack_scope             *scrollview_keywords_hack_scope*
+                       |String| specifying the search scope for hack keyword
+                       signs. See |scrollview-signs-keyword-scopes| for details.
+                       Defaults to `'auto'`. Considered only when the plugin is
                        loaded.
 
 scrollview_keywords_hack_symbol            *scrollview_keywords_hack_symbol*
@@ -635,6 +647,12 @@ scrollview_keywords_todo_priority          *scrollview_keywords_todo_priority*
                        Defaults to `20`. Considered only when the plugin is
                        loaded.
 
+scrollview_keywords_todo_scope             *scrollview_keywords_todo_scope*
+                       |String| specifying the search scope for todo keyword
+                       signs. See |scrollview-signs-keyword-scopes| for details.
+                       Defaults to `'auto'`. Considered only when the plugin is
+                       loaded.
+
 scrollview_keywords_todo_symbol            *scrollview_keywords_todo_symbol*
                        |String| specifying the symbol for todo keyword signs.
                        Defaults to `'T'`. Considered only when the plugin is
@@ -645,6 +663,12 @@ scrollview_keywords_warn_priority          *scrollview_keywords_warn_priority*
                        Defaults to `20`. Considered only when the plugin is
                        loaded.
 
+scrollview_keywords_warn_scope             *scrollview_keywords_warn_scope*
+                       |String| specifying the search scope for warn keyword
+                       signs. See |scrollview-signs-keyword-scopes| for details.
+                       Defaults to `'auto'`. Considered only when the plugin is
+                       loaded.
+
 scrollview_keywords_warn_symbol            *scrollview_keywords_warn_symbol*
                        |String| specifying the symbol for warn keyword signs.
                        Defaults to `'W'`. Considered only when the plugin is
@@ -653,6 +677,12 @@ scrollview_keywords_warn_symbol            *scrollview_keywords_warn_symbol*
 scrollview_keywords_xxx_priority           *scrollview_keywords_xxx_priority*
                        |Number| specifying the priority for xxx keyword signs.
                        Defaults to `20`. Considered only when the plugin is
+                       loaded.
+
+scrollview_keywords_xxx_scope              *scrollview_keywords_xxx_scope*
+                       |String| specifying the search scope for xxx keyword
+                       signs. See |scrollview-signs-keyword-scopes| for details.
+                       Defaults to `'auto'`. Considered only when the plugin is
                        loaded.
 
 scrollview_keywords_xxx_symbol             *scrollview_keywords_xxx_symbol*
@@ -1111,6 +1141,8 @@ replaced accordingly). It is comprised of the following items.
   searched for
 * `highlight`: an optional highlight group
 * `priority`: an optional number indicating sign priority
+* `scope`: an optional string to specify the scope for keyword searching (see
+  |scrollview-signs-keyword-scopes|). Defaults to `'auto'`.
 * `symbol`: an optional string to use for the sign symbol
 
 For example, with the following Vimscript code, |nvim-scrollview| will show
@@ -1124,6 +1156,21 @@ signs for lines that have the text `'NOTE'`.
           \   'symbol': 'N',
           \ }
 <
+Keyword Scopes ~
+                                           *scrollview-signs-keyword-scopes*
+The scope settings for keyword signs are described below. The scope setting
+controls the parts of a buffer that will be searched for keywords.
+
+Scope      Description
+-----      -----------
+`full`       Search the entire buffer.
+
+`comments`   Search comments, using |treesitter| or |'commentstring'| to detect
+           comments.
+
+`auto`       Same as `comments` when |treesitter| is available or |'commentstring'| is
+           set; same as `full` otherwise.
+
 ============================================================================
 7. Issues                                  *scrollview-issues*
 
