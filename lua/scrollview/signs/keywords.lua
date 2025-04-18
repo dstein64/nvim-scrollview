@@ -143,8 +143,10 @@ function M.init(enable)
                         -- Treesitter nor 'commentstring'.
                         if scope == SCOPE_AUTO then
                           match = in_comment_ts == nil and in_comment_cs == nil
-                        else  -- scope == SCOPE_COMMENTS
+                        elseif scope == SCOPE_COMMENTS then
                           match = false
+                        else
+                          error('Unknown scope: ' .. scope)
                         end
                       end
                     end
