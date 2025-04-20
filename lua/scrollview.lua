@@ -28,8 +28,8 @@ local to_bool = utils.to_bool
 -- setting should use a window workspace to prevent unwanted side effects. More
 -- details are in the documentation for with_win_workspace.
 -- XXX: Some of the functionality is applicable to bars and signs, but is
--- named as if it were only applicable to bars (since it was implemented prior
--- to sign support).
+-- described in comments as if it were only applicable to bars (since it was
+-- written prior to sign support).
 
 -- *************************************************
 -- * Forward Declarations
@@ -38,7 +38,7 @@ local to_bool = utils.to_bool
 -- Declared here since it's used by the earlier legend() function.
 local get_sign_groups
 
--- Declared here since it's used by the earlier refresh_bars() function.
+-- Declared here since it's used by the earlier refresh_impl() function.
 local is_sign_group_active
 
 -- *************************************************
@@ -2398,7 +2398,7 @@ end
 
 -- With no argument, remove all bars. Otherwise, remove the specified list of
 -- bars. Global state is initialized and restored.
-local remove_bars = function(target_wins)
+local remove = function(target_wins)
   if target_wins == nil then target_wins = get_scrollview_windows() end
   if bar_bufnr == -1 and sign_bufnr == -1 then return end
   local state = init()
@@ -2416,12 +2416,12 @@ end
 -- the command line window (from the WinEnter event).
 local remove_if_command_line_window = function()
   if in_command_line_window() then
-    pcall(remove_bars)
+    pcall(remove)
   end
 end
 
 -- Refreshes scrollbars. Global state is initialized and restored.
-local refresh_bars = function()
+local refresh_impl = function()
   vim.g.scrollview_refreshing = true
   local state = init()
   local resume_memoize = memoize
@@ -2545,7 +2545,7 @@ end
 -- which can result in bars being placed where they shouldn't be.
 -- WARN: For debugging, it's helpful to use synchronous refreshing, so that
 -- e.g., echom works as expected.
-local refresh_bars_async = function()
+local refresh_impl_async = function()
   pending_async_refresh_count = pending_async_refresh_count + 1
   -- Use defer_fn twice so that refreshing happens after other processing. #59.
   vim.defer_fn(function()
@@ -2559,7 +2559,7 @@ local refresh_bars_async = function()
       -- ScrollView may have already been disabled by time this callback
       -- executes asynchronously.
       if vim.g.scrollview_enabled then
-        refresh_bars()
+        refresh_impl()
       end
     end, 0)
   end, 0)
@@ -2639,34 +2639,34 @@ local enable = function()
       " <ctrl-w>o can be used to first close the floating windows, or
       " alternatively :tabclose can be used (or one of the alternatives handled
       " with the autocmd, like ZQ).
-      autocmd QuitPre * lua require('scrollview').remove_bars()
+      autocmd QuitPre * lua require('scrollview').remove()
 
       " === Scrollbar Refreshing ===
 
       " The following handles bar refreshing when changing the current window.
-      autocmd WinEnter,TermEnter * lua require('scrollview').refresh_bars_async()
+      autocmd WinEnter,TermEnter * lua require('scrollview').refresh_impl_async()
 
       " The following restores bars after leaving the command-line window.
       " Refreshing must be asynchronous, since the command line window is still
       " in an intermediate state when the CmdwinLeave event is triggered.
-      autocmd CmdwinLeave * lua require('scrollview').refresh_bars_async()
+      autocmd CmdwinLeave * lua require('scrollview').refresh_impl_async()
 
       " The following handles scrolling events, which could arise from various
       " actions, including resizing windows, movements (e.g., j, k), or
       " scrolling (e.g., <ctrl-e>, zz).
-      autocmd WinScrolled * lua require('scrollview').refresh_bars_async()
+      autocmd WinScrolled * lua require('scrollview').refresh_impl_async()
 
       " The following handles window resizes that don't trigger WinScrolled
       " (e.g., leaving the command line window). This was added in Neovim 0.9,
       " so its presence needs to be tested.
       if exists('##WinResized')
-        autocmd WinResized * lua require('scrollview').refresh_bars_async()
+        autocmd WinResized * lua require('scrollview').refresh_impl_async()
       endif
 
       " The following handles the case where text is pasted. Handling for
       " TextChangedI is not necessary since WinScrolled will be triggered if
       " there is corresponding scrolling when pasting.
-      autocmd TextChanged * lua require('scrollview').refresh_bars_async()
+      autocmd TextChanged * lua require('scrollview').refresh_impl_async()
 
       " Refresh in insert mode if the number of lines changes. This handles the
       " case where lines are deleted in insert mode. This is also used as a
@@ -2683,7 +2683,7 @@ local enable = function()
             \ let g:scrollview_ins_mode_buf_lines = nvim_buf_line_count(0)
       autocmd TextChangedI,TextChangedP *
             \   if g:scrollview_ins_mode_buf_lines !=# nvim_buf_line_count(0)
-            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ |   execute "lua require('scrollview').refresh_impl_async()"
             \ | endif
             \ | let g:scrollview_ins_mode_buf_lines = nvim_buf_line_count(0)
 
@@ -2695,7 +2695,7 @@ local enable = function()
       autocmd InsertEnter,InsertLeave *
             \   if g:scrollview_hide_bar_for_insert
             \       || !empty(g:scrollview_signs_hidden_for_insert)
-            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ |   execute "lua require('scrollview').refresh_impl_async()"
             \ | endif
 
       " Refresh bars if the cursor intersects a scrollview window (and the
@@ -2705,7 +2705,7 @@ local enable = function()
             \   if g:scrollview_hide_on_cursor_intersect
             \       && has('nvim-0.7')
             \       && luaeval('require("scrollview").cursor_intersects_scrollview()')
-            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ |   execute "lua require('scrollview').refresh_impl_async()"
             \ | endif
 
       " Refresh scrollview when text is changed in insert mode (and
@@ -2713,7 +2713,7 @@ local enable = function()
       " signs will appear/hide accordingly when modifying text.
       autocmd TextChangedI *
             \   if g:scrollview_hide_on_text_intersect
-            \ |   execute "lua require('scrollview').refresh_bars_async()"
+            \ |   execute "lua require('scrollview').refresh_impl_async()"
             \ | endif
 
       " The following handles when :e is used to load a file. The asynchronous
@@ -2721,24 +2721,24 @@ local enable = function()
       " is already scrolled. This avoids a scenario where the scrollbar is
       " refreshed while the window is an intermediate state, resulting in the
       " scrollbar moving to the top of the window.
-      autocmd BufWinEnter * lua require('scrollview').refresh_bars_async()
+      autocmd BufWinEnter * lua require('scrollview').refresh_impl_async()
 
       " The following is used so that bars are shown when cycling through tabs.
-      autocmd TabEnter * lua require('scrollview').refresh_bars_async()
+      autocmd TabEnter * lua require('scrollview').refresh_impl_async()
 
-      autocmd VimResized * lua require('scrollview').refresh_bars_async()
+      autocmd VimResized * lua require('scrollview').refresh_impl_async()
 
       " Scrollbar positions can become stale after adding or removing winbars.
-      autocmd OptionSet winbar lua require('scrollview').refresh_bars_async()
+      autocmd OptionSet winbar lua require('scrollview').refresh_impl_async()
 
       " Scrollbar positions can become stale when the number column or sign
       " column is added or removed (when scrollview_base=buffer).
       autocmd OptionSet number,relativenumber,signcolumn
-            \ lua require('scrollview').refresh_bars_async()
+            \ lua require('scrollview').refresh_impl_async()
 
       " The following handles scrollbar/sign generation for new floating
       " windows.
-      autocmd WinNew * lua require('scrollview').refresh_bars_async()
+      autocmd WinNew * lua require('scrollview').refresh_impl_async()
     augroup END
   ]])
   -- The initial refresh is asynchronous, since :ScrollViewEnable can be used
@@ -2746,7 +2746,7 @@ local enable = function()
   -- ':bdelete | ScrollViewEnable', with synchronous processing, the 'topline'
   -- and 'botline' in getwininfo's results correspond to the existing buffer
   -- that :bdelete was called on.
-  refresh_bars_async()
+  refresh_impl_async()
 end
 
 local disable = function()
@@ -2770,7 +2770,7 @@ local disable = function()
     -- Remove scrollbars from all tabs.
     for _, tabnr in ipairs(api.nvim_list_tabpages()) do
       api.nvim_set_current_tabpage(tabnr)
-      pcall(remove_bars)
+      pcall(remove)
     end
   end)
   api.nvim_set_current_win(winid)
@@ -2803,7 +2803,7 @@ local refresh = function()
     -- be updated (e.g., :ScrollViewRefresh --sync) to accommodate (as there is
     -- currently only a single refresh command and a single refresh <plug>
     -- mapping, both utilizing whatever is implemented here).
-    refresh_bars_async()
+    refresh_impl_async()
   end
 end
 
@@ -3117,7 +3117,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
             -- Refresh scrollbars to handle the scenario where
             -- scrollview_hide_on_float_intersect is enabled and dragging
             -- resulted in a scrollbar overlapping a floating window.
-            refresh_bars()
+            refresh_impl()
             -- We only restore the cursor after dragging is finished. The
             -- cursor position can't be changed while dragging (but it stays in
             -- the same place when there aren't wrapped lines).
@@ -3137,7 +3137,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
               local target = subsequent(props.lines, current, 1, true)
               vim.cmd('normal!' .. target .. 'G')
             end)
-            refresh_bars()
+            refresh_impl()
             return
           end
           if not is_primary then
@@ -3245,7 +3245,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
             end
             vim.cmd('silent! aunmenu ' .. menu_name)
             api.nvim_win_close(popup_win, true)
-            refresh_bars()
+            refresh_impl()
             return
           end
           -- There was a primary click on a scrollbar.
@@ -3254,7 +3254,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
           -- not, ignore all mouse events until a mouseup. This approach was
           -- deemed preferable to refreshing scrollbars initially, as that could
           -- result in unintended clicking/dragging where there is no scrollbar.
-          refresh_bars()
+          refresh_impl()
           vim.cmd('redraw')
           props = get_scrollview_bar_props(mouse_winid)
           if vim.tbl_isempty(props)
@@ -3306,14 +3306,14 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
           set_topline(winid, topline)
           if api.nvim_win_get_option(winid, 'scrollbind')
               or api.nvim_win_get_option(winid, 'cursorbind') then
-            refresh_bars()
+            refresh_impl()
             props = get_scrollview_bar_props(winid)
           end
           props = move_scrollbar(props, row)  -- luacheck: ignore
           -- Refresh since sign backgrounds might be stale, for signs that
           -- switched intersection state with scrollbar. This is fast, from
           -- caching.
-          refresh_bars()
+          refresh_impl()
           props = get_scrollview_bar_props(winid)
           -- Apply appropriate highlighting where relevant.
           if mousemove_received
@@ -3521,7 +3521,7 @@ local deregister_sign_group = function(group, refresh_)
   end
   sign_group_callbacks[group] = nil
   if refresh_ and vim.g.scrollview_enabled then
-    refresh_bars()
+    refresh_impl()
   end
 end
 
@@ -3608,7 +3608,7 @@ local deregister_sign_spec = function(id, refresh_)
   end
   sign_specs[id] = nil
   if refresh_ and vim.g.scrollview_enabled then
-    refresh_bars()
+    refresh_impl()
   end
 end
 
@@ -3629,7 +3629,7 @@ local set_sign_group_state = function(group, state)
     sign_group_state[group] = state
   end
   if prior_state ~= sign_group_state[group] then
-    refresh_bars_async()
+    refresh_impl_async()
   end
 end
 
@@ -3682,7 +3682,7 @@ local win_seqs = {
   t('<c-w>r'), t('<c-w><c-r>'), t('<c-w>R')
 }
 for _, seq in ipairs(win_seqs) do
-  register_key_sequence_callback(seq, 'nvs', refresh_bars_async)
+  register_key_sequence_callback(seq, 'nvs', refresh_impl_async)
 end
 
 -- Refresh after :wincmd.
@@ -3703,7 +3703,7 @@ if api.nvim_create_autocmd ~= nil then
       end
       local cmdline = fn.getcmdline()
       if string.match(cmdline, '^%d*winc') ~= nil then
-        refresh_bars_async()
+        refresh_impl_async()
       end
     end
   })
@@ -3716,7 +3716,7 @@ end
 -- corresponds to the current window.
 local wheel_seqs = {t('<scrollwheelup>'), t('<scrollwheeldown>')}
 for _, seq in ipairs(wheel_seqs) do
-  register_key_sequence_callback(seq, 'nvsit', refresh_bars_async)
+  register_key_sequence_callback(seq, 'nvsit', refresh_impl_async)
 end
 
 -- === Fold command synchronization ===
@@ -3734,7 +3734,7 @@ local zf_operator = function(type_)
   else  -- luacheck: ignore 542 (an empty if branch)
     -- Unsupported
   end
-  refresh_bars_async()
+  refresh_impl_async()
 end
 
 register_key_sequence_callback('zf', 'n', function()
@@ -3750,14 +3750,14 @@ register_key_sequence_callback('zf', 'n', function()
     end
   end, 0)
 end)
-register_key_sequence_callback('zf', 'v', refresh_bars_async)
+register_key_sequence_callback('zf', 'v', refresh_impl_async)
 
 local fold_seqs = {
   'zF', 'zd', 'zD', 'zE', 'zo', 'zO', 'zc', 'zC', 'za', 'zA', 'zv',
   'zx', 'zX', 'zm', 'zM', 'zr', 'zR', 'zn', 'zN', 'zi'
 }
 for _, seq in ipairs(fold_seqs) do
-  register_key_sequence_callback(seq, 'nv', refresh_bars_async)
+  register_key_sequence_callback(seq, 'nv', refresh_impl_async)
 end
 
 -- === InsertLeave synchronization ===
@@ -3767,7 +3767,7 @@ end
 register_key_sequence_callback(t('<c-c>'), 'i', function()
   if vim.g.scrollview_hide_bar_for_insert
       or not vim.tbl_isempty(vim.g.scrollview_signs_hidden_for_insert) then
-    refresh_bars_async()
+    refresh_impl_async()
   end
 end)
 
@@ -3778,8 +3778,8 @@ end)
 return {
   -- Functions called internally (by autocmds and operatorfunc).
   cursor_intersects_scrollview = cursor_intersects_scrollview,
-  refresh_bars_async = refresh_bars_async,
-  remove_bars = remove_bars,
+  refresh_impl_async = refresh_impl_async,
+  remove = remove,
   remove_if_command_line_window = remove_if_command_line_window,
   zf_operator = zf_operator,
 
