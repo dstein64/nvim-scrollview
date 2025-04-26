@@ -359,7 +359,12 @@ local get_scrollview_windows = function()
 end
 
 -- Returns the non-workspace floating windows (including scrollview windows).
-local get_floating_windows = function()
+-- The optional 'hidden' parameter specifies whether hidden floating windows
+-- are included (defaults to false).
+local get_floating_windows = function(hidden)
+  if hidden == nil then
+    hidden = false
+  end
   local result = {}
   for winnr = 1, fn.winnr('$') do
     local winid = fn.win_getid(winnr)
@@ -367,18 +372,26 @@ local get_floating_windows = function()
     local floating = tbl_get(config, 'relative', '') ~= ''
     local workspace_win =
       fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1
-    if not workspace_win and floating then
+    local is_hidden = tbl_get(config, 'hide', '') or false
+    if not workspace_win
+        and floating
+        and (hidden or not is_hidden) then
       table.insert(result, winid)
     end
   end
   return result
 end
 
-local get_non_scrollview_floats = function()
+-- Returns the non-scrollview floating windows. The optional 'hidden' parameter
+-- specifies whether hidden floating windows are included (defaults to false).
+local get_non_scrollview_floats = function(hidden)
+  if hidden == nil then
+    hidden = false
+  end
   local memoize_key = GET_NON_SCROLLVIEW_FLOATS_KEY
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local result = {}
-  for _, winid in ipairs(get_floating_windows()) do
+  for _, winid in ipairs(get_floating_windows(hidden)) do
     if not is_scrollview_window(winid) then
       table.insert(result, winid)
     end
