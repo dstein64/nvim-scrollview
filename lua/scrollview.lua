@@ -349,8 +349,7 @@ end
 
 local get_scrollview_windows = function()
   local result = {}
-  for winnr = 1, fn.winnr('$') do
-    local winid = fn.win_getid(winnr)
+  for _, winid in ipairs(api.nvim_tabpage_list_wins(0)) do
     if is_scrollview_window(winid) then
       table.insert(result, winid)
     end
@@ -366,8 +365,7 @@ local get_floating_windows = function(hidden)
     hidden = false
   end
   local result = {}
-  for winnr = 1, fn.winnr('$') do
-    local winid = fn.win_getid(winnr)
+  for _, winid in ipairs(api.nvim_tabpage_list_wins(0)) do
     local config = api.nvim_win_get_config(winid)
     local floating = tbl_get(config, 'relative', '') ~= ''
     local workspace_win =
@@ -2468,8 +2466,7 @@ local refresh_impl = function()
       end
     end
     local target_wins = {}
-    for winnr = 1, fn.winnr('$') do
-      local winid = fn.win_getid(winnr)
+    for _, winid in ipairs(api.nvim_tabpage_list_wins(0)) do
       table.insert(target_wins, winid)
     end
     -- Execute sign group callbacks. We don't do this when handle_mouse is
@@ -3673,8 +3670,7 @@ end
 -- Returns a list of window IDs that could potentially have signs.
 local get_sign_eligible_windows = function()
   local winids = {}
-  for winnr = 1, fn.winnr('$') do
-    local winid = fn.win_getid(winnr)
+  for _, winid in ipairs(api.nvim_tabpage_list_wins(0)) do
     if should_show(winid) then
       if not is_restricted(winid) then
         table.insert(winids, winid)

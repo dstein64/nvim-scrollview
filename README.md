@@ -188,9 +188,8 @@ Documentation for issues, along with some workarounds, can be accessed with:
 :help scrollview-issues
 ```
 
-Some of the known issues are regarding scrollbar synchronization, error messages, session
-restoration, and scrollbar floating windows being included in the window count returned by
-`winnr('$')`.
+Some of the known issues are regarding scrollbar synchronization, error messages,
+and session restoration.
 
 ## License
 

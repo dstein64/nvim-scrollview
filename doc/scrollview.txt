@@ -1236,8 +1236,8 @@ Other Issues ~
           \ | mksession<bang> <args>
           \ | silent! ScrollViewEnable
 
-* Because scrollbars are floating windows, they are included in the window
-  count returned by `winnr('$')`.
+* For `nvim<0.12`, scrollview windows are included in the window count returned
+  by `winnr('$')`. Neovim PR #34207 addressed the underlying issue.
   + Workaround 1: Use a Vimscript function that omits external and floating
     windows in the count. >
     function! WindowCount()
