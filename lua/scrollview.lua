@@ -1666,8 +1666,10 @@ local show_scrollbar = function(winid, bar_winid)
     if is_hl_reversed(highlight) then
       winblend = 0
     end
-    -- Add a workaround for Neovim #24584 (nvim-scrollview #112).
-    if string.gsub(character, '%s', '') ~= '' then
+    -- Add a workaround for Neovim #24584 (nvim-scrollview #112). This was
+    -- addressed by Neovim #34302.
+    if not to_bool(fn.has('nvim-0.12'))
+        and string.gsub(character, '%s', '') ~= '' then
       winblend = 0
     end
     set_window_option(bar_winid, 'winblend', winblend)
@@ -2020,10 +2022,13 @@ local show_signs = function(winid, sign_winids, bar_winid)
             if is_hl_reversed(highlight) then
               winblend = 0
             end
-            -- Add a workaround for Neovim #24584 (nvim-scrollview #112).
-            local bufline = fn.getbufline(sign_bufnr, sign_line_count)[1]
-            if string.gsub(bufline, '%s', '') ~= '' then
-              winblend = 0
+            -- Add a workaround for Neovim #24584 (nvim-scrollview #112). This
+            -- was addressed by Neovim #34302.
+            if not to_bool(fn.has('nvim-0.12')) then
+              local bufline = fn.getbufline(sign_bufnr, sign_line_count)[1]
+              if string.gsub(bufline, '%s', '') ~= '' then
+                winblend = 0
+              end
             end
             set_window_option(sign_winid, 'winblend', winblend)
             local target = is_float and 'NormalFloat' or 'Normal'
