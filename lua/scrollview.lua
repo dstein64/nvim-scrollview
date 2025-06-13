@@ -1868,16 +1868,17 @@ local show_signs = function(winid, sign_winids, bar_winid)
     -- A set of columns, to prevent creating multiple signs in the same
     -- location.
     local total_width = 0  -- running sum of sign widths
+    local bar_row = bar_props ~= nil
+      and row >= bar_props.row
+      and row <= bar_props.row + bar_props.height - 1
     -- Treat the bar as if it were a sign, and position subsequent signs
     -- accordingly. This only applies if a scrollbar is shown (e.g., not when
     -- it is hidden from hide_on_intersect or not shown because of an invalid
     -- column).
-    if bar_props ~= nil
-        and row >= bar_props.row
-        and row <= bar_props.row + bar_props.height - 1 then
+    if vim.g.scrollview_signs_scrollbar_overlap == 'off' and bar_row then
       total_width = total_width + 1
     end
-    for _, properties in ipairs(props_list) do
+    for properties_idx, properties in ipairs(props_list) do
       local symbol = properties.symbol
       local sign_width = fn.strdisplaywidth(symbol)
       local col = base_col
@@ -1971,6 +1972,13 @@ local show_signs = function(winid, sign_winids, bar_winid)
         if is_float then
           zindex = zindex + config.zindex
         end
+        if bar_row and properties_idx == 1 then
+          if vim.g.scrollview_signs_scrollbar_overlap == 'over' then
+            zindex = zindex + 1
+          elseif vim.g.scrollview_signs_scrollbar_overlap == 'under' then
+            zindex = zindex - 1
+          end
+        end
         local sign_config = {
           win = winid,
           relative = 'win',
@@ -1981,7 +1989,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
           width = sign_width,
           row = row - 1,
           col = col - 1,
-          zindex = zindex,
+          zindex = math.max(1, zindex),
         }
         -- Create a new window if none are available for re-use. Also, create a
         -- new window if the base window is a floating window, to avoid Neovim
@@ -2044,6 +2052,22 @@ local show_signs = function(winid, sign_winids, bar_winid)
                   and 0 >= col
                   and 0 <= col + sign_width - 1 then
                 target = 'FloatBorder'
+              end
+            end
+            -- Properly highlight a sign over a scrollbar.
+            if bar_props ~= nil
+                and bar_row
+                and vim.g.scrollview_signs_scrollbar_overlap == 'over'
+                and properties_idx == 1 then
+              target = 'ScrollView'
+              if vim.g.scrollview_hover
+                  and mousemove_received
+                  and to_bool(fn.exists('&mousemoveevent'))
+                  and vim.o.mousemoveevent then
+                if is_mouse_over_scrollview_win(bar_props.scrollview_winid)
+                    or is_mouse_over_scrollview_win(sign_winid) then
+                  target = 'ScrollViewHover'
+                end
               end
             end
             target = get_mapped_highlight(winid, target)

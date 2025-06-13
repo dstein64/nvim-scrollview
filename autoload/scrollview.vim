@@ -108,6 +108,8 @@ let g:scrollview_signs_on_startup =
       \ get(g:, 'scrollview_signs_on_startup', s:default_signs)
 " Specifies the sign overflow direction ('left' or 'right').
 let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
+let g:scrollview_signs_scrollbar_overlap =
+      \ get(g:, 'scrollview_signs_scrollbar_overlap', 'off')
 " Whether signs in folds should be shown or hidden.
 let g:scrollview_signs_show_in_folds =
       \ get(g:, 'scrollview_signs_show_in_folds', v:false)

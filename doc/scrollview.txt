@@ -401,6 +401,15 @@ scrollview_signs_overflow                  *scrollview_signs_overflow*
                        Possible values are `'left'` or `'right'`. Defaults to
                        `'left'`.
 
+scrollview_signs_scrollbar_overlap         *scrollview_signs_scrollbar_overlap*
+                       |String| specifying whether/how signs overlap the
+                       scrollbar. Possible values are `'off'`, `'over'`, and `'under'`.
+                       Defaults to `'off'`.
+                       * `off` Signs are positioned to never overlap the
+                         scrollbar.
+                       * `over` A sign can be placed over the scrollbar.
+                       * `under` A sign can be placed under the scrollbar.
+
 scrollview_signs_show_in_folds             *scrollview_signs_show_in_folds*
                        |Boolean| specifying whether signs on lines within hidden
                        folds should be shown. Sign groups can override this

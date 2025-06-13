@@ -128,6 +128,7 @@ scrollview_signs_hidden_for_insert	scrollview.txt	/*scrollview_signs_hidden_for_
 scrollview_signs_max_per_row	scrollview.txt	/*scrollview_signs_max_per_row*
 scrollview_signs_on_startup	scrollview.txt	/*scrollview_signs_on_startup*
 scrollview_signs_overflow	scrollview.txt	/*scrollview_signs_overflow*
+scrollview_signs_scrollbar_overlap	scrollview.txt	/*scrollview_signs_scrollbar_overlap*
 scrollview_signs_show_in_folds	scrollview.txt	/*scrollview_signs_show_in_folds*
 scrollview_signs_version	scrollview.txt	/*scrollview_signs_version*
 scrollview_spell_priority	scrollview.txt	/*scrollview_spell_priority*
