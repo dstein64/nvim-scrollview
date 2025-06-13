@@ -34,8 +34,6 @@ let g:scrollview_excluded_info_signs =
       \   ['changelist', 'cursor', 'latestchange'])
 let g:scrollview_floating_windows =
       \ get(g:, 'scrollview_floating_windows', v:false)
-let g:scrollview_signs_hidden_for_insert =
-      \ get(g:, 'scrollview_signs_hidden_for_insert', [])
 let g:scrollview_hide_bar_for_insert =
       \ get(g:, 'scrollview_hide_bar_for_insert', v:false)
 let g:scrollview_hide_on_cursor_intersect =
@@ -97,6 +95,8 @@ if has('nvim-0.10')
 endif
 
 " *** General sign settings ***
+let g:scrollview_signs_hidden_for_insert =
+      \ get(g:, 'scrollview_signs_hidden_for_insert', [])
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =
