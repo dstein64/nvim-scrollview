@@ -405,8 +405,7 @@ scrollview_signs_scrollbar_overlap         *scrollview_signs_scrollbar_overlap*
                        |String| specifying whether/how signs overlap the
                        scrollbar. Possible values are `'off'`, `'over'`, and `'under'`.
                        Defaults to `'off'`.
-                       * `off` Signs are positioned to never overlap the
-                         scrollbar.
+                       * `off` Signs are positioned to not overlap the scrollbar.
                        * `over` A sign can be placed over the scrollbar.
                        * `under` A sign can be placed under the scrollbar.
 
