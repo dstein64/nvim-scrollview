@@ -29,9 +29,6 @@ let g:scrollview_consider_border =
 let g:scrollview_current_only = get(g:, 'scrollview_current_only', v:false)
 let g:scrollview_excluded_filetypes =
       \ get(g:, 'scrollview_excluded_filetypes', [])
-let g:scrollview_excluded_info_signs =
-      \ get(g:, 'scrollview_excluded_info_signs',
-      \   ['changelist', 'cursor', 'latestchange'])
 let g:scrollview_floating_windows =
       \ get(g:, 'scrollview_floating_windows', v:false)
 let g:scrollview_hide_bar_for_insert =
@@ -97,6 +94,14 @@ endif
 " *** General sign settings ***
 let g:scrollview_signs_hidden_for_insert =
       \ get(g:, 'scrollview_signs_hidden_for_insert', [])
+" Use the old option, scrollview_excluded_info_signs, if it's set.
+if has_key(g:, 'scrollview_excluded_info_signs')
+      \ && !has_key(g:, 'scrollview_signs_info_excluded')
+  let g:scrollview_signs_info_excluded = g:scrollview_excluded_info_signs
+endif
+let g:scrollview_signs_info_excluded =
+      \ get(g:, 'scrollview_signs_info_excluded',
+      \   ['changelist', 'cursor', 'latestchange'])
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =

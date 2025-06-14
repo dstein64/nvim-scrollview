@@ -2522,7 +2522,7 @@ local refresh_impl = function()
         sign_bufnr, 0, api.nvim_buf_line_count(sign_bufnr), true, {})
       api.nvim_buf_set_option(sign_bufnr, 'modifiable', false)
     end
-    local excluded_info_signs = mapify(vim.g.scrollview_excluded_info_signs)
+    local excluded_info_signs = mapify(vim.g.scrollview_signs_info_excluded)
     for _, winid in ipairs(target_wins) do
       if should_show(winid) then
         local existing_winid = -1
