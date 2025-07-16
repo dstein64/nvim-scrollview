@@ -48,18 +48,32 @@ function M.setup(config)
     delete_priority = 90,
   }
 
-  -- Try setting highlight and symbol defaults from gitsigns config.
+  -- Try setting symbol defaults from gitsigns config.
   pcall(function()
     local signs = require('gitsigns.config').config.signs
-    defaults.add_highlight = signs.add.hl
-    defaults.change_highlight = signs.change.hl
-    defaults.delete_highlight = signs.delete.hl
     defaults.add_symbol = signs.add.text
     defaults.change_symbol = signs.change.text
     defaults.delete_symbol = signs.delete.text
   end)
 
-  -- Try setting highlight and symbol defaults from gitsigns defaults.
+  -- Try setting highlight defaults from gitsigns config (relevant prior to
+  -- gitsigns PR #1306).
+  pcall(function()
+    local signs = require('gitsigns.config').config.signs
+    local default = signs.default
+    if default.add.hl ~= nil then
+      defaults.add_highlight = signs.add.hl
+    end
+    if default.change.hl ~= nil then
+      defaults.change_highlight = signs.change.hl
+    end
+    if default.delete.hl ~= nil then
+      defaults.delete_highlight = signs.delete.hl
+    end
+  end)
+
+  -- Try setting highlight and symbol defaults from gitsigns defaults (for
+  -- highlights, relevant prior to gitsigns PR #1306).
   pcall(function()
     local default = require('gitsigns.config').schema.signs.default
     defaults.add_highlight = defaults.add_highlight or default.add.hl
@@ -68,6 +82,19 @@ function M.setup(config)
     defaults.add_symbol = defaults.add_symbol or default.add.text
     defaults.change_symbol = defaults.change_symbol or default.change.text
     defaults.delete_symbol = defaults.delete_symbol or default.delete.text
+  end)
+
+  -- Try setting highlight defaults from gitsigns highlight groups.
+  pcall(function()
+    if not vim.tbl_isempty(api.nvim_get_hl(0, {name = 'GitSignsAdd'})) then
+      defaults.add_highlight = defaults.add_highlight or 'GitSignsAdd'
+    end
+    if not vim.tbl_isempty(api.nvim_get_hl(0, {name = 'GitSignsChange'})) then
+      defaults.change_highlight = defaults.change_highlight or 'GitSignsChange'
+    end
+    if not vim.tbl_isempty(api.nvim_get_hl(0, {name = 'GitSignsDelete'})) then
+      defaults.delete_highlight = defaults.delete_highlight or 'GitSignsDelete'
+    end
   end)
 
   -- Try setting highlight and symbol defaults from fixed values.
