@@ -547,7 +547,11 @@ local with_win_workspace = function(winid, fun)
       -- Don't include the workspace window in a diff session. If included,
       -- closing it could end the diff session (e.g., when there is one other
       -- window in the session). Issue #57.
-      set_window_option(workspace_winid, 'diff', false)
+      if api.nvim_win_get_option(0, 'foldmethod') == 'diff' then
+        -- First set foldmethod to manual so that folds are retained.
+        set_window_option(workspace_winid, 'foldmethod', 'manual')
+        set_window_option(workspace_winid, 'diff', false)
+      end
     end
   end
   local success, result = pcall(function()
