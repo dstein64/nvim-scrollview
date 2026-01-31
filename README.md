@@ -45,6 +45,16 @@ A package manager can be used to install `nvim-scrollview`.
 * [NeoBundle][neobundle]:
   - Add `NeoBundle 'dstein64/nvim-scrollview'` to `~/.config/nvim/init.vim`
   - Re-open Neovim or execute `:source ~/.config/nvim/init.vim`
+* [lazy][lazy]:
+  ```lua
+  {
+    'dstein64/nvim-scrollview',
+    opts = {
+      -- Your options here
+      visibility = 'always' -- example!
+    },
+  }
+  ```
 * [packer.nvim][packer]:
   - Add `use 'dstein64/nvim-scrollview'` to the packer startup function
   - `:PackerInstall`
@@ -202,6 +212,7 @@ See [LICENSE](LICENSE).
 [dein]: https://github.com/Shougo/dein.vim
 [gitsigns.nvim]: https://github.com/lewis6991/gitsigns.nvim
 [gitsigns_example]: https://gist.github.com/dstein64/b5d9431ebeacae1fb963efc3f2c94cf4
+[lazy]: https://github.com/folke/lazy.nvim
 [neobundle]: https://github.com/Shougo/neobundle.vim
 [packer]: https://github.com/wbthomason/packer.nvim
 [pathogen]: https://github.com/tpope/vim-pathogen
