@@ -49,7 +49,7 @@ A package manager can be used to install `nvim-scrollview`.
   - Add `use 'dstein64/nvim-scrollview'` to the packer startup function
   - `:PackerInstall`
 * [lazy.nvim][lazy]:
-  - Add a plugin spec: { 'dstein64/nvim-scrollview', opts = { ... } }
+  - Add a plugin spec: `{ 'dstein64/nvim-scrollview', opts = { ... } }`
 
 </details>
 
