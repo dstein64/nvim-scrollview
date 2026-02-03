@@ -1233,6 +1233,7 @@ local calculate_position = function(winid)
 end
 
 -- Indicates whether content overflows the window.
+-- WARN: This doesn't account for wrapped lines.
 local has_overflow = function(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   local topline, botline = line_range(winid)
