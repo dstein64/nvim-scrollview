@@ -3121,7 +3121,7 @@ local handle_mouse = function(button, is_primary, init_props, init_mousepos)
             or vim.tbl_contains({mousedown, mouseup}, char) then
           break
         end
-        if idx >= #char_props then break end
+        if idx >= #chars_props then break end
         local next_char_props = chars_props[idx + 1]
         if next_char_props.mouse_winid == 0
             or vim.tbl_contains({mousedown, mouseup}, next_char_props.char) then
