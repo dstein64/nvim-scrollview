@@ -91,7 +91,7 @@ function M.preceding(l, item, count, wrapscan)
   end
   local idx = M.binary_search(l, item) - count
   if idx < 1 then
-    idx = wrapscan and (idx - 1) % #l + 1 or #l
+    idx = wrapscan and (idx - 1) % #l + 1 or 1
   end
   return l[idx]
 end
