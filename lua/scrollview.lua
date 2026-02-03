@@ -125,9 +125,7 @@ local PROPER_LINE_COUNT_KEY_PREFIX = 1
 local TOPLINE_LOOKUP_KEY_PREFIX = 2
 local GET_WINDOW_EDGES_KEY_PREFIX = 3
 local ROW_LENGTH_LOOKUP_KEY_PREFIX = 4
--- For get_non_scrollview_floats, a prefix is not necessary, since the function
--- takes no arguments.
-local GET_NON_SCROLLVIEW_FLOATS_KEY = 5
+local GET_NON_SCROLLVIEW_FLOATS_KEY_PREFIX = 5
 
 -- Maps window ID and highlight group to a temporary highlight group with the
 -- corresponding definition. This is reset on each refresh cycle.
@@ -386,7 +384,8 @@ local get_non_scrollview_floats = function(hidden)
   if hidden == nil then
     hidden = false
   end
-  local memoize_key = GET_NON_SCROLLVIEW_FLOATS_KEY
+  local memoize_key =
+    table.concat({GET_NON_SCROLLVIEW_FLOATS_KEY_PREFIX, hidden and 1 or 0}, ':')
   if memoize and cache[memoize_key] then return cache[memoize_key] end
   local result = {}
   for _, winid in ipairs(get_floating_windows(hidden)) do
