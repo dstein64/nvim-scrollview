@@ -370,7 +370,7 @@ local get_floating_windows = function(hidden)
     local floating = tbl_get(config, 'relative', '') ~= ''
     local workspace_win =
       fn.getwinvar(winid, WIN_WORKSPACE_BASE_WINID_VAR, -1) ~= -1
-    local is_hidden = tbl_get(config, 'hide', '') or false
+    local is_hidden = tbl_get(config, 'hide', false)
     if not workspace_win
         and floating
         and (hidden or not is_hidden) then
