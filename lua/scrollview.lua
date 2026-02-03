@@ -1123,7 +1123,10 @@ local simple_topline_lookup = function(winid)
   local target_topline_count = get_target_topline_count(winid)
   local topline_lookup = {}
   for row = 1, target_topline_count do
-    local proportion = (row - 1) / (target_topline_count - 1)
+    local proportion = 0
+    if target_topline_count > 1 then
+      proportion = (row - 1) / (target_topline_count - 1)
+    end
     local topline = round(proportion * (line_count - 1)) + 1
     table.insert(topline_lookup, topline)
   end
