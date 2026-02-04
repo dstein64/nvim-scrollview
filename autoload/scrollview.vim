@@ -106,6 +106,10 @@ let g:scrollview_signs_info_excluded =
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =
       \ get(g:, 'scrollview_signs_max_per_row', -1)
+" Specifies the maximum number of signs per row, by group. -1 and 0 have the
+" same meaning as for scrollview_signs_max_per_row.
+let g:scrollview_signs_max_per_row_by_group =
+      \ get(g:, 'scrollview_signs_max_per_row_by_group', {})
 " Sign groups to enable on startup. If 'all' is included, it effectively
 " expands to all built-in plugins. If 'defaults' is included, it effectively
 " expands to built-in plugins that would ordinarily be enabled by default.

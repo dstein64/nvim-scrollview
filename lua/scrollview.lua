@@ -1868,6 +1868,22 @@ local show_signs = function(winid, sign_winids, bar_winid)
         return a.sign_spec_id < b.sign_spec_id
       end
     end)
+    -- Apply max per row by group.
+    local max_signs_per_row_by_group = vim.g.scrollview_signs_max_per_row_by_group
+    if not vim.tbl_isempty(max_signs_per_row_by_group) then
+      local group_counts = {}
+      local filtered_list = {}
+      for _, props in ipairs(props_list) do
+        local group = sign_specs[props.sign_spec_id].group
+        local group_limit = max_signs_per_row_by_group[group] or -1
+        group_counts[group] = (group_counts[group] or 0) + 1
+        if group_limit < 0 or group_counts[group] <= group_limit then
+          table.insert(filtered_list, props)
+        end
+      end
+      props_list = filtered_list
+    end
+    -- Apply global max per row.
     local max_signs_per_row = vim.g.scrollview_signs_max_per_row
     if max_signs_per_row >= 0 then
       props_list = vim.list_slice(props_list, 1, max_signs_per_row)

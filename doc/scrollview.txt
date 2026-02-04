@@ -386,6 +386,13 @@ scrollview_signs_max_per_row               *scrollview_signs_max_per_row*
                        |Number| specifying the maximum number of signs per row.
                        Set to `-1` to have no limit. Defaults to `-1`.
 
+scrollview_signs_max_per_row_by_group      *scrollview_signs_max_per_row_by_group*
+                       |Dictionary| mapping sign groups (|String|) to maximum
+                       number of corresponding signs per row (|Number|). Groups
+                       not present in the dictionary, or that have a value of
+                       `-1`, have no group-specific limit. Defaults to `{}`.
+                       Example: `{'diagnostics': 1, 'keywords': 2}`.
+
 scrollview_signs_on_startup                *scrollview_signs_on_startup*
                        |List| of |String|s specifying built-in sign groups to
                        enable on startup. Set to `[]` to disable all built-in
