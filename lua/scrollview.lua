@@ -3821,6 +3821,35 @@ for _, seq in ipairs(fold_seqs) do
   register_key_sequence_callback(seq, 'nv', refresh_impl_async)
 end
 
+-- Refresh after fold commands.
+--   :{range}fo[ld]
+--   :{range}foldc[lose][!]
+--   :[range]foldd[oopen]
+--   :[range]folddoc[losed]
+--   :{range}foldo[pen][!]
+-- WARN: Only text at the beginning of the command is considered.
+-- WARN: CmdlineLeave is not executed for command mappings (<cmd>).
+-- WARN: CmdlineLeave is not executed for commands executed from Lua
+-- (e.g., vim.cmd('help')).
+if api.nvim_create_autocmd ~= nil then
+  api.nvim_create_autocmd('CmdlineLeave', {
+    callback = function()
+      if to_bool(vim.v.event.abort) then
+        return
+      end
+      if fn.expand('<afile>') ~= ':' then
+        return
+      end
+      local cmdline = fn.getcmdline()
+      cmdline = cmdline:gsub('^[^%a]*', '')  -- remove the leading range
+      cmdline = vim.trim(cmdline)
+      if cmdline == 'fo' or cmdline:match('^fol') ~= nil then
+        refresh_impl_async()
+      end
+    end
+  })
+end
+
 -- === InsertLeave synchronization ===
 
 -- InsertLeave is not triggered when leaving insert mode with <ctrl-c>. We use
