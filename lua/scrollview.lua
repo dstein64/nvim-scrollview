@@ -1875,7 +1875,9 @@ local show_signs = function(winid, sign_winids, bar_winid)
       local filtered_list = {}
       for _, props in ipairs(props_list) do
         local group = sign_specs[props.sign_spec_id].group
-        local group_limit = max_signs_per_row_by_group[group] or -1
+        local group_limit = max_signs_per_row_by_group[group]
+          or max_signs_per_row_by_group['all']
+          or -1
         group_counts[group] = (group_counts[group] or 0) + 1
         if group_limit < 0 or group_counts[group] <= group_limit then
           table.insert(filtered_list, props)
