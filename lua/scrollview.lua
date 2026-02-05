@@ -3763,7 +3763,9 @@ if api.nvim_create_autocmd ~= nil then
         return
       end
       local cmdline = fn.getcmdline()
-      if string.match(cmdline, '^%d*winc') ~= nil then
+      -- Remove the leading non-alphabetic characters (count and spaces).
+      cmdline = cmdline:gsub('^[^%a]*', '')
+      if vim.startswith(cmdline, 'winc') then
         refresh_impl_async()
       end
     end

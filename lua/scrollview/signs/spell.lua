@@ -109,7 +109,9 @@ function M.init(enable)
       -- WARN: CmdlineLeave is not executed for commands executed from Lua
       -- (e.g., vim.cmd('help')).
       local cmdline = fn.getcmdline()
-      if string.match(cmdline, '^%d*spe') ~= nil then
+      -- Remove the leading non-alphabetic characters (count and spaces).
+      cmdline = cmdline:gsub('^[^%a]*', '')
+      if vim.startswith(cmdline, 'spe') then
         invalidate_cache()
         scrollview.refresh()
       end
