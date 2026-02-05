@@ -1191,13 +1191,14 @@ Scope      Description
 
 Synchronization Issues ~
                                            *scrollview-synchronization-issues*
-* Scrollbars can become out-of-sync after modifying window arrangement with
-  |:wincmd|. |:ScrollViewRefresh|, or scrolling can be used to refresh the
-  scrollbars.
+* For `nvim<0.7`, scrollbars can become out-of-sync after modifying window
+  arrangement with |:wincmd|. For `nvim>=0.7`, this is limited to |<cmd>| mappings
+  and commands executed from Lua (e.g., `vim.cmd('wincmd H')`). |:ScrollViewRefresh|
+  or scrolling can be used to refresh the scrollbars.
 
-* Scrollbars become out-of-sync after ":" fold commands when using a
-  |scrollview-mode| that accounts for folds. Because there are no |autocmd-events|
-  for folding, the plugin is unable to refresh the scrollbars.
+* For `nvim<0.7`, scrollbars can become out-of-sync after fold commands when
+  using a |scrollview-mode| that accounts for folds. For `nvim>=0.7`, this is
+  limited to |<cmd>| mappings and commands executed from Lua (e.g., `vim.cmd('foldo')`).
   |:ScrollViewRefresh|, or scrolling can be used to refresh the scrollbars.
 
 Error Message Issues ~
