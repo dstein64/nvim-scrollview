@@ -3841,8 +3841,8 @@ if api.nvim_create_autocmd ~= nil then
         return
       end
       local cmdline = fn.getcmdline()
-      cmdline = cmdline:gsub('^[^%a]*', '')  -- remove the leading range
-      cmdline = vim.trim(cmdline)
+      -- Remove the leading non-alphabetic characters (range and spaces).
+      cmdline = cmdline:gsub('^[^%a]*', '')
       if cmdline == 'fo' or cmdline:match('^fol') ~= nil then
         refresh_impl_async()
       end
