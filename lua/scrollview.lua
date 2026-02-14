@@ -1758,7 +1758,9 @@ local show_signs = function(winid, sign_winids, bar_winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local topline_lookup = nil  -- only set when needed
   local base_col = calculate_scrollbar_column(winid)
-  -- lookup maps rows to a mapping of names to sign specifications (with lines).
+  -- lookup maps rows to a mapping of names to sign properties (with lines).
+  --   {[12] = {scrollview_signs_24_marks = {
+  --             symbol = {"c"}, lines = {79}, ...}, ...}, ...}
   local lookup = {}
   for _, sign_spec in pairs(sign_specs) do
     local name = sign_spec.name
@@ -1846,6 +1848,10 @@ local show_signs = function(winid, sign_winids, bar_winid)
       end
     end
   end
+  -- row_props maps rows to their filtered list of sign properties.
+  --   {[12] = {{name = "scrollview_signs_24_marks", symbol = "c",
+  --              lines = {79}, priority = 50, sign_spec_id = 24, ...}, ...}, ...}
+  local row_props = {}
   for row, props_lookup in pairs(lookup) do
     local props_list = {}
     for _, properties in pairs(props_lookup) do
@@ -1890,6 +1896,54 @@ local show_signs = function(winid, sign_winids, bar_winid)
     if max_signs_per_row >= 0 then
       props_list = vim.list_slice(props_list, 1, max_signs_per_row)
     end
+    row_props[row] = props_list
+  end
+  -- Apply window-level max.
+  local signs_max = vim.g.scrollview_signs_max
+  if signs_max >= 0 then
+    local bar_top, bar_bot
+    if bar_props ~= nil then
+      bar_top = bar_props.row
+      bar_bot = bar_props.row + bar_props.height - 1
+    else
+      local bar_position = calculate_position(winid)
+      bar_top = bar_position.row
+      bar_bot = bar_position.row + bar_position.height - 1
+    end
+    -- all_signs has a flattened version of row_props, for considering all rows
+    -- when sorting.
+    --   {{row = 12, props = {symbol = "c", priority = 50, ...}}, ...}
+    local all_signs = {}
+    for row, props_list in pairs(row_props) do
+      for _, props in ipairs(props_list) do
+        table.insert(all_signs, {row = row, props = props})
+      end
+    end
+    table.sort(all_signs, function(a, b)
+      if a.props.priority ~= b.props.priority then
+        return a.props.priority > b.props.priority
+      end
+      local a_dist = math.max(0, bar_top - a.row, a.row - bar_bot)
+      local b_dist = math.max(0, bar_top - b.row, b.row - bar_bot)
+      if a_dist ~= b_dist then
+        return a_dist < b_dist
+      end
+      if a.props.sign_spec_id ~= b.props.sign_spec_id then
+        return a.props.sign_spec_id < b.props.sign_spec_id
+      end
+      return a.props.lines[1] < b.props.lines[1]
+    end)
+    -- Rebuild row_props from the top signs_max entries.
+    row_props = {}
+    for i = 1, math.min(signs_max, #all_signs) do
+      local item = all_signs[i]
+      if row_props[item.row] == nil then
+        row_props[item.row] = {}
+      end
+      table.insert(row_props[item.row], item.props)
+    end
+  end
+  for row, props_list in pairs(row_props) do
     -- A set of columns, to prevent creating multiple signs in the same
     -- location.
     local total_width = 0  -- running sum of sign widths

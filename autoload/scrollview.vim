@@ -102,6 +102,9 @@ endif
 let g:scrollview_signs_info_excluded =
       \ get(g:, 'scrollview_signs_info_excluded',
       \   ['changelist', 'cursor', 'latestchange'])
+" The maximum number of signs shown in a window. Set to -1 to have no limit.
+" Set to 0 to disable signs.
+let g:scrollview_signs_max = get(g:, 'scrollview_signs_max', -1)
 " The maximum number of signs shown per row. Set to -1 to have no limit.
 " Set to 0 to disable signs.
 let g:scrollview_signs_max_per_row =

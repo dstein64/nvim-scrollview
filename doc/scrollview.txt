@@ -382,6 +382,13 @@ scrollview_signs_info_excluded             *scrollview_signs_info_excluded*
                        set to `'info'` and there is no overflow. Defaults to
                        `['changelist', 'cursor', 'latestchange']`.
 
+scrollview_signs_max                       *scrollview_signs_max*
+                       |Number| specifying the maximum number of signs in a
+                       window. The highest priority signs are shown when the
+                       limit is reached. Applied after |scrollview_signs_max_per_row|
+                       and |scrollview_signs_max_per_row_by_group|. Set to `-1`
+                       to have no limit. Defaults to `-1`.
+
 scrollview_signs_max_per_row               *scrollview_signs_max_per_row*
                        |Number| specifying the maximum number of signs per row.
                        Set to `-1` to have no limit. Defaults to `-1`.

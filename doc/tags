@@ -125,6 +125,7 @@ scrollview_search_priority	scrollview.txt	/*scrollview_search_priority*
 scrollview_search_symbol	scrollview.txt	/*scrollview_search_symbol*
 scrollview_signs_hidden_for_insert	scrollview.txt	/*scrollview_signs_hidden_for_insert*
 scrollview_signs_info_excluded	scrollview.txt	/*scrollview_signs_info_excluded*
+scrollview_signs_max	scrollview.txt	/*scrollview_signs_max*
 scrollview_signs_max_per_row	scrollview.txt	/*scrollview_signs_max_per_row*
 scrollview_signs_max_per_row_by_group	scrollview.txt	/*scrollview_signs_max_per_row_by_group*
 scrollview_signs_on_startup	scrollview.txt	/*scrollview_signs_on_startup*
