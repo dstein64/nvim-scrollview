@@ -1734,30 +1734,15 @@ local show_scrollbar = function(winid, bar_winid)
   return bar_winid
 end
 
--- Show signs for the specified 'winid' window ID. A list of existing sign
--- winids, 'sign_winids', is specified for possible reuse. Reused windows are
--- removed from the list. The bar_winid is necessary to correctly position
--- signs to not intersect the scrollbar.
-local show_signs = function(winid, sign_winids, bar_winid)
-  local shown = {}  -- a list winids for the signs created
-  -- Neovim 0.8 has an issue with matchaddpos highlighting (similar type of
-  -- issue reported in Neovim #22906).
-  if not to_bool(fn.has('nvim-0.9')) then return shown end
-  local bar_props
-  -- The scrollbar may not be displayed (e.g., if
-  -- scrollview_hide_on_float_intersect is set).
-  if bar_winid ~= -1 then
-    bar_props = api.nvim_win_get_var(bar_winid, PROPS_VAR)
-  end
+-- get_sign_row_props returns a mapping of rows to their filtered list of sign
+-- properties for the specified window.
+--   {[12] = {{name = "scrollview_signs_24_marks", symbol = "c",
+--              lines = {79}, priority = 50, sign_spec_id = 24, ...}, ...}, ...}
+local get_sign_row_props = function(winid, bar_props)
   local cur_winid = api.nvim_get_current_win()
-  local wininfo = fn.getwininfo(winid)[1]
-  local config = api.nvim_win_get_config(winid)
-  local is_float = tbl_get(config, 'relative', '') ~= ''
-  if is_restricted(winid) then return shown end
   local bufnr = api.nvim_win_get_buf(winid)
   local line_count = api.nvim_buf_line_count(bufnr)
   local topline_lookup = nil  -- only set when needed
-  local base_col = calculate_scrollbar_column(winid)
   -- lookup maps rows to a mapping of names to sign properties (with lines).
   --   {[12] = {scrollview_signs_24_marks = {
   --             symbol = {"c"}, lines = {79}, ...}, ...}, ...}
@@ -1848,9 +1833,6 @@ local show_signs = function(winid, sign_winids, bar_winid)
       end
     end
   end
-  -- row_props maps rows to their filtered list of sign properties.
-  --   {[12] = {{name = "scrollview_signs_24_marks", symbol = "c",
-  --              lines = {79}, priority = 50, sign_spec_id = 24, ...}, ...}, ...}
   local row_props = {}
   for row, props_lookup in pairs(lookup) do
     local props_list = {}
@@ -1943,6 +1925,31 @@ local show_signs = function(winid, sign_winids, bar_winid)
       table.insert(row_props[item.row], item.props)
     end
   end
+  return row_props
+end
+
+-- Show signs for the specified 'winid' window ID. A list of existing sign
+-- winids, 'sign_winids', is specified for possible reuse. Reused windows are
+-- removed from the list. The bar_winid is necessary to correctly position
+-- signs to not intersect the scrollbar.
+local show_signs = function(winid, sign_winids, bar_winid)
+  local shown = {}  -- a list of winids for the signs created
+  -- Neovim 0.8 has an issue with matchaddpos highlighting (similar type of
+  -- issue reported in Neovim #22906).
+  if not to_bool(fn.has('nvim-0.9')) then return shown end
+  local bar_props
+  -- The scrollbar may not be displayed (e.g., if
+  -- scrollview_hide_on_float_intersect is set).
+  if bar_winid ~= -1 then
+    bar_props = api.nvim_win_get_var(bar_winid, PROPS_VAR)
+  end
+  local cur_winid = api.nvim_get_current_win()
+  local wininfo = fn.getwininfo(winid)[1]
+  local config = api.nvim_win_get_config(winid)
+  local is_float = tbl_get(config, 'relative', '') ~= ''
+  if is_restricted(winid) then return shown end
+  local base_col = calculate_scrollbar_column(winid)
+  local row_props = get_sign_row_props(winid, bar_props)
   for row, props_list in pairs(row_props) do
     -- A set of columns, to prevent creating multiple signs in the same
     -- location.
