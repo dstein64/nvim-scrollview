@@ -3908,6 +3908,8 @@ if api.nvim_create_autocmd ~= nil then
       local cmdline = fn.getcmdline()
       -- Remove the leading non-alphabetic characters (range and spaces).
       cmdline = cmdline:gsub('^[^%a]*', '')
+      -- :fo is short for :fold, but we can't just check for that prefix since
+      -- there is also a :for command.
       if cmdline == 'fo' or cmdline:match('^fol') ~= nil then
         refresh_impl_async()
       end
