@@ -3623,6 +3623,9 @@ local setup = function(opts)
 end
 
 local register_sign_group = function(group)
+  if group == 'all' then
+    error('group name is reserved: all')
+  end
   if sign_group_state[group] ~= nil then
     error('group is already registered: ' .. group)
   end

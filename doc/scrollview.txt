@@ -1028,7 +1028,7 @@ register_sign_group({group})               *scrollview.register_sign_group()*
     Register a sign group.
 
     Parameters: ~
-      * {group}  (string) Group name.
+      * {group}  (string) Group name. `'all'` is reserved and cannot be used.
 
 register_sign_spec({spec})                 *scrollview.register_sign_spec()*
     Register a sign specification.
