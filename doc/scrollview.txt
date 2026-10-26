@@ -207,12 +207,6 @@ scrollview_byte_limit  |Number| specifying the buffer size threshold (in
                        bytes) for entering restricted mode, to prevent slow
                        operation. Defaults to `1,000,000`. Use `-1` for no limit.
 
-                                           *scrollview_character*
-scrollview_character   |String| specifying a character to display on scrollbars.
-                       Defaults to `''`. Scrollbar transparency (via
-                       |scrollview_winblend|) is not possible when a scrollbar
-                       character is used.
-
                                            *scrollview_column*
 scrollview_column      |Number| specifying the scrollbar column (relative to
                        |scrollview_base|). Defaults to `1`. Must be an integer
@@ -320,6 +314,19 @@ scrollview_on_startup  |Boolean| specifying whether scrollbars are enabled on
                        startup. Defaults to |v:true|. Considered only when the
                        plugin is loaded.
 
+scrollview_overflow                        *scrollview_overflow*
+                       |String| specifying the overflow direction for signs (to
+                       avoid overlapping the scrollbar or other signs) and wide
+                       scrollbars. Possible values are `'left'` or `'right'`.
+                       Defaults to `'left'`.
+
+                                           *scrollview_symbol*
+scrollview_symbol      |String| specifying a symbol to display on scrollbars,
+                       truncated or padded with spaces to |scrollview_width|.
+                       Defaults to `''`. Scrollbar transparency (via
+                       |scrollview_winblend|) is not possible when a scrollbar
+                       symbol is used.
+
                                            *scrollview_visibility*
 scrollview_visibility  |String| specifying the visibility level of scrollbars
                        and signs. Possible values are `'always'`, `'overflow'`,
@@ -332,6 +339,10 @@ scrollview_visibility  |String| specifying the visibility level of scrollbars
                          the window. Otherwise, show when there are signs to
                          display (excluding those from sign groups included in
                          |scrollview_signs_info_excluded|).
+
+                                           *scrollview_width*
+scrollview_width       |Number| specifying the scrollbar width. Defaults to
+                       `1`. Must be an integer greater than or equal to `1`.
 
                                            *scrollview_winblend*
 scrollview_winblend    |Number| specifying the level of transparency for
@@ -409,12 +420,6 @@ scrollview_signs_on_startup                *scrollview_signs_on_startup*
                        for `nvim<0.10`. `['diagnostics', 'marks', 'search']` is
                        the default for `nvim>=0.10`. Considered only when the
                        plugin is loaded.
-
-scrollview_signs_overflow                  *scrollview_signs_overflow*
-                       |String| specifying the sign overflow direction (to
-                       avoid overlapping the scrollbar or other signs).
-                       Possible values are `'left'` or `'right'`. Defaults to
-                       `'left'`.
 
 scrollview_signs_scrollbar_overlap         *scrollview_signs_scrollbar_overlap*
                        |String| specifying whether/how signs overlap the

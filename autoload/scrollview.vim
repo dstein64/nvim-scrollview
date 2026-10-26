@@ -22,7 +22,6 @@ let g:scrollview_base = get(g:, 'scrollview_base', 'right')
 " The plugin enters a restricted state when the number of buffer bytes exceeds
 " the limit. Use -1 for no limit.
 let g:scrollview_byte_limit = get(g:, 'scrollview_byte_limit', 1000000)
-let g:scrollview_character = get(g:, 'scrollview_character', '')
 let g:scrollview_column = get(g:, 'scrollview_column', 1)
 let g:scrollview_consider_border =
       \ get(g:, 'scrollview_consider_border', v:false)
@@ -65,12 +64,26 @@ let g:scrollview_mouse_primary = get(g:, 'scrollview_mouse_primary', 'left')
 let g:scrollview_mouse_secondary =
       \ get(g:, 'scrollview_mouse_secondary', 'right')
 let g:scrollview_on_startup = get(g:, 'scrollview_on_startup', v:true)
+" Use the old option, scrollview_signs_overflow, if it's set.
+if has_key(g:, 'scrollview_signs_overflow')
+      \ && !has_key(g:, 'scrollview_overflow')
+  let g:scrollview_overflow = g:scrollview_signs_overflow
+endif
+" Specifies the overflow direction ('left' or 'right').
+let g:scrollview_overflow = get(g:, 'scrollview_overflow', 'left')
+" Use the old option, scrollview_character, if it's set.
+if has_key(g:, 'scrollview_character')
+      \ && !has_key(g:, 'scrollview_symbol')
+  let g:scrollview_symbol = g:scrollview_character
+endif
+let g:scrollview_symbol = get(g:, 'scrollview_symbol', '')
 " Use the old option, scrollview_always_show, if it's set.
 if has_key(g:, 'scrollview_always_show')
       \ && !has_key(g:, 'scrollview_visibility')
   let g:scrollview_visibility = g:scrollview_always_show ? 'always' : 'overflow'
 endif
 let g:scrollview_visibility = get(g:, 'scrollview_visibility', 'overflow')
+let g:scrollview_width = get(g:, 'scrollview_width', 1)
 let g:scrollview_winblend = get(g:, 'scrollview_winblend', 50)
 let g:scrollview_winblend_gui = get(g:, 'scrollview_winblend_gui', 0)
 " The default zindex for floating windows is 50. A smaller value is used here
@@ -118,8 +131,6 @@ let g:scrollview_signs_max_per_row_by_group =
 " expands to built-in plugins that would ordinarily be enabled by default.
 let g:scrollview_signs_on_startup =
       \ get(g:, 'scrollview_signs_on_startup', s:default_signs)
-" Specifies the sign overflow direction ('left' or 'right').
-let g:scrollview_signs_overflow = get(g:, 'scrollview_signs_overflow', 'left')
 let g:scrollview_signs_scrollbar_overlap =
       \ get(g:, 'scrollview_signs_scrollbar_overlap', 'off')
 " Whether signs in folds should be shown or hidden.

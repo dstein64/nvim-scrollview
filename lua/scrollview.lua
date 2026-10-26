@@ -1448,13 +1448,19 @@ local get_mapped_highlight = function(winid, from)
   return highlight
 end
 
-local get_scrollbar_character = function()
-  local character = vim.g.scrollview_character
-  character = character:gsub('\n', '')
-  character = character:gsub('\r', '')
-  if #character < 1 then character = ' ' end
-  character = fn.strcharpart(character, 0, 1)
-  return character
+local get_scrollbar_symbol = function()
+  local symbol = vim.g.scrollview_symbol
+  symbol = symbol:gsub('\n', '')
+  symbol = symbol:gsub('\r', '')
+  -- Truncate and pad with spaces to the scrollbar width.
+  local width = vim.g.scrollview_width
+  symbol = fn.strcharpart(symbol, 0, width)
+  -- Multi-cell characters can still exceed the width. The empty check
+  -- prevents an infinite loop for negative widths.
+  while symbol ~= '' and fn.strdisplaywidth(symbol) > width do
+    symbol = fn.strcharpart(symbol, 0, fn.strchars(symbol) - 1)
+  end
+  return symbol .. string.rep(' ', width - fn.strdisplaywidth(symbol))
 end
 
 -- Returns a table that maps window rows to the length of text on that row.
@@ -1513,7 +1519,11 @@ local show_scrollbar = function(winid, bar_winid)
   local config = api.nvim_win_get_config(winid)
   local is_float = tbl_get(config, 'relative', '') ~= ''
   local bar_position = calculate_position(winid)
-  local bar_width = 1
+  local bar_width = vim.g.scrollview_width
+  -- The scrollbar extends from its column in the overflow direction.
+  if vim.g.scrollview_overflow == 'left' then
+    bar_position.col = bar_position.col - bar_width + 1
+  end
   if not is_valid_column(winid, bar_position.col, bar_width) then
     return -1
   end
@@ -1534,7 +1544,7 @@ local show_scrollbar = function(winid, bar_winid)
   local top = winrow0 + bar_position.row
   local bottom = winrow0 + bar_position.row + bar_position.height - 1
   local left = wincol0 + bar_position.col
-  local right = wincol0 + bar_position.col
+  local right = wincol0 + bar_position.col + bar_width - 1
   if to_bool(vim.g.scrollview_hide_on_float_intersect) then
     local float_overlaps = get_win_overlaps(
       top, bottom, left, right, get_non_scrollview_floats())
@@ -1594,16 +1604,16 @@ local show_scrollbar = function(winid, bar_winid)
       api.nvim_buf_set_option(bar_bufnr, 'undolevels', -1)
     end
   end
-  -- Make sure that a custom character is up-to-date and is repeated enough to
+  -- Make sure that a custom symbol is up-to-date and is repeated enough to
   -- cover the full height of the scrollbar.
   local bar_line_count = api.nvim_buf_line_count(bar_bufnr)
-  local character = get_scrollbar_character()
-  if api.nvim_buf_get_lines(bar_bufnr, 0, 1, false)[1] ~= character
+  local symbol = get_scrollbar_symbol()
+  if api.nvim_buf_get_lines(bar_bufnr, 0, 1, false)[1] ~= symbol
       or bar_position.height > bar_line_count then
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', true)
     api.nvim_buf_set_lines(
       bar_bufnr, 0, bar_line_count, false,
-      fn['repeat']({character}, bar_position.height))
+      fn['repeat']({symbol}, bar_position.height))
     api.nvim_buf_set_option(bar_bufnr, 'modifiable', false)
   end
   local zindex = vim.g.scrollview_zindex
@@ -1676,7 +1686,7 @@ local show_scrollbar = function(winid, bar_winid)
     -- Add a workaround for Neovim #24584 (nvim-scrollview #112). This was
     -- addressed by Neovim #34302.
     if not to_bool(fn.has('nvim-0.12'))
-        and string.gsub(character, '%s', '') ~= '' then
+        and string.gsub(symbol, '%s', '') ~= '' then
       winblend = 0
     end
     set_window_option(bar_winid, 'winblend', winblend)
@@ -1689,11 +1699,13 @@ local show_scrollbar = function(winid, bar_winid)
       local border = api.nvim_win_get_config(winid).border
       local winwidth = fn.winwidth(winid)
       if border[BORDER_RIGHT] ~= ''
-          and winwidth + 1 == bar_position.col then
+          and winwidth + 1 >= bar_position.col
+          and winwidth + 1 <= bar_position.col + bar_width - 1 then
         target = 'FloatBorder'
       end
       if border[BORDER_LEFT] ~= ''
-          and 0 == bar_position.col then
+          and 0 >= bar_position.col
+          and 0 <= bar_position.col + bar_width - 1 then
         target = 'FloatBorder'
       end
     end
@@ -1962,13 +1974,15 @@ local show_signs = function(winid, sign_winids, bar_winid)
     -- it is hidden from hide_on_intersect or not shown because of an invalid
     -- column).
     if vim.g.scrollview_signs_scrollbar_overlap == 'off' and bar_row then
-      total_width = total_width + 1
+      total_width = total_width + bar_props.width
     end
-    for properties_idx, properties in ipairs(props_list) do
+    for _, properties in ipairs(props_list) do
       local symbol = properties.symbol
       local sign_width = fn.strdisplaywidth(symbol)
+      -- Signs that start within the scrollbar overlap it.
+      local overlaps_bar = bar_row and total_width < bar_props.width
       local col = base_col
-      if vim.g.scrollview_signs_overflow == 'left' then
+      if vim.g.scrollview_overflow == 'left' then
         col = col - total_width
         col = col - sign_width + 1
       else
@@ -2058,7 +2072,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
         if is_float then
           zindex = zindex + config.zindex
         end
-        if bar_row and properties_idx == 1 then
+        if bar_row and overlaps_bar then
           if vim.g.scrollview_signs_scrollbar_overlap == 'over' then
             zindex = zindex + 1
           elseif vim.g.scrollview_signs_scrollbar_overlap == 'under' then
@@ -2144,7 +2158,7 @@ local show_signs = function(winid, sign_winids, bar_winid)
             if bar_props ~= nil
                 and bar_row
                 and vim.g.scrollview_signs_scrollbar_overlap == 'over'
-                and properties_idx == 1 then
+                and overlaps_bar then
               target = 'ScrollView'
               if vim.g.scrollview_hover
                   and mousemove_received
@@ -3021,7 +3035,7 @@ local legend = function(groups, full)
       name = 'scrollbar',
       extra = nil,
       highlight = 'ScrollView',
-      symbol = get_scrollbar_character(),
+      symbol = get_scrollbar_symbol(),
     })
   end
   if full then
@@ -3561,7 +3575,7 @@ local should_handle_mouse = function(str)
     clicked_bar = mouse_row >= props.row
       and mouse_row < props.row + props.height
       and mouse_col >= props.col
-      and mouse_col <= props.col
+      and mouse_col <= props.col + props.width - 1
   end
   -- First check for a click on a sign and handle accordingly.
   for _, sign_props in ipairs(get_scrollview_sign_props(mouse_winid)) do
